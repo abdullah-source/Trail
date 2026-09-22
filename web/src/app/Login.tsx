@@ -14,13 +14,13 @@ export default function Login() {
   const me = useAsync(() => data.me(), []);
   const referral = params.get('ref') || code || undefined;
   if (me.status === 'ready' && me.value) return <Navigate to="/app" replace />;
-  if (cfg.clerkPublishableKey && me.status === 'ready') return <ClerkLogin referral={referral} freeAccess={cfg.freeAccess} />;
+  if (cfg.clerkPublishableKey && me.status === 'ready') return <ClerkLogin referral={referral} freeAccess={cfg.freeAccess} signUp={params.get('mode') === 'signup'} />;
   return <MagicLinkLogin referral={referral} freeAccess={cfg.freeAccess} expired={params.get('error') === 'expired'} />;
 }
 
 /** Clerk's hosted box (Google, email code). Once Clerk has a session, its token is exchanged
  *  for our own httpOnly cookie; Clerk never learns anything about the writing record. */
-function ClerkLogin({ referral, freeAccess }: { referral?: string; freeAccess: boolean }) {
+function ClerkLogin({ referral, freeAccess, signUp }: { referral?: string; freeAccess: boolean; signUp: boolean }) {
   const [Ui, setUi] = useState<null | typeof import('@clerk/clerk-react')>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ function ClerkLogin({ referral, freeAccess }: { referral?: string; freeAccess: b
     import('@clerk/clerk-react').then((m) => setUi(() => m));
   }, []);
   if (!Ui) return <PublicShell><div className="max-w-md mx-auto text-sm text-ink-soft">Loading sign-in…</div></PublicShell>;
-  const { SignIn, useAuth } = Ui;
+  const { SignIn, SignUp, useAuth } = Ui;
   function Exchange() {
     const { isSignedIn, getToken } = useAuth();
     const started = useRef(false);
@@ -55,7 +55,7 @@ function ClerkLogin({ referral, freeAccess }: { referral?: string; freeAccess: b
         <Exchange />
         <Sheet className="p-4 sm:p-6 grid gap-3">
           <Marginal>Sign in</Marginal>
-          <h1 className="text-2xl">Sign in with Google or your email.</h1>
+          <h1 className="text-2xl">{signUp ? 'Create your account.' : 'Sign in with Google or your email.'}</h1>
           <p className="text-ink-soft text-sm">Any address works; .edu is not required. {freeAccess ? 'Free during early access, no card.' : '14-day trial, no card.'} Your writing never leaves your device.</p>
           {referral && (
             <p className="text-sm text-ink-soft">
@@ -68,7 +68,11 @@ function ClerkLogin({ referral, freeAccess }: { referral?: string; freeAccess: b
             </p>
           )}
           <div className="grid place-items-center">
-            <SignIn routing="hash" signUpUrl="/login" forceRedirectUrl="/login" />
+            {signUp ? (
+              <SignUp routing="hash" signInUrl="/login" forceRedirectUrl="/login" />
+            ) : (
+              <SignIn routing="hash" signUpUrl="/login?mode=signup" forceRedirectUrl="/login" />
+            )}
           </div>
         </Sheet>
       </div>
