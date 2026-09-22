@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-log = logging.getLogger("longhand.billing")
+log = logging.getLogger("trail.billing")
 
 PLANS = {
     "semester": {"label": "Semester", "price_usd": "12.00", "interval": "4 months"},
@@ -54,7 +54,7 @@ class StripeGateway(Gateway):
     def ensure_customer(self, email: str, uid: str, existing: str | None) -> str:
         if existing:
             return existing
-        c = self.stripe.Customer.create(email=email, metadata={"longhand_user": uid})
+        c = self.stripe.Customer.create(email=email, metadata={"trail_user": uid})
         return c["id"]
 
     def checkout_url(self, *, customer: str, plan: str, success_url: str, cancel_url: str, uid: str) -> str:
@@ -62,7 +62,7 @@ class StripeGateway(Gateway):
             mode="subscription", customer=customer, client_reference_id=uid,
             line_items=[{"price": self.prices[plan], "quantity": 1}],
             success_url=success_url, cancel_url=cancel_url, allow_promotion_codes=True,
-            subscription_data={"metadata": {"longhand_user": uid, "plan": plan}},
+            subscription_data={"metadata": {"trail_user": uid, "plan": plan}},
         )
         return s["url"]
 
@@ -175,7 +175,7 @@ def handle_webhook(store: Any, gateway: Any, event: dict[str, Any]) -> dict[str,
             store.upsert_subscription(uid=uid, **subscription_fields(gateway, sub))
         return {"handled": True, "user": uid}
     if kind in ("customer.subscription.updated", "customer.subscription.deleted", "customer.subscription.created"):
-        uid = (obj.get("metadata") or {}).get("longhand_user")
+        uid = (obj.get("metadata") or {}).get("trail_user")
         if not uid:
             u = store.user_by_customer(obj.get("customer"))
             uid = u.id if u else None

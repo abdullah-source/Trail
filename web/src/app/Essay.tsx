@@ -157,7 +157,7 @@ function ExportMenu({ docId, title, declaration, entitled }: { docId: string; ti
           {confirmPack ? (
             <div className="p-2 grid gap-3">
               <p className="text-ink-soft text-xs leading-relaxed">
-                To sign the pack, this essay's record is sent to Longhand <em>once</em>, built in memory, and returned as a .tar.gz. It is not stored or logged. Anyone can check the result at <span className="font-mono">/verify</span>.
+                To sign the pack, this essay's record is sent to Trail <em>once</em>, built in memory, and returned as a .tar.gz. It is not stored or logged. Anyone can check the result at <span className="font-mono">/verify</span>.
               </p>
               <div className="flex gap-2">
                 <Button
@@ -165,7 +165,7 @@ function ExportMenu({ docId, title, declaration, entitled }: { docId: string; ti
                   onClick={() =>
                     run('record', async () => {
                       const blob = await data.buildPack(docId, 'record', { title });
-                      download(blob, `${safeName(title)}.longhand.tar.gz`);
+                      download(blob, `${safeName(title)}.trail.tar.gz`);
                       setConfirmPack(false);
                     })
                   }

@@ -1,4 +1,4 @@
-# Deploying Longhand on Railway
+# Deploying Trail on Railway
 
 One Railway service runs the FastAPI API and serves the built web app; a Railway Postgres
 holds the (text-free) tables. Stripe and Resend are external. The Chrome extension is built
@@ -6,7 +6,7 @@ from `extension/` for the app origin and submitted to the Chrome Web Store.
 
 ## 0. Before you start
 
-- A domain: `longhand.app` (fallback `getlonghand.com`).
+- A domain: `trail.app` (fallback `gettrail.app`).
 - Accounts: Railway, Stripe, Resend, Chrome Web Store developer ($5).
 - Locally: Python 3.12+, Node 20, pnpm (`corepack enable`).
 
@@ -14,7 +14,7 @@ Generate the two secrets once and keep them in a password manager:
 
 ```bash
 cd trail
-../.venv/bin/trail keygen --out signer.pem        # Ed25519; paste the PEM into LONGHAND_SIGNING_KEY
+../.venv/bin/trail keygen --out signer.pem        # Ed25519; paste the PEM into TRAIL_SIGNING_KEY
 python3 -c "import secrets; print(secrets.token_urlsafe(48))"   # SESSION_SECRET
 ```
 
@@ -36,11 +36,11 @@ Set exactly these (see `.env.example`):
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (reference the Postgres service) |
-| `LONGHAND_SIGNING_KEY` | contents of `signer.pem` (multi-line is fine) |
+| `TRAIL_SIGNING_KEY` | contents of `signer.pem` (multi-line is fine) |
 | `SESSION_SECRET` | the random string from step 0 |
-| `APP_URL` | `https://longhand.app` (no trailing slash) |
+| `APP_URL` | `https://trail.app` (no trailing slash) |
 | `RESEND_API_KEY` | from Resend |
-| `RESEND_FROM` | `Longhand <hello@longhand.app>` |
+| `RESEND_FROM` | `Trail <hello@trail.app>` |
 | `FREE_ACCESS` | leave unset. Free mode is on while `STRIPE_SECRET_KEY` is unset: no trial, no paywall, and the site says "free during early access". Set `0` to force pricing on, `1` to keep free mode even with Stripe configured. |
 | `STRIPE_SECRET_KEY` | optional, only when you start charging: `sk_live_…` (or `sk_test_…` while testing) |
 | `STRIPE_WEBHOOK_SECRET` | from step 5 |
@@ -68,19 +68,19 @@ strings.
 
 ## 4. Custom domain
 
-Service → Settings → Networking → **Custom Domain** → `longhand.app`. Add the CNAME Railway shows
+Service → Settings → Networking → **Custom Domain** → `trail.app`. Add the CNAME Railway shows
 at your registrar (for an apex domain use your DNS provider's ALIAS/ANAME or Railway's provided
-A records). Wait for the certificate, then set `APP_URL=https://longhand.app` and redeploy so
+A records). Wait for the certificate, then set `APP_URL=https://trail.app` and redeploy so
 cookies are `Secure`, magic links use the right host, and the CSRF origin check matches.
 
 ## 5. Stripe
 
-1. Products → **Add product** "Longhand Semester", recurring, $12.00 every **4 months** → copy
-   the price id into `STRIPE_PRICE_SEMESTER`. Add "Longhand Monthly", $3.99 every month →
+1. Products → **Add product** "Trail Semester", recurring, $12.00 every **4 months** → copy
+   the price id into `STRIPE_PRICE_SEMESTER`. Add "Trail Monthly", $3.99 every month →
    `STRIPE_PRICE_MONTHLY`.
 2. Settings → Billing → **Customer portal**: enable "Cancel subscriptions" (immediately or at period
    end, no retention offers), enable "Update payment method" and invoice history. Save.
-3. Developers → Webhooks → **Add endpoint**: `https://longhand.app/v1/billing/webhook`, events
+3. Developers → Webhooks → **Add endpoint**: `https://trail.app/v1/billing/webhook`, events
    `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`,
    `customer.subscription.deleted`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 4. Test mode first: repeat 1–3 with test keys, use card `4242 4242 4242 4242`, confirm Settings
@@ -92,7 +92,7 @@ cookies are `Secure`, magic links use the right host, and the CSRF origin check 
 
 ## 6. Resend
 
-1. Domains → **Add domain** `longhand.app`; add the DKIM/SPF (and optional DMARC) records it
+1. Domains → **Add domain** `trail.app`; add the DKIM/SPF (and optional DMARC) records it
    shows at your registrar; wait for "Verified".
 2. API Keys → create a key with sending access → `RESEND_API_KEY`. `RESEND_FROM` must use the
    verified domain. Send yourself a magic link from `/login` to confirm delivery.
@@ -101,19 +101,19 @@ cookies are `Secure`, magic links use the right host, and the CSRF origin check 
 
 ```bash
 cd extension
-node build.js --origin https://longhand.app      # writes manifest.json + src/config.js
-zip -r ../longhand-extension.zip . -x 'build.js' 'manifest.template.json' 'package.json'
+node build.js --origin https://trail.app      # writes manifest.json + src/config.js
+zip -r ../trail-extension.zip . -x 'build.js' 'manifest.template.json' 'package.json'
 ```
 
 Upload the zip in the Chrome Web Store developer dashboard. Listing justification for reviewers:
-"Longhand records how a document is written (typing rhythm, pastes and their source, drafts)
+"Trail records how a document is written (typing rhythm, pastes and their source, drafts)
 inside supported editors only, stores it locally in IndexedDB, and never uploads text. The
 `<all_urls>` content script only hashes copied text to attribute later pastes. `tabs` records
 which sites were open during a writing session (host names and dwell time). `externally_connectable`
-lets longhand.app read the local record." After publication, copy the extension id into
+lets trail.app read the local record." After publication, copy the extension id into
 `VITE_EXTENSION_ID` and redeploy the web service. For local testing against `vite dev`, run
-`node build.js --origin https://longhand.app --dev` and load `extension/` unpacked; in the app set
-`localStorage.longhand_extension_id = "<unpacked id>"`.
+`node build.js --origin https://trail.app --dev` and load `extension/` unpacked; in the app set
+`localStorage.trail_extension_id = "<unpacked id>"`.
 
 ## 8. Local run
 
@@ -131,7 +131,7 @@ billing buttons are disabled with a clear message.
 ## 9. Docker locally (optional)
 
 ```bash
-docker build -t longhand . && docker run -p 8080:8080 -e APP_URL=http://localhost:8080 -e SESSION_SECRET=dev longhand
+docker build -t trail . && docker run -p 8080:8080 -e APP_URL=http://localhost:8080 -e SESSION_SECRET=dev trail
 curl localhost:8080/healthz
 ```
 
@@ -139,7 +139,7 @@ curl localhost:8080/healthz
 
 - `../.venv/bin/pytest` green (auth, checkpoints, packs, Stripe webhook, privacy sentinel, schema, production guard).
 - After any model change: `../.venv/bin/python -m trail.server.gen_schema` regenerates the /privacy table list (the test fails when it is stale) and `alembic revision --autogenerate` writes the migration.
-- Boot refuses to start on an https APP_URL without SESSION_SECRET, LONGHAND_SIGNING_KEY and RESEND_API_KEY; the log names the missing one.
+- Boot refuses to start on an https APP_URL without SESSION_SECRET, TRAIL_SIGNING_KEY and RESEND_API_KEY; the log names the missing one.
 - `cd web && pnpm test && pnpm build` green.
 - `/privacy` lists every table in `/v1/schema` (test `test_privacy_page_lists_every_table`).
 - Clean Chrome profile: install → welcome → magic link → connected → paragraph in Docs and Notion

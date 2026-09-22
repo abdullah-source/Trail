@@ -52,7 +52,7 @@ export default function Settings() {
 
       <section className="grid gap-3">
         <Marginal>Your data</Marginal>
-        <p className="text-sm text-ink-soft">Everything Longhand records lives in the extension on this computer. Export it any time; it is yours whether or not you pay.</p>
+        <p className="text-sm text-ink-soft">Everything Trail records lives in the extension on this computer. Export it any time; it is yours whether or not you pay.</p>
         <ExportAll />
       </section>
 
@@ -95,7 +95,7 @@ function PlanCard({ reload }: { reload: () => void }) {
       <Sheet className="p-5 grid gap-2">
         <div className="display text-2xl">{me.billing.freeAccess ? FREE_ACCESS_LABEL : PLAN_LABEL[me.plan] || me.plan}</div>
         <p className="text-sm text-ink-soft">
-          {me.billing.freeAccess && 'Every feature, no card, no clock. While Longhand is in early access nothing is charged. If that ever changes you will hear it from us first, with notice, and recording, signing and export never lock.'}
+          {me.billing.freeAccess && 'Every feature, no card, no clock. While Trail is in early access nothing is charged. If that ever changes you will hear it from us first, with notice, and recording, signing and export never lock.'}
           {me.plan === 'trial' && (me.trialEndsAt ? `${trialDays} day${trialDays === 1 ? '' : 's'} left, ends ${fmtDateLong(me.trialEndsAt)}. No card on file.` : 'Your 14 days start the first time you play a replay, not today.')}
           {me.plan === 'expired' && 'Replay, patterns, declaration and packs are paused. Recording, signing and raw export continue.'}
           {paid && me.currentPeriodEnd && (me.cancelAtPeriodEnd ? `Cancelled. Access continues until ${fmtDateLong(me.currentPeriodEnd)}; nothing more will be charged.` : `Renews ${fmtDateLong(me.currentPeriodEnd)}. We email you 7 days before.`)}
@@ -191,7 +191,7 @@ function ExtensionCard() {
       <div className="flex gap-3">
         {!installed && st.status === 'ready' && (
           <ButtonLink to={CHROME_STORE_URL} external variant="secondary">
-            Get Longhand for Chrome
+            Get Trail for Chrome
           </ButtonLink>
         )}
         {installed && (
@@ -266,7 +266,7 @@ function DeleteCard() {
       <Marginal>Delete everything</Marginal>
       <Rule />
       <p className="text-sm text-ink-soft max-w-prose">
-        Deleting your account removes every row Longhand holds about you: your email, plan, signed checkpoint hashes, and invites. Any subscription is cancelled. Your essays and their records stay on this computer unless you also tick the box below.
+        Deleting your account removes every row Trail holds about you: your email, plan, signed checkpoint hashes, and invites. Any subscription is cancelled. Your essays and their records stay on this computer unless you also tick the box below.
       </p>
       <label className="text-sm flex items-center gap-2">
         <input type="checkbox" checked={alsoLocal} onChange={(e) => setAlsoLocal(e.target.checked)} />

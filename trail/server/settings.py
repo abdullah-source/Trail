@@ -1,19 +1,19 @@
 """Environment configuration (DECISIONS §5).
 
     DATABASE_URL            postgresql://...  (Railway) — falls back to a local SQLite file
-    LONGHAND_SIGNING_KEY    Ed25519 private key, PEM *contents*
+    TRAIL_SIGNING_KEY    Ed25519 private key, PEM *contents*
     SESSION_SECRET          HMAC key for session / token hashes
-    APP_URL                 public origin, e.g. https://longhand.app
+    APP_URL                 public origin, e.g. https://trail.app
     RESEND_API_KEY, RESEND_FROM
     STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_SEMESTER, STRIPE_PRICE_MONTHLY
     SENTRY_DSN              optional
     SIGNUP_OPEN             "1" (default) or "0": whether new emails may create accounts
     FREE_ACCESS             "1": every account has every feature, no trial clock, no paywall.
                             Defaults to "1" while STRIPE_SECRET_KEY is unset, "0" once it is set.
-    LONGHAND_ENV            "production" forces the production checks even on an http APP_URL
+    TRAIL_ENV            "production" forces the production checks even on an http APP_URL
 
-Production (APP_URL is https, or LONGHAND_ENV=production) refuses to boot without a real
-SESSION_SECRET, LONGHAND_SIGNING_KEY and RESEND_API_KEY: see require_production_config().
+Production (APP_URL is https, or TRAIL_ENV=production) refuses to boot without a real
+SESSION_SECRET, TRAIL_SIGNING_KEY and RESEND_API_KEY: see require_production_config().
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ class Settings:
         if not self.session_secret or self.session_secret == DEV_SESSION_SECRET or len(self.session_secret) < 32:
             missing.append("SESSION_SECRET (at least 32 random characters; the dev default hashes every session and token)")
         if not self.signing_key_pem:
-            missing.append("LONGHAND_SIGNING_KEY (PEM contents; without it a new key would be generated on every deploy)")
+            missing.append("TRAIL_SIGNING_KEY (PEM contents; without it a new key would be generated on every deploy)")
         if not self.resend_api_key:
             missing.append("RESEND_API_KEY (without it magic links are printed to the log instead of emailed)")
         return missing
@@ -83,17 +83,17 @@ class Settings:
     def from_env(cls, env: dict[str, str] | None = None) -> "Settings":
         e = os.environ if env is None else env
         data_dir = Path(e.get("TRAIL_DATA_DIR", "trail-data"))
-        db = e.get("DATABASE_URL") or f"sqlite:///{data_dir / 'longhand.sqlite'}"
-        key_path = e.get("TRAIL_SIGNING_KEY")
+        db = e.get("DATABASE_URL") or f"sqlite:///{data_dir / 'trail.sqlite'}"
+        key_path = e.get("TRAIL_SIGNING_KEY_PATH")
         return cls(
             database_url=_normalise_db_url(db),
             data_dir=data_dir,
-            signing_key_pem=e.get("LONGHAND_SIGNING_KEY") or None,
+            signing_key_pem=e.get("TRAIL_SIGNING_KEY") or None,
             signing_key_path=Path(key_path) if key_path else None,
             session_secret=e.get("SESSION_SECRET") or DEV_SESSION_SECRET,
             app_url=(e.get("APP_URL") or "http://localhost:8100").rstrip("/"),
             resend_api_key=e.get("RESEND_API_KEY") or None,
-            resend_from=e.get("RESEND_FROM") or "Longhand <hello@longhand.app>",
+            resend_from=e.get("RESEND_FROM") or "Trail <hello@trail.app>",
             stripe_secret_key=e.get("STRIPE_SECRET_KEY") or None,
             stripe_webhook_secret=e.get("STRIPE_WEBHOOK_SECRET") or None,
             stripe_price_semester=e.get("STRIPE_PRICE_SEMESTER") or None,
@@ -101,5 +101,5 @@ class Settings:
             sentry_dsn=e.get("SENTRY_DSN") or None,
             signup_open=(e.get("SIGNUP_OPEN") or e.get("TRAIL_SIGNUP_OPEN") or "1") == "1",
             free_access=(e.get("FREE_ACCESS") or ("0" if e.get("STRIPE_SECRET_KEY") else "1")) == "1",
-            production=(e.get("LONGHAND_ENV") == "production") or (e.get("APP_URL") or "").startswith("https://"),
+            production=(e.get("TRAIL_ENV") == "production") or (e.get("APP_URL") or "").startswith("https://"),
         )

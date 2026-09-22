@@ -16,11 +16,11 @@ export default function Invite() {
   const r = ref.value;
   const done = r.credits >= r.maxCredits;
   const progress = Math.min(r.needed, r.progress);
-  const share = `I keep my own record of how I write my essays with Longhand — replay, patterns, and an honest AI-use statement. Free, no card: ${r.link}`;
+  const share = `I keep my own record of how I write my essays with Trail — replay, patterns, and an honest AI-use statement. Free, no card: ${r.link}`;
 
   return (
     <div className="grid gap-8 max-w-2xl">
-      <SectionHead kicker="Invite" title="Three friends, one free semester." lede={me.billing.freeAccess ? 'Longhand is free for everyone during early access. Invites still count: when three people you invite play their first replay, a free semester is banked for you for whenever pricing switches on.' : 'When three people you invite play their first replay, you get a semester free. Up to three times. They get the same 14-day trial as everyone.'} />
+      <SectionHead kicker="Invite" title="Three friends, one free semester." lede={me.billing.freeAccess ? 'Trail is free for everyone during early access. Invites still count: when three people you invite play their first replay, a free semester is banked for you for whenever pricing switches on.' : 'When three people you invite play their first replay, you get a semester free. Up to three times. They get the same 14-day trial as everyone.'} />
 
       <Sheet className="p-5 grid gap-3">
         <Marginal>Your link</Marginal>

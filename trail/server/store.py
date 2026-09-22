@@ -151,7 +151,7 @@ class Store:
             n = s.scalar(select(func.count()).select_from(MagicLink).where(MagicLink.user_id == uid, MagicLink.created_at >= since)) or 0
             if n >= MAGIC_LINKS_PER_WINDOW:
                 return None
-            token = "lh_" + secrets.token_urlsafe(32)
+            token = "tr_" + secrets.token_urlsafe(32)
             s.add(MagicLink(id=_id(), user_id=uid, token_hash=self.token_hash(token), created_at=utcnow(),
                             expires_at=utcnow() + timedelta(minutes=MAGIC_LINK_MINUTES)))
             s.commit()

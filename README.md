@@ -1,6 +1,6 @@
-# Longhand
+# Trail
 
-*See how you write.* A student's own writing record. (Python package and CLI keep the name `trail`.) A browser extension records *how* a document
+*See how you write.* A student's own writing record. A browser extension records *how* a document
 was written, on the student's device: keystroke rhythm, pastes and where they
 came from, drafts over time, sources open while writing. Every record is
 hash-chained and periodically signed by a service that never sees the text.

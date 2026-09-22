@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Writes manifest.json and src/config.js from manifest.template.json for one app origin.
 //
-//   node build.js                                  # APP_ORIGIN env or https://longhand.app
+//   node build.js                                  # APP_ORIGIN env or https://trail.app
 //   node build.js --origin http://localhost:5173   # local dev against `vite dev`
-//   node build.js --origin https://longhand.app --dev   # production origin plus localhost for testing
+//   node build.js --origin https://trail.app --dev   # production origin plus localhost for testing
 //
 // The origin appears in externally_connectable (the web app talks to the extension over
 // chrome.runtime.sendMessage) and in config.js (popup links, origin check). It is not a host
@@ -18,10 +18,10 @@ const flag = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const origin = (flag("--origin") || process.env.APP_ORIGIN || "https://longhand.app").replace(/\/$/, "");
+const origin = (flag("--origin") || process.env.APP_ORIGIN || "https://trail.app").replace(/\/$/, "");
 const dev = args.includes("--dev");
 if (!/^https?:\/\/[^/]+$/.test(origin)) {
-  console.error(`APP_ORIGIN must be scheme + host only, e.g. https://longhand.app (got ${origin})`);
+  console.error(`APP_ORIGIN must be scheme + host only, e.g. https://trail.app (got ${origin})`);
   process.exit(1);
 }
 const extra = dev ? ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8100"] : [];

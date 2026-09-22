@@ -17,7 +17,7 @@ export default function Essays() {
   if (ext.status === 'ready' && !ext.value.installed) {
     return (
       <div className="grid gap-8">
-        <SectionHead kicker="Your essays" title="Nothing to show yet: the extension is not talking to this page." lede="Longhand reads your essays straight from the extension on this computer. Nothing is uploaded, so this page is empty without it." />
+        <SectionHead kicker="Your essays" title="Nothing to show yet: the extension is not talking to this page." lede="Trail reads your essays straight from the extension on this computer. Nothing is uploaded, so this page is empty without it." />
         <EmptyState
           title="Install the extension in Chrome on this computer"
           body={
@@ -25,7 +25,7 @@ export default function Essays() {
               Then come back here, or open it from the extension popup. On a phone or another browser, your essays are only where the extension is. <Link to="/app/welcome" className="link">First time? Start here.</Link>
             </>
           }
-          action={<ButtonLink to={CHROME_STORE_URL} external>Get Longhand for Chrome</ButtonLink>}
+          action={<ButtonLink to={CHROME_STORE_URL} external>Get Trail for Chrome</ButtonLink>}
         />
       </div>
     );
@@ -38,13 +38,13 @@ export default function Essays() {
 
   return (
     <div className="grid gap-8">
-      <SectionHead kicker="Your essays" title="Every essay you have written with Longhand on." lede="Open one to replay it, see your sessions, and copy an honest AI-use statement." />
+      <SectionHead kicker="Your essays" title="Every essay you have written with Trail on." lede="Open one to replay it, see your sessions, and copy an honest AI-use statement." />
       <ol className="grid divide-y divide-rule border-t border-b border-rule">
         {list.map((e) => (
           <EssayRow key={e.id} essay={e} />
         ))}
       </ol>
-      <p className="text-xs text-ink-faint">Read from this computer's extension. Nothing here is stored on Longhand's servers.</p>
+      <p className="text-xs text-ink-faint">Read from this computer's extension. Nothing here is stored on Trail's servers.</p>
     </div>
   );
 }

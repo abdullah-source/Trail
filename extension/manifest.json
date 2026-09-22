@@ -3,7 +3,11 @@
   "name": "Trail — see how you write",
   "version": "0.2.0",
   "description": "Keeps your own record of how each essay gets written, on your device. Replay your drafts, see your patterns, and get an honest AI-use statement written from what actually happened.",
-  "permissions": ["storage", "alarms", "tabs"],
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs"
+  ],
   "host_permissions": [
     "https://docs.google.com/document/*",
     "https://www.notion.so/*",
@@ -16,11 +20,30 @@
     "https://*.blackboard.com/*",
     "https://*.brightspace.com/*"
   ],
-  "background": { "service_worker": "src/background.js", "type": "module" },
-  "action": { "default_popup": "src/popup.html", "default_title": "Trail" },
-  "externally_connectable": { "matches": ["__APP_ORIGIN__/*"] },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Trail"
+  },
+  "externally_connectable": {
+    "matches": [
+      "http://127.0.0.1:8100/*"
+    ]
+  },
   "content_scripts": [
-    { "matches": ["<all_urls>"], "js": ["src/copytrack.js"], "run_at": "document_start", "all_frames": true },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/copytrack.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    },
     {
       "matches": [
         "https://docs.google.com/document/*",
@@ -34,10 +57,14 @@
         "https://*.blackboard.com/*",
         "https://*.brightspace.com/*"
       ],
-      "js": ["src/recorder.js"],
+      "js": [
+        "src/recorder.js"
+      ],
       "run_at": "document_idle",
       "all_frames": true
     }
   ],
-  "icons": { "128": "icons/icon128.png" }
+  "icons": {
+    "128": "icons/icon128.png"
+  }
 }

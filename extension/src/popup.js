@@ -35,14 +35,15 @@ const send = (m) => new Promise((r) => chrome.runtime.sendMessage(m, (x) => r(x 
     };
     renderPause();
   } else {
-    status.textContent = "Not an editor Longhand records. Supported: Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard, Brightspace.";
+    status.textContent = "Not an editor Trail records. Supported: Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard, Brightspace.";
   }
   $("pause").onclick = async () => {
     const r = await send({ type: "pause", host, paused: !paused.has(host) });
     paused.clear(); for (const h of r.paused || []) paused.add(h);
     renderPause();
   };
-  $("open").onclick = () => chrome.tabs.create({ url: `${APP_ORIGIN}/app` });
+  // ?ext= tells the web app this extension's id (unpacked builds have a random one); it stores it locally.
+  $("open").onclick = () => chrome.tabs.create({ url: `${APP_ORIGIN}/app?ext=${chrome.runtime.id}` });
   $("cp").onclick = async () => {
     status.textContent = "Signing…";
     const res = await send({ type: "checkpointAll" });

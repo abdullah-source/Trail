@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Protocol
 
-log = logging.getLogger("longhand.mail")
+log = logging.getLogger("trail.mail")
 
 
 class Mailer(Protocol):
@@ -42,18 +42,18 @@ class ResendMailer:
 
 
 def magic_link_message(link: str, first_time: bool) -> tuple[str, str, str]:
-    subject = "Your Longhand sign-in link" if not first_time else "Welcome to Longhand — sign in"
-    text = (f"Hi,\n\nClick to sign in to Longhand:\n\n{link}\n\nThe link works once and expires in 30 minutes. "
-            "If you did not ask for it, ignore this email.\n\nLonghand keeps your writing record on your device; "
+    subject = "Your Trail sign-in link" if not first_time else "Welcome to Trail — sign in"
+    text = (f"Hi,\n\nClick to sign in to Trail:\n\n{link}\n\nThe link works once and expires in 30 minutes. "
+            "If you did not ask for it, ignore this email.\n\nTrail keeps your writing record on your device; "
             "this email is the only password you will ever need.\n")
-    html = (f"<p>Click to sign in to Longhand:</p><p><a href=\"{link}\">{link}</a></p>"
+    html = (f"<p>Click to sign in to Trail:</p><p><a href=\"{link}\">{link}</a></p>"
             "<p>The link works once and expires in 30 minutes. If you did not ask for it, ignore this email.</p>")
     return subject, text, html
 
 
 def renewal_reminder_message(plan: str, renews_on: str, amount: str, portal_hint: str) -> tuple[str, str]:
-    subject = f"Your Longhand {plan} plan renews on {renews_on}"
-    text = (f"A heads-up, as promised: your Longhand {plan} plan renews on {renews_on} for {amount}.\n\n"
+    subject = f"Your Trail {plan} plan renews on {renews_on}"
+    text = (f"A heads-up, as promised: your Trail {plan} plan renews on {renews_on} for {amount}.\n\n"
             f"Nothing to do if you want to keep it. To cancel in one click, open Settings → Billing ({portal_hint}). "
             "No retention flow, no questions.\n")
     return subject, text

@@ -12,7 +12,7 @@ const RECORDED: [string, string][] = [
 ];
 
 const NOT_RECORDED: [string, string][] = [
-  ['Anything outside a supported editor', 'Longhand only wakes up on Google Docs, Notion, Word Online and your LMS editor. Email, chat, banking, search: not seen.'],
+  ['Anything outside a supported editor', 'Trail only wakes up on Google Docs, Notion, Word Online and your LMS editor. Email, chat, banking, search: not seen.'],
   ['Passwords or form fields', 'The recorder attaches to the document body of the editor, not to inputs.'],
   ['Screenshots, camera, microphone', 'None. The extension does not ask for those permissions.'],
   ['Anything while paused', 'Pause any site from the popup. Paused means paused; there is no "we still collect a little".'],
@@ -24,7 +24,7 @@ export default function HowItWorks() {
   return (
     <>
       <Section flush code="00:00" label="Overview">
-        <Heading as="h1" eyebrow="How it works" title="A record you keep. A fingerprint we sign." lede="Longhand is two small things: an extension that keeps a record of your writing on your own device, and a server that puts a signed timestamp on a fingerprint of that record every ten minutes. Here is exactly what each one sees." />
+        <Heading as="h1" eyebrow="How it works" title="A record you keep. A fingerprint we sign." lede="Trail is two small things: an extension that keeps a record of your writing on your own device, and a server that puts a signed timestamp on a fingerprint of that record every ten minutes. Here is exactly what each one sees." />
       </Section>
 
       <Section code="00:08" label="Recorded">
@@ -61,7 +61,7 @@ export default function HowItWorks() {
           <Heading title="Where it lives" lede="In your browser. Not in ours." />
           <Prose className="mt-6">
             <p>
-              Everything the extension records is stored in your browser's local database (IndexedDB), on your laptop. When you open <span className="font-mono text-sm">longhand.app</span>, the web app asks the extension for your essays directly, over a channel Chrome provides between a site and an extension. The replay, your patterns and the draft declaration are all computed in your browser, in JavaScript.
+              Everything the extension records is stored in your browser's local database (IndexedDB), on your laptop. When you open <span className="font-mono text-sm">trail.app</span>, the web app asks the extension for your essays directly, over a channel Chrome provides between a site and an extension. The replay, your patterns and the draft declaration are all computed in your browser, in JavaScript.
             </p>
             <p>
               That is not a policy we promise to follow. It is how the code is built: there is no endpoint on our server that accepts your text, except the one you use on purpose to export an evidence pack, described below.
@@ -90,7 +90,7 @@ export default function HowItWorks() {
             {[
               ['1', 'Chain', 'Each event fingerprints itself and the one before. Lives on your device.'],
               ['2', 'Checkpoint', 'Every ten minutes the last fingerprint is sent, signed with the time, and returned.'],
-              ['3', 'Verify', 'Anyone recomputes the chain, checks the signatures against the public key published at longhand.app, looks each checkpoint up in the public log, and gets a yes or no.'],
+              ['3', 'Verify', 'Anyone recomputes the chain, checks the signatures against the public key published at trail.app, looks each checkpoint up in the public log, and gets a yes or no.'],
             ].map(([n, t, d]) => (
               <Card key={t} className="grid gap-2 content-start">
                 <span className="font-mono text-sm text-margin">{n}</span>
@@ -127,7 +127,7 @@ export default function HowItWorks() {
           <Prose className="mt-6">
             <p>An evidence pack is a folder with your record, the analysis, the signed checkpoints and a report anyone can open. Building it needs the server's signature over the whole pack, so when you click Export, your browser sends the record to the server for that one request. The server builds the pack in memory, signs it, returns it, and keeps nothing: it is never written to disk or to a log. Our tests check that by searching the database and logs for a sentence from the record after an export.</p>
             <p>
-              The pack is a normal <span className="font-mono text-sm">.longhand.tar.gz</span> file. You keep it. You decide who sees it.
+              The pack is a normal <span className="font-mono text-sm">.trail.tar.gz</span> file. You keep it. You decide who sees it.
             </p>
           </Prose>
           <div className="flex flex-wrap items-center gap-3 mt-8">
@@ -144,11 +144,11 @@ export default function HowItWorks() {
             <p>
               Drop a pack on{' '}
               <Link to="/verify" className="link">
-                longhand.app/verify
+                trail.app/verify
               </Link>
-              . Your browser recomputes every hash and every chain link, checks every signature against the public key it fetches from longhand.app/v1/public-key (never the copy inside the pack), looks each checkpoint up in our public log, and reports each check as pass or fail. Nothing is uploaded. The small Python script inside every pack repeats the hash and signature checks offline; only the log lookup needs the site.
+              . Your browser recomputes every hash and every chain link, checks every signature against the public key it fetches from trail.app/v1/public-key (never the copy inside the pack), looks each checkpoint up in our public log, and reports each check as pass or fail. Nothing is uploaded. The small Python script inside every pack repeats the hash and signature checks offline; only the log lookup needs the site.
             </p>
-            <p>What verification shows: this record existed in this state at these times and was not changed afterwards. What it does not prove: who was at the keyboard, or that text typed by hand was not copied from a screen. Longhand says this in every pack.</p>
+            <p>What verification shows: this record existed in this state at these times and was not changed afterwards. What it does not prove: who was at the keyboard, or that text typed by hand was not copied from a screen. Trail says this in every pack.</p>
           </Prose>
           <div className="flex flex-wrap gap-3 mt-8">
             <ButtonLink to={CHROME_STORE_URL} external size="lg">

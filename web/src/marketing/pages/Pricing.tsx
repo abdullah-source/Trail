@@ -59,7 +59,7 @@ export default function Pricing() {
         <FadeUp inView>
           <Heading title="Invite three friends, get a semester" lede="Simple rule, no fine print hidden elsewhere." />
           <dl className="mt-6">
-            <Row term="The rule">Invite three people. When each of them installs Longhand and finishes their first replay, you get one free semester (4 months) added to your account.</Row>
+            <Row term="The rule">Invite three people. When each of them installs Trail and finishes their first replay, you get one free semester (4 months) added to your account.</Row>
             <Row term="Stacking">Up to three free semesters in total, so nine successful invites.</Row>
             <Row term="Counting">An invite counts when your friend completes a first replay, not when they sign up. Your progress (0 of 3) is on the Invite page.</Row>
             <Row term="Your friends">They get the same 14-day trial as everyone. No discount either way; we would rather keep one price.</Row>
@@ -96,7 +96,7 @@ export default function Pricing() {
               <p>Nothing. It is on your device, and it stays there. The extension keeps recording, and you can export the raw record whenever you want. If you come back, every essay you wrote in the meantime is already in your replay list.</p>
             </Disclosure>
             <Disclosure q="Can my university pay for it?">
-              <p>Not in this version. Longhand is on the student's side and we want the billing to reflect that. If your department wants to reimburse you, Stripe emails a receipt for every charge, and your invoices are in the billing portal, one click from Settings.</p>
+              <p>Not in this version. Trail is on the student's side and we want the billing to reflect that. If your department wants to reimburse you, Stripe emails a receipt for every charge, and your invoices are in the billing portal, one click from Settings.</p>
             </Disclosure>
             <Disclosure q="What does the server know about my payment?">
               <p>

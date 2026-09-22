@@ -17,7 +17,7 @@ export default function Privacy() {
   return (
     <>
       <Section flush code="00:00" label="Privacy">
-        <Heading as="h1" eyebrow="Privacy" title="What we store, listed as tables, not adjectives." lede="Longhand is built so that your writing never reaches our server. This page lists every table and every column that does. Last updated 21 September 2026." />
+        <Heading as="h1" eyebrow="Privacy" title="What we store, listed as tables, not adjectives." lede="Trail is built so that your writing never reaches our server. This page lists every table and every column that does. Last updated 21 September 2026." />
       </Section>
 
       <Section code="00:05" label="Short version">
@@ -85,7 +85,7 @@ export default function Privacy() {
           <Row term="Stripe">Payments. They see your email and card. We see a customer id and a plan.</Row>
           <Row term="Resend">Sends login links and renewal reminders to your email.</Row>
           <Row term="Railway">Hosts the server and the database, in the United States.</Row>
-          <Row term="Fonts">Served from longhand.app itself. Nothing on this site loads from Google or any other third party.</Row>
+          <Row term="Fonts">Served from trail.app itself. Nothing on this site loads from Google or any other third party.</Row>
           <Row term="Nobody else">No analytics scripts, no ad pixels, no error tracker unless we turn one on, and then it is configured to drop request bodies.</Row>
         </dl>
       </Section>
@@ -98,8 +98,8 @@ export default function Privacy() {
           <Row term="Delete">Settings has a Delete account button. It removes every server row listed above within minutes, except transparency-log entries, which contain only hashes. Your local record is not touched.</Row>
           <Row term="Ask">
             Email{' '}
-            <a href="mailto:privacy@longhand.app" className="link">
-              privacy@longhand.app
+            <a href="mailto:privacy@trail.app" className="link">
+              privacy@trail.app
             </a>
             . A person answers.
           </Row>

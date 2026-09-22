@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "trail"
 version = "0.1.0"
-description = "Longhand: a student's own writing record. Records how a document was written, signs it, and turns it into replays, patterns, honest AI-use declarations, and a verifiable evidence pack."
+description = "Trail: a student's own writing record. Records how a document was written, signs it, and turns it into replays, patterns, honest AI-use declarations, and a verifiable evidence pack."
 requires-python = ">=3.11"
 dependencies = ["cryptography>=42"]
 

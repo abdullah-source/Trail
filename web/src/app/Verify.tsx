@@ -1,4 +1,4 @@
-// Public verifier: drop a .longhand.tar.gz (or a raw events.jsonl); everything is checked in
+// Public verifier: drop a .trail.tar.gz (or a raw events.jsonl); everything is checked in
 // the browser (lib/verify.ts). Nothing is uploaded. For a professor who does not trust us.
 import { useState, type DragEvent } from 'react';
 import { data } from '../lib/data';
@@ -40,9 +40,9 @@ export default function Verify() {
       <div className="grid gap-8">
         <header className="grid gap-3">
           <Marginal>Verify a record</Marginal>
-          <h1 className="text-3xl sm:text-4xl">Check a Longhand record without trusting Longhand.</h1>
+          <h1 className="text-3xl sm:text-4xl">Check a Trail record without trusting Trail.</h1>
           <p className="text-ink-soft max-w-prose">
-            Drop the <span className="font-mono">.longhand.tar.gz</span> a student gave you. Your browser recomputes every hash, walks every chain, checks every signature against Longhand's public key fetched from this site (not the copy inside the archive), and looks each checkpoint up in the public log. Nothing is uploaded. The <span className="font-mono">verify.py</span> inside the archive repeats the hash and signature checks offline.
+            Drop the <span className="font-mono">.trail.tar.gz</span> a student gave you. Your browser recomputes every hash, walks every chain, checks every signature against Trail's public key fetched from this site (not the copy inside the archive), and looks each checkpoint up in the public log. Nothing is uploaded. The <span className="font-mono">verify.py</span> inside the archive repeats the hash and signature checks offline.
           </p>
         </header>
 
@@ -57,7 +57,7 @@ export default function Verify() {
         >
           <input type="file" accept=".gz,.tgz,.tar.gz,.jsonl,.json,application/gzip" className="sr-only" onChange={(e) => e.target.files?.[0] && check(e.target.files[0])} />
           <span className="display text-xl block">Drop a record here, or click to choose one</span>
-          <span className="text-sm text-ink-soft block mt-2">.longhand.tar.gz (full record) or events.jsonl (raw export)</span>
+          <span className="text-sm text-ink-soft block mt-2">.trail.tar.gz (full record) or events.jsonl (raw export)</span>
         </label>
 
         {busy && (
@@ -88,7 +88,7 @@ export default function Verify() {
               ))}
             </ol>
             <p className="text-xs text-ink-soft">
-              Verified means Longhand's key signed these checkpoints, they are in the public log, and the record was not altered after any of them. A pack signed by any other key fails, however consistent its hashes are. It describes how the document was produced. It does not judge content, and it cannot see text retyped by hand.
+              Verified means Trail's key signed these checkpoints, they are in the public log, and the record was not altered after any of them. A pack signed by any other key fails, however consistent its hashes are. It describes how the document was produced. It does not judge content, and it cannot see text retyped by hand.
             </p>
           </Sheet>
         )}

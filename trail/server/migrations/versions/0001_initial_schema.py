@@ -1,4 +1,4 @@
-"""Initial Longhand schema: users, magic_links, sessions, api_tokens, subscriptions, referrals,
+"""Initial Trail schema: users, magic_links, sessions, api_tokens, subscriptions, referrals,
 checkpoints, transparency_log, docs. No table holds document text (see trail/server/models.py).
 
 Revision ID: 0001

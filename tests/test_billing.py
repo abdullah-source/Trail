@@ -30,7 +30,7 @@ def post_webhook(client, payload: dict, header: str | None = None):
 def sub_object(sub_id: str, customer: str, uid: str, plan: str, status: str = "active", days: int = 122, cancel: bool = False) -> dict:
     return {"id": sub_id, "object": "subscription", "customer": customer, "status": status,
             "current_period_end": int((utcnow() + timedelta(days=days)).timestamp()), "cancel_at_period_end": cancel,
-            "metadata": {"longhand_user": uid, "plan": plan}, "items": {"data": [{"price": {"id": "price_sem" if plan == "semester" else "price_mon"}}]}}
+            "metadata": {"trail_user": uid, "plan": plan}, "items": {"data": [{"price": {"id": "price_sem" if plan == "semester" else "price_mon"}}]}}
 
 
 def test_checkout_then_webhook_flips_plan_and_cancel_flips_back(client, mailer, store, gateway):
@@ -105,10 +105,10 @@ def test_renewal_reminder_seven_days_before(store, mailer, gateway):
     store.set_stripe_customer(uid, "cus_r")
     end = utcnow() + timedelta(days=7)
     store.upsert_subscription(sub_id="sub_r", uid=uid, plan="semester", status="active", current_period_end=end, cancel_at_period_end=False)
-    assert send_renewal_reminders(store, mailer, "https://longhand.app") == 1
+    assert send_renewal_reminders(store, mailer, "https://trail.app") == 1
     m = mailer.sent[-1]
     assert m["to"] == "renew@uni.example" and "renews on" in m["subject"] and PLANS["semester"]["price_usd"] in m["text"] and "/app/settings" in m["text"]
-    assert send_renewal_reminders(store, mailer, "https://longhand.app") == 0  # not twice for the same period
+    assert send_renewal_reminders(store, mailer, "https://trail.app") == 0  # not twice for the same period
     # cancelled-at-period-end subscriptions get no reminder (nothing will be charged)
     store.upsert_subscription(sub_id="sub_r", uid=uid, plan="semester", status="active", current_period_end=end + timedelta(days=200), cancel_at_period_end=True)
-    assert send_renewal_reminders(store, mailer, "https://longhand.app", now=utcnow() + timedelta(days=200)) == 0
+    assert send_renewal_reminders(store, mailer, "https://trail.app", now=utcnow() + timedelta(days=200)) == 0

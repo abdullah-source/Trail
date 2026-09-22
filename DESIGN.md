@@ -1,4 +1,4 @@
-# DESIGN.md — Longhand
+# DESIGN.md — Trail
 
 Design source of truth for the marketing site and the student app. DECISIONS.md §7 is binding; this document makes it concrete.
 
@@ -12,7 +12,7 @@ Tone rules from DECISIONS §7 apply to copy and to visuals: never "detect", "pro
 
 ## 2. Aesthetic direction: the manuscript, not the dashboard
 
-The name is *Longhand*: writing in your own hand, over time. The interface should feel like a well-made notebook that happens to be able to rewind.
+The name is *Trail*: writing in your own hand, over time. The interface should feel like a well-made notebook that happens to be able to rewind.
 
 Specific moves:
 

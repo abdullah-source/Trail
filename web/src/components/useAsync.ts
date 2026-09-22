@@ -24,7 +24,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): Async<T
 export function usePageTitle(title: string) {
   useEffect(() => {
     const prev = document.title;
-    document.title = title ? `${title} · Longhand` : 'Longhand — See how you write.';
+    document.title = title ? `${title} · Trail` : 'Trail — See how you write.';
     return () => {
       document.title = prev;
     };

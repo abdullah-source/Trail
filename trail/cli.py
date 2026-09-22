@@ -1,4 +1,4 @@
-"""Longhand command line (package name `trail`).
+"""Trail command line (package name `trail`).
 
     trail backtest [--lines N] [--seed S] [--out DIR]
     trail demo [--out DIR] [--profile honest|mixed|heavy_paster|autotyper|gapped]
@@ -116,8 +116,8 @@ def cmd_reminders(a):
 
 
 def main(argv=None) -> int:
-    p = argparse.ArgumentParser(prog="trail", description="Longhand: your writing record")
-    p.add_argument("--version", action="version", version=f"longhand {__version__}")
+    p = argparse.ArgumentParser(prog="trail", description="Trail: your writing record")
+    p.add_argument("--version", action="version", version=f"trail {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("backtest"); s.add_argument("--lines", type=int, default=10_000); s.add_argument("--seed", type=int, default=42); s.add_argument("--out", default="backtest-out"); s.set_defaults(fn=cmd_backtest)
     s = sub.add_parser("demo"); s.add_argument("--out", default="demo-out"); s.add_argument("--profile", default="mixed"); s.add_argument("--seed", type=int, default=7); s.set_defaults(fn=cmd_demo)

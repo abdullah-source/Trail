@@ -1,10 +1,10 @@
-# Longhand design system
+# Trail design system
 
 Owned by design. Source of truth for `web/src/design/*`, `web/src/marketing/*`, `web/public/*`.
 
 ## 1. Concept: the manuscript
 
-A Longhand page is a page of writing coming into being. Everything on the site follows from three facts about a manuscript:
+A Trail page is a page of writing coming into being. Everything on the site follows from three facts about a manuscript:
 
 - **Typed text is just ink.** We do not colour a student's own words. Only what arrived from elsewhere gets marked: pasted text sits under a **highlighter** wash with a small mono chip naming its source.
 - **The margin is where the record lives.** Every section hangs off a thin red **notebook margin rule** on the left, and the margin carries a timecode (`00:12`) and a one-word label, like a replay scrubber running down the page. Nothing is centered. This is the one aesthetic risk: a page-level margin instead of cards with accent rails.

@@ -25,7 +25,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...init,
     });
   } catch {
-    throw new ApiError(0, 'Could not reach Longhand. Check your connection and try again.');
+    throw new ApiError(0, 'Could not reach Trail. Check your connection and try again.');
   }
   if (!r.ok) {
     let detail = r.statusText || `HTTP ${r.status}`;
@@ -150,7 +150,7 @@ export const data = {
         body: JSON.stringify({ events, checkpoints, format, title: meta.title ?? null, student: meta.student ?? null, course: meta.course ?? null }),
       });
     } catch {
-      throw new ApiError(0, 'Could not reach Longhand to sign the pack. Check your connection and try again.');
+      throw new ApiError(0, 'Could not reach Trail to sign the pack. Check your connection and try again.');
     }
     if (!r.ok) {
       let detail = `HTTP ${r.status}`;
@@ -234,7 +234,7 @@ export const data = {
     }
   },
 
-  /** Longhand's published public key and transparency log, so /verify never trusts the key inside an archive. */
+  /** Trail's published public key and transparency log, so /verify never trusts the key inside an archive. */
   async trustAnchor(): Promise<TrustAnchor | undefined> {
     if (MOCK) return undefined;
     const anchor: TrustAnchor = { origin: location.origin, publicKeyPem: null, transparency: null };

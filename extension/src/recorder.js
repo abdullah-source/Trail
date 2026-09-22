@@ -2,8 +2,8 @@
 // Keystrokes are batched (text + timing), pastes carry a hash-matched source,
 // and periodic snapshots let the record be verified against the real text.
 (() => {
-  if (window.__longhandRecorder) return;
-  window.__longhandRecorder = true;
+  if (window.__trailRecorder) return;
+  window.__trailRecorder = true;
 
   const host = location.host;
   const IDLE_SESSION_MS = 30 * 60_000;

@@ -111,7 +111,7 @@ export default function Welcome() {
                 {active && s.key === 'install' && (
                   <div className="pl-9 pt-1 flex flex-wrap gap-3 items-center">
                     <ButtonLink to={CHROME_STORE_URL} external>
-                      Get Longhand for Chrome
+                      Get Trail for Chrome
                     </ButtonLink>
                     <span className="text-xs text-ink-soft">{installed === null ? 'Checking…' : 'Waiting for the extension… this page notices on its own.'}</span>
                   </div>
@@ -147,7 +147,7 @@ export default function Welcome() {
           );
         })}
       </ol>
-      <p className="text-xs text-ink-faint">On a phone? Longhand records on a laptop; this page shows what the laptop's extension has.</p>
+      <p className="text-xs text-ink-faint">On a phone? Trail records on a laptop; this page shows what the laptop's extension has.</p>
     </div>
   );
 }

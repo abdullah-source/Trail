@@ -30,7 +30,7 @@ Verified by the founder: pytest 26 passed, vitest 26 passed, tsc clean, build OK
 | 7 Sentinel never stored/logged | **PASS** | `test_privacy.py:38-64`; `app.py:425` logs id/count/ms; uvicorn access log off (`Dockerfile:28`) |
 | 8 /privacy lists every table and column, test reads both | **FAIL** | Test checks table *names* only (`test_privacy.py:89-92`). `Privacy.tsx:13-120` invents columns: `users.plan`, `checkpoints.id/doc_id/head_hash/created_at`, `transparency_log.id`, `referrals.completed_at`; omits `users.last_login_at/free_until/referral_credits/renewal_reminded_for`, `checkpoints.body`, `transparency_log.prev/entry_hash`, `magic_links.used_at` (`models.py`). "If it is not here, we do not have it" is false today. |
 | 9 Lighthouse, reduced motion | NOT VERIFIABLE HERE | Reduced-motion paths exist (`ReplayHero.tsx:314`, `ReplayPlayer.tsx:39-40,262`). Three external font requests are the LCP risk. |
-| 10 CWS review, narrowed hosts, justification | NOT VERIFIABLE HERE | `manifest.template.json:7-19,24`; justification `DEPLOY.md:107-112`. `https://longhand.app/*` in `host_permissions` (line 18) is unnecessary for `externally_connectable`; remove it. |
+| 10 CWS review, narrowed hosts, justification | NOT VERIFIABLE HERE | `manifest.template.json:7-19,24`; justification `DEPLOY.md:107-112`. `https://trail.app/*` in `host_permissions` (line 18) is unnecessary for `externally_connectable`; remove it. |
 | 11 No body logging, CI grep | **PASS / no CI** | `test_privacy.py:97-110`. The folder is not a git repository; there is no CI. |
 
 ## 3. Product judgement
@@ -67,16 +67,16 @@ Bundle: 130 KB gzip is under the 200 KB §7 budget with React, router, Framer Mo
 
 ## 5. Fixes, in priority order
 
-1. **BLOCKER** `web/src/lib/verify.ts`, `web/src/app/Verify.tsx`: fetch `/v1/public-key` (and `/v1/transparency`) and add a check "signed by Longhand's key" that FAILs on any other key; show the key id. Fix `HowItWorks.tsx:148` to match.
+1. **BLOCKER** `web/src/lib/verify.ts`, `web/src/app/Verify.tsx`: fetch `/v1/public-key` (and `/v1/transparency`) and add a check "signed by Trail's key" that FAILs on any other key; show the key id. Fix `HowItWorks.tsx:148` to match.
 2. **BLOCKER** `web/src/marketing/pages/Privacy.tsx`, `tests/test_privacy.py:89-92`: generate `STORED_TABLES` from `schema_description()` (write a JSON at build time) and make the test compare every column, not table names. Fix the 15/30-minute, fonts, "every server row" and "7 days" sentences.
 3. **BLOCKER** `extension/src/background.js:215`, `trail/server/app.py:115`, `store.py:368-371`: stop sending and storing titles; drop `docs.title` in a migration. Reword "random id" to "the editor's document id" in `HowItWorks.tsx:110` and `Privacy.tsx:34,56`.
 4. **BLOCKER** `trail/server/app.py:302-309`: delete `/v1/signup` and its test; the CLI can use a magic link.
-5. **BLOCKER** `trail/server/app.py:153-158`, `settings.py`: when `APP_URL` is https, refuse to start unless `SESSION_SECRET` is non-default, `LONGHAND_SIGNING_KEY` is set and `RESEND_API_KEY` is set. Never log a magic link outside dev.
+5. **BLOCKER** `trail/server/app.py:153-158`, `settings.py`: when `APP_URL` is https, refuse to start unless `SESSION_SECRET` is non-default, `TRAIL_SIGNING_KEY` is set and `RESEND_API_KEY` is set. Never log a magic link outside dev.
 6. **BLOCKER** `web/src/marketing/pages/Home.tsx:186-207`: remove the placeholder testimonials; also drop "Share the replay with a friend" (`:76`).
 7. **LATER** `trail/server/app.py:273-286`: move the token out of the GET query string (redirect to `/login/confirm#token=…`, SPA POSTs to a consume endpoint). Protects against link-scanning university mail gateways and edge logs.
 8. **LATER** `trail/server/store.py:260-277`, `app.py:248-263`: count an activation only if the user has at least one checkpoint; strip `+tags` when normalising emails; per-IP limit on `/v1/auth/request`; stop returning `created` (enumeration).
 9. **LATER** `trail/server/app.py:320`: compute `refundable` from the latest paid charge, not the subscription row's age, so renewals honour "any charge within 14 days".
-10. **LATER** Self-host the three fonts (`index.html:31-36`, `tokens.css:9`, `components.tsx:234`); remove `https://longhand.app/*` from `host_permissions` (`manifest.template.json:18`); delete `EXTENSION_ORIGINS`; replace "prove/provable"; put price and renewal date on the paywall buttons (`AppShell.tsx:155,164`); move the trial-days line out of the rail; add "text snapshots" to the on-device list; start the trial server-side on first `/v1/pack` too.
+10. **LATER** Self-host the three fonts (`index.html:31-36`, `tokens.css:9`, `components.tsx:234`); remove `https://trail.app/*` from `host_permissions` (`manifest.template.json:18`); delete `EXTENSION_ORIGINS`; replace "prove/provable"; put price and renewal date on the paywall buttons (`AppShell.tsx:155,164`); move the trial-days line out of the rail; add "text snapshots" to the on-device list; start the trial server-side on first `/v1/pack` too.
 
 ## 6. Decision
 

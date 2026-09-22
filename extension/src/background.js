@@ -25,7 +25,7 @@ async function resolveDoc(editorId, editor, host) {
   if (aliases.has(editorId)) return aliases.get(editorId);
   let doc = (await db.byIndex("docs", "editorId", editorId))[0];
   if (!doc) {
-    doc = { id: "lh_" + uuid().replace(/-/g, ""), editorId, editor, host, title: null, created: nowTs(), events: 0, typed: 0, pasted: 0, deleted: 0, words: 0 };
+    doc = { id: "tr_" + uuid().replace(/-/g, ""), editorId, editor, host, title: null, created: nowTs(), events: 0, typed: 0, pasted: 0, deleted: 0, words: 0 };
     await db.put("docs", doc);
   }
   aliases.set(editorId, doc.id);
@@ -130,7 +130,7 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
 });
 
 // ---- messages from the web app (externally_connectable) ------------------------------------------
-// Events never leave this device except through this channel to the Longhand page itself.
+// Events never leave this device except through this channel to the Trail page itself.
 function originOf(sender) {
   if (sender.origin) return sender.origin;
   try { return new URL(sender.url).origin; } catch { return null; }

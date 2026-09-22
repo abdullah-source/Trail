@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 
-/* Longhand design system components. See web/DESIGN.md. */
+/* Trail design system components. See web/DESIGN.md. */
 
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ');
 export const CHROME_STORE_URL = 'https://chromewebstore.google.com/';
@@ -68,9 +68,9 @@ export function Mark({ size = 20, className }: { size?: number; className?: stri
 
 export function Wordmark({ to = '/', className }: { to?: string; className?: string }) {
   return (
-    <Link to={to} aria-label="Longhand home" className={cx('inline-flex items-center gap-2 text-ink', className)}>
+    <Link to={to} aria-label="Trail home" className={cx('inline-flex items-center gap-2 text-ink', className)}>
       <Mark size={22} />
-      <span className="display text-[22px] leading-none">Longhand</span>
+      <span className="display text-[22px] leading-none">Trail</span>
     </Link>
   );
 }
@@ -78,7 +78,7 @@ export function Wordmark({ to = '/', className }: { to?: string; className?: str
 /* ------------------------------------------------------------ Theme toggle */
 
 type Pref = 'system' | 'light' | 'dark';
-const THEME_KEY = 'longhand.theme';
+const THEME_KEY = 'trail.theme';
 
 function applyTheme(pref: Pref) {
   const dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
@@ -215,7 +215,7 @@ export function Footer() {
             <Eyebrow tick={false}>Trust</Eyebrow>
             <Link className={a} to="/privacy">Privacy</Link>
             <Link className={a} to="/terms">Terms</Link>
-            <a className={a} href="mailto:hello@longhand.app">hello@longhand.app</a>
+            <a className={a} href="mailto:hello@trail.app">hello@trail.app</a>
           </div>
           <div className={col}>
             <Eyebrow tick={false}>Account</Eyebrow>
@@ -223,7 +223,7 @@ export function Footer() {
             <a className={a} href={CHROME_STORE_URL} target="_blank" rel="noreferrer">Add to Chrome</a>
           </div>
         </nav>
-        <p className="md:col-span-12 font-mono text-xs text-ink-soft">2026 Longhand. Built for students, not against them.</p>
+        <p className="md:col-span-12 font-mono text-xs text-ink-soft">2026 Trail. Built for students, not against them.</p>
       </div>
     </footer>
   );
@@ -399,9 +399,9 @@ export function Disclosure({ q, children }: { q: string; children: ReactNode }) 
   );
 }
 
-/** Sets document.title as "Page · Longhand" (or the tagline on the home page). */
+/** Sets document.title as "Page · Trail" (or the tagline on the home page). */
 export function useTitle(page?: string) {
   useEffect(() => {
-    document.title = page ? `${page} · Longhand` : 'Longhand — See how you write.';
+    document.title = page ? `${page} · Trail` : 'Trail — See how you write.';
   }, [page]);
 }

@@ -1,4 +1,4 @@
-// Bridge to the Longhand Chrome extension over chrome.runtime.sendMessage(EXTENSION_ID, ...)
+// Bridge to the Trail Chrome extension over chrome.runtime.sendMessage(EXTENSION_ID, ...)
 // (externally_connectable). Events never touch the server: the app reads them here.
 import type { Checkpoint, Essay, ExtensionStatus, TrailEvent } from './types';
 
@@ -9,10 +9,16 @@ declare global {
 }
 
 /** Extension id: set VITE_EXTENSION_ID at build time (Chrome Web Store id). For unpacked
- *  dev builds, `localStorage.longhand_extension_id` overrides it. */
+ *  dev builds the popup opens the app with `?ext=<id>`, which is remembered in
+ *  `localStorage.trail_extension_id` (settable by hand too). */
 export function extensionId(): string | null {
   try {
-    const local = localStorage.getItem('longhand_extension_id');
+    const fromUrl = new URLSearchParams(location.search).get('ext');
+    if (fromUrl && /^[a-p]{32}$/.test(fromUrl)) {
+      localStorage.setItem('trail_extension_id', fromUrl);
+      return fromUrl;
+    }
+    const local = localStorage.getItem('trail_extension_id');
     if (local) return local;
   } catch {
     /* storage may be unavailable */

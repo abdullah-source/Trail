@@ -5,11 +5,11 @@ const SECTIONS: { code: string; label: string; title: string; body: React.ReactN
   {
     code: '00:03',
     label: 'Service',
-    title: 'What Longhand is',
+    title: 'What Trail is',
     body: (
       <>
-        <p>Longhand is a browser extension and a web app that keep a record of how you write, on your device, and sign fingerprints of that record on our server. The details of what is stored where are on the <Link to="/privacy" className="link">privacy page</Link> and the <Link to="/how-it-works" className="link">how it works page</Link>; both are part of these terms.</p>
-        <p>Longhand does not detect AI writing, grade your work, or judge its content. The record shows what happened in the editor and nothing else.</p>
+        <p>Trail is a browser extension and a web app that keep a record of how you write, on your device, and sign fingerprints of that record on our server. The details of what is stored where are on the <Link to="/privacy" className="link">privacy page</Link> and the <Link to="/how-it-works" className="link">how it works page</Link>; both are part of these terms.</p>
+        <p>Trail does not detect AI writing, grade your work, or judge its content. The record shows what happened in the editor and nothing else.</p>
       </>
     ),
   },
@@ -30,7 +30,7 @@ const SECTIONS: { code: string; label: string; title: string; body: React.ReactN
     title: 'Trial, payment, refunds',
     body: (
       <>
-        <p>While Longhand is in early access every account has every feature free, with no card and no trial clock; the pricing page says so whenever that is the case, and we give at least 30 days' notice by email before any charging begins. Once pricing is on, every account starts with a 14-day trial of all features, no card needed. After it, the views (replay, sessions, patterns, declaration, evidence packs) require a paid plan: $12 every four months or $3.99 a month, in US dollars, billed by Stripe. Recording, local storage, raw export and checkpoint signing never require payment.</p>
+        <p>While Trail is in early access every account has every feature free, with no card and no trial clock; the pricing page says so whenever that is the case, and we give at least 30 days' notice by email before any charging begins. Once pricing is on, every account starts with a 14-day trial of all features, no card needed. After it, the views (replay, sessions, patterns, declaration, evidence packs) require a paid plan: $12 every four months or $3.99 a month, in US dollars, billed by Stripe. Recording, local storage, raw export and checkpoint signing never require payment.</p>
         <p>Plans renew automatically. We email you seven days before every renewal. You can cancel at any time in one click; your plan then runs to the end of the paid period. Any charge is refunded in full if you ask within 14 days of it, with one click in Settings. We may change prices with 30 days' notice by email; a price change never applies to a period you have already paid for.</p>
         <p>Referral credit (one free semester per three invited friends who complete a first replay, up to three semesters) is added to your account automatically and has no cash value.</p>
       </>
@@ -54,7 +54,7 @@ const SECTIONS: { code: string; label: string; title: string; body: React.ReactN
     title: 'What you agree not to do',
     body: (
       <>
-        <p>Do not use Longhand to record someone else's writing without their knowledge. Do not tamper with the extension, the record or a pack and present it as genuine. Do not attack, probe or overload the service. Do not resell access.</p>
+        <p>Do not use Trail to record someone else's writing without their knowledge. Do not tamper with the extension, the record or a pack and present it as genuine. Do not attack, probe or overload the service. Do not resell access.</p>
         <p>If you do any of these we may close your account. Your local record still belongs to you.</p>
       </>
     ),
@@ -76,8 +76,8 @@ const SECTIONS: { code: string; label: string; title: string; body: React.ReactN
     title: 'Changes, ending, contact',
     body: (
       <>
-        <p>We may update these terms. If a change matters to you, we email you at least 14 days before it takes effect, and you can close your account before then with a refund of any unused period. We may stop offering Longhand; if we do, you get at least 60 days' notice, the verification page stays up for at least a year, and your local record and packs keep working, because verification does not depend on us.</p>
-        <p>These terms are governed by the laws of the State of Delaware, United States, without regard to conflict of law rules. Questions: <a href="mailto:hello@longhand.app" className="link">hello@longhand.app</a>.</p>
+        <p>We may update these terms. If a change matters to you, we email you at least 14 days before it takes effect, and you can close your account before then with a refund of any unused period. We may stop offering Trail; if we do, you get at least 60 days' notice, the verification page stays up for at least a year, and your local record and packs keep working, because verification does not depend on us.</p>
+        <p>These terms are governed by the laws of the State of Delaware, United States, without regard to conflict of law rules. Questions: <a href="mailto:hello@trail.app" className="link">hello@trail.app</a>.</p>
       </>
     ),
   },
@@ -88,7 +88,7 @@ export default function Terms() {
   return (
     <>
       <Section flush code="00:00" label="Terms">
-        <Heading as="h1" eyebrow="Terms of service" title="Short, because there is not much to say." lede="These are the terms for using Longhand. Plain English, no surprises. Last updated 21 September 2026." />
+        <Heading as="h1" eyebrow="Terms of service" title="Short, because there is not much to say." lede="These are the terms for using Trail. Plain English, no surprises. Last updated 21 September 2026." />
       </Section>
       {SECTIONS.map((s) => (
         <Section key={s.code} code={s.code} label={s.label}>

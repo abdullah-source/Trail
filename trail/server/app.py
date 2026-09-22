@@ -1,4 +1,4 @@
-"""Longhand API and static server.
+"""Trail API and static server.
 
     uvicorn trail.server.app:create_app --factory --host 0.0.0.0 --port $PORT
 
@@ -40,8 +40,8 @@ from trail.server.models import schema_description
 from trail.server.settings import Settings
 from trail.server.store import Store, aware, iso, utcnow
 
-log = logging.getLogger("longhand.api")
-SESSION_COOKIE = "lh_session"
+log = logging.getLogger("trail.api")
+SESSION_COOKIE = "trail_session"
 SESSION_MAX_AGE = 90 * 24 * 3600
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -50,7 +50,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def load_signer(settings: Settings) -> Signer:
-    """LONGHAND_SIGNING_KEY holds the PEM itself (Railway variables), TRAIL_SIGNING_KEY a path.
+    """TRAIL_SIGNING_KEY holds the PEM itself (Railway variables), TRAIL_SIGNING_KEY_PATH a path.
     Without either, a key is generated once and kept in the data dir (local dev only)."""
     if settings.signing_key_pem:
         pem = settings.signing_key_pem.replace("\\n", "\n").strip()
@@ -63,7 +63,7 @@ def load_signer(settings: Settings) -> Signer:
     p.write_bytes(s.to_pem())
     os.chmod(p, 0o600)
     (p.parent / "signing-key.pub.pem").write_bytes(s.public_key.to_pem())
-    log.warning("generated a new signing key at %s; set LONGHAND_SIGNING_KEY in production", p)
+    log.warning("generated a new signing key at %s; set TRAIL_SIGNING_KEY in production", p)
     return s
 
 
@@ -177,7 +177,7 @@ def create_app(
         except ImportError:
             log.warning("SENTRY_DSN set but sentry-sdk is not installed")
 
-    app = FastAPI(title="Longhand API", version=__version__, docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="Trail API", version=__version__, docs_url=None, redoc_url=None, openapi_url=None)
     app.state.store = store
     app.state.signer = signer
     app.state.settings = settings
@@ -437,7 +437,7 @@ def create_app(
             if req.format == "record":
                 with tempfile.TemporaryDirectory() as tmp:
                     safe = re.sub(r"[^A-Za-z0-9_-]+", "-", (req.title or evs[0].doc[:12])).strip("-") or "essay"
-                    path = Path(tmp) / f"{safe[:60]}.longhand.tar.gz"
+                    path = Path(tmp) / f"{safe[:60]}.trail.tar.gz"
                     build_record(path, events=evs, checkpoints=cps, verifier=signer.public_key, signer=signer, pack=p)
                     data = path.read_bytes()
                 return Response(data, media_type="application/gzip", headers={"Content-Disposition": f'attachment; filename="{path.name}"'})
@@ -449,7 +449,7 @@ def create_app(
 
     def need_billing() -> None:
         if settings.free_access:
-            raise HTTPException(409, "Longhand is free during early access. There is nothing to buy.")
+            raise HTTPException(409, "Trail is free during early access. There is nothing to buy.")
         if not gateway.configured:
             raise HTTPException(503, "Billing is not configured on this server yet.")
 

@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Longhand — See how you write.</title>
-    <meta name="description" content="Longhand is a free browser extension that keeps your own record of how each essay gets written: every draft, every session, every source. Replay your essay, see your patterns, and get an honest AI-use statement." />
+    <title>Trail — See how you write.</title>
+    <meta name="description" content="Trail is a free browser extension that keeps your own record of how each essay gets written: every draft, every session, every source. Replay your essay, see your patterns, and get an honest AI-use statement." />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F7F4EC" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141210" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Longhand" />
-    <meta property="og:title" content="Longhand — See how you write." />
+    <meta property="og:site_name" content="Trail" />
+    <meta property="og:title" content="Trail — See how you write." />
     <meta property="og:description" content="A time-lapse of your essay growing, your writing patterns, and an honest AI-use statement written from what actually happened. Text never leaves your device." />
     <meta property="og:image" content="/og.svg" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -20,7 +20,7 @@
       // Resolve the theme before first paint so there is no flash. Mirrors ThemeToggle.
       (function () {
         try {
-          var pref = localStorage.getItem('longhand.theme') || 'system';
+          var pref = localStorage.getItem('trail.theme') || 'system';
           var dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
         } catch (e) {

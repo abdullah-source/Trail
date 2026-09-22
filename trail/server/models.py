@@ -1,4 +1,4 @@
-"""Server-side schema. This is the complete list of what Longhand stores about a user
+"""Server-side schema. This is the complete list of what Trail stores about a user
 (DECISIONS §6 /privacy must match it; /v1/schema exposes it and a test checks Alembic agrees).
 
 No table holds document text, events, sources or keystrokes. Checkpoints hold hashes only.

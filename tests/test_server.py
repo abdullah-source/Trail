@@ -17,12 +17,12 @@ from tests.test_pipeline import _doc
 def test_magic_link_round_trip_sets_cookie_and_redirects(client, mailer, store):
     r = client.post("/v1/auth/request", json={"email": "  Sam@Uni.example "})
     assert r.status_code == 200 and r.json() == {"sent": True}
-    assert mailer.sent[-1]["to"] == "sam@uni.example" and "Longhand" in mailer.sent[-1]["subject"]
+    assert mailer.sent[-1]["to"] == "sam@uni.example" and "Trail" in mailer.sent[-1]["subject"]
     token = magic_token(mailer)
 
     r = client.get("/v1/auth/callback", params={"token": token}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"].endswith("/app/welcome")  # first login
-    assert "lh_session=" in r.headers["set-cookie"] and "HttpOnly" in r.headers["set-cookie"]
+    assert "trail_session=" in r.headers["set-cookie"] and "HttpOnly" in r.headers["set-cookie"]
     me = client.get("/v1/me").json()
     assert me["email"] == "sam@uni.example" and me["plan"] == "trial" and me["entitled"] and me["trialStartedAt"] is None
 
@@ -78,7 +78,7 @@ def test_extension_token_checkpoint_and_pack(client, mailer, store, tmp_path):
     r = client.post("/v1/pack", json={"events": evs, "format": "html"}, headers=H)
     assert "Writing record" in r.text
     r = client.post("/v1/pack", json={"events": evs, "title": "My Essay", "format": "record"}, headers=H)
-    assert r.status_code == 200 and 'filename="My-Essay.longhand.tar.gz"' in r.headers["content-disposition"]
+    assert r.status_code == 200 and 'filename="My-Essay.trail.tar.gz"' in r.headers["content-disposition"]
     p = tmp_path / "r.tar.gz"
     p.write_bytes(r.content)
     from trail.record import verify_record
@@ -194,7 +194,7 @@ def test_static_spa(tmp_path, store, mailer, gateway):
     app = create_app(store=store, signer=Signer.generate(), settings=make_settings(), mailer=mailer, gateway=gateway, static_dir=static)
     with TestClient(app) as c:
         assert c.get("/").text == "<html>spa</html>"
-        assert c.get("/app/essays/lh_abc").text == "<html>spa</html>"
+        assert c.get("/app/essays/tr_abc").text == "<html>spa</html>"
         assert c.get("/assets/a.js").text == "js" and "immutable" in c.get("/assets/a.js").headers["cache-control"]
         assert c.get("/v1/nope").status_code == 404
         assert c.get("/../../etc/passwd").status_code in (200, 404)  # never escapes the static dir

@@ -1,10 +1,10 @@
-// Browser-side port of trail/verify.py for the public /verify page: unpacks a .longhand.tar.gz
+// Browser-side port of trail/verify.py for the public /verify page: unpacks a .trail.tar.gz
 // (or .trail.tar.gz) and checks manifest hashes, event hashes, chain links, checkpoint heads
 // and Ed25519 signatures (WebCrypto when the browser supports Ed25519; SKIP otherwise).
 //
-// The key inside the archive is never trusted on its own: with a TrustAnchor (Longhand's
+// The key inside the archive is never trusted on its own: with a TrustAnchor (Trail's
 // published public key and transparency log, fetched by the page from the same origin) the
-// verifier also checks that the archive was signed by Longhand's key and that every checkpoint
+// verifier also checks that the archive was signed by Trail's key and that every checkpoint
 // is in the public log. Without an anchor those checks are reported as SKIP, never PASS.
 import type { VerifyCheck, VerifyResult } from './types';
 import { canonical, GENESIS_HASH } from './canonical';
@@ -176,21 +176,21 @@ export async function verifyRecordBytes(data: Uint8Array, trust?: TrustAnchor): 
   const canSign = !!(verifier && verifier.verify);
   const sigBytes = get('manifest.sig.json');
 
-  // Is the key in the archive Longhand's key? Anyone can generate a key and sign a fabricated
+  // Is the key in the archive Trail's key? Anyone can generate a key and sign a fabricated
   // record with it, so this check decides what "Verified" means.
   if (trust) {
     if (!checkpoints.length && !sigBytes) {
-      r.fail("signed by Longhand's key", 'nothing in this archive carries a signature');
+      r.fail("signed by Trail's key", 'nothing in this archive carries a signature');
     } else if (!archivePem || !verifier) {
-      r.fail("signed by Longhand's key", 'the archive carries no usable public key');
+      r.fail("signed by Trail's key", 'the archive carries no usable public key');
     } else if (trust.publicKeyPem === null) {
-      r.skip("signed by Longhand's key", `could not fetch Longhand's public key from ${trust.origin}; compare key id ${verifier.keyId} with ${trust.origin}/v1/public-key yourself`);
+      r.skip("signed by Trail's key", `could not fetch Trail's public key from ${trust.origin}; compare key id ${verifier.keyId} with ${trust.origin}/v1/public-key yourself`);
     } else {
       const trusted = await loadVerifier(trust.publicKeyPem);
       if (trusted && trusted.keyId === verifier.keyId && normalisePem(trust.publicKeyPem) === normalisePem(archivePem)) {
-        r.ok("signed by Longhand's key", `key id ${verifier.keyId} matches ${trust.origin}/v1/public-key`);
+        r.ok("signed by Trail's key", `key id ${verifier.keyId} matches ${trust.origin}/v1/public-key`);
       } else {
-        r.fail("signed by Longhand's key", `the archive is signed by an unknown key (${verifier.keyId}); Longhand's key is ${trusted?.keyId ?? 'unavailable'}. Hashes and chains below may still be internally consistent, but this pack could have been made by anyone`);
+        r.fail("signed by Trail's key", `the archive is signed by an unknown key (${verifier.keyId}); Trail's key is ${trusted?.keyId ?? 'unavailable'}. Hashes and chains below may still be internally consistent, but this pack could have been made by anyone`);
       }
     }
   }
@@ -237,7 +237,7 @@ export async function verifyRecordBytes(data: Uint8Array, trust?: TrustAnchor): 
       } else {
         const logged = new Set(trust.transparency.map((e) => e.checkpoint_hash));
         const missing = checkpoints.filter((cp) => !logged.has(cp.hash ?? sha256Hex(canonical(cp.body))));
-        if (missing.length) r.fail('checkpoints in the public log', `${missing.length} of ${checkpoints.length} checkpoints are not in Longhand's transparency log`);
+        if (missing.length) r.fail('checkpoints in the public log', `${missing.length} of ${checkpoints.length} checkpoints are not in Trail's transparency log`);
         else r.ok('checkpoints in the public log', `all ${checkpoints.length} found in ${trust.origin}/v1/transparency`);
       }
     }

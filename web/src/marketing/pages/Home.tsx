@@ -37,7 +37,7 @@ export default function Home() {
               <h1 className="text-4xl sm:text-5xl">See how you write.</h1>
             </div>
             <p className="text-lg sm:text-xl text-ink-soft max-w-md">
-              Longhand keeps your own record of how each essay gets written: every draft, every session, every source you had open. Replay it. Learn your patterns. And if anyone ever questions your work, the record is already there.
+              Trail keeps your own record of how each essay gets written: every draft, every session, every source you had open. Replay it. Learn your patterns. And if anyone ever questions your work, the record is already there.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <ButtonLink to={CHROME_STORE_URL} external size="lg">
@@ -75,7 +75,7 @@ export default function Home() {
           <FadeUp inView>
             <Heading eyebrow="Replay your essay" title="Watch 2,000 words happen." lede="Your essay at 40 seconds a session. The sentence you rewrote four times. The paragraph that showed up at one in the morning. The paste from a source you then took apart." />
             <Prose className="mt-6">
-              <p>Most writing tools keep your final version. Longhand keeps the whole thing: what you typed, what you pasted, what you deleted, and when. Scrub it like a video, or just watch it once before you hand it in.</p>
+              <p>Most writing tools keep your final version. Trail keeps the whole thing: what you typed, what you pasted, what you deleted, and when. Scrub it like a video, or just watch it once before you hand it in.</p>
             </Prose>
           </FadeUp>
           <FadeUp inView delay={0.1}>
@@ -129,7 +129,7 @@ export default function Home() {
       <Section code="00:47" label="Declare">
         <div className="grid gap-10 md:grid-cols-2 md:gap-12 items-start">
           <FadeUp inView>
-            <Heading eyebrow="Declare AI use honestly" title="A statement written from what happened, not from memory." lede="More courses now ask you to declare how you used AI. Longhand drafts that statement from your record: which tools, how much, what survived. You edit it, you sign it." />
+            <Heading eyebrow="Declare AI use honestly" title="A statement written from what happened, not from memory." lede="More courses now ask you to declare how you used AI. Trail drafts that statement from your record: which tools, how much, what survived. You edit it, you sign it." />
             <Prose className="mt-6">
               <p>It says what the record shows and nothing more. If you retyped something by hand, the record cannot see that, and the statement says so. No detection, no score, no verdict.</p>
             </Prose>
@@ -154,7 +154,7 @@ export default function Home() {
       {/* ------------------------------------------------- accused */}
       <Section code="01:05" label="If asked">
         <FadeUp inView>
-          <Heading eyebrow="And if you're ever accused" title="You will not have to remember. You will have the record." lede="A false accusation is stressful because there is nothing to show. Longhand gives you something: an evidence pack you export in one click, that anyone can check without trusting us." />
+          <Heading eyebrow="And if you're ever accused" title="You will not have to remember. You will have the record." lede="A false accusation is stressful because there is nothing to show. Trail gives you something: an evidence pack you export in one click, that anyone can check without trusting us." />
         </FadeUp>
         <FadeUp inView delay={0.1} className="mt-10">
           <Card>
@@ -173,7 +173,7 @@ export default function Home() {
                 <dd className="mt-1 text-ink-soft">
                   A professor can drop the pack on{' '}
                   <Link to="/verify" className="link">
-                    longhand.app/verify
+                    trail.app/verify
                   </Link>{' '}
                   and check every hash and signature in their browser.
                 </dd>

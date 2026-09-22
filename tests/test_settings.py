@@ -1,4 +1,4 @@
-"""Production guard: an https APP_URL (or LONGHAND_ENV=production) refuses to boot without real
+"""Production guard: an https APP_URL (or TRAIL_ENV=production) refuses to boot without real
 secrets, and names the missing variable. Local http keeps the dev defaults."""
 from __future__ import annotations
 
@@ -13,26 +13,26 @@ from trail.server.settings import Settings
 from trail.server.store import Store
 
 GOOD = {
-    "APP_URL": "https://longhand.app",
+    "APP_URL": "https://trail.app",
     "SESSION_SECRET": "x" * 48,
-    "LONGHAND_SIGNING_KEY": Signer.generate().to_pem().decode(),
+    "TRAIL_SIGNING_KEY": Signer.generate().to_pem().decode(),
     "RESEND_API_KEY": "re_test",
 }
 
 
 def test_https_requires_secret_key_and_mailer(caplog):
-    s = Settings.from_env({"APP_URL": "https://longhand.app"})
+    s = Settings.from_env({"APP_URL": "https://trail.app"})
     assert s.production
     missing = s.missing_for_production()
-    assert [m.split(" ")[0] for m in missing] == ["SESSION_SECRET", "LONGHAND_SIGNING_KEY", "RESEND_API_KEY"]
+    assert [m.split(" ")[0] for m in missing] == ["SESSION_SECRET", "TRAIL_SIGNING_KEY", "RESEND_API_KEY"]
     caplog.set_level(logging.ERROR)
     with pytest.raises(RuntimeError) as e:
         create_app(store=Store("sqlite://"), settings=s, gateway=FakeGateway(), static_dir=None)
-    assert "SESSION_SECRET" in str(e.value) and "LONGHAND_SIGNING_KEY" in str(e.value) and "RESEND_API_KEY" in str(e.value)
+    assert "SESSION_SECRET" in str(e.value) and "TRAIL_SIGNING_KEY" in str(e.value) and "RESEND_API_KEY" in str(e.value)
     assert any("SESSION_SECRET" in r.getMessage() for r in caplog.records)
 
 
-@pytest.mark.parametrize("drop", ["SESSION_SECRET", "LONGHAND_SIGNING_KEY", "RESEND_API_KEY"])
+@pytest.mark.parametrize("drop", ["SESSION_SECRET", "TRAIL_SIGNING_KEY", "RESEND_API_KEY"])
 def test_each_variable_is_named(drop):
     env = {k: v for k, v in GOOD.items() if k != drop}
     with pytest.raises(RuntimeError) as e:
@@ -49,12 +49,12 @@ def test_dev_default_secret_is_refused_in_production():
 def test_production_boots_with_everything_set():
     app = create_app(store=Store("sqlite://"), settings=Settings.from_env(GOOD), gateway=FakeGateway(), static_dir=None)
     assert app.state.settings.secure_cookies and type(app.state.mailer).__name__ == "ResendMailer"
-    assert app.state.signer.public_key.key_id == Signer.from_pem(GOOD["LONGHAND_SIGNING_KEY"].encode()).public_key.key_id
+    assert app.state.signer.public_key.key_id == Signer.from_pem(GOOD["TRAIL_SIGNING_KEY"].encode()).public_key.key_id
 
 
-def test_longhand_env_flag_forces_the_guard():
+def test_trail_env_flag_forces_the_guard():
     with pytest.raises(RuntimeError):
-        create_app(store=Store("sqlite://"), settings=Settings.from_env({"APP_URL": "http://localhost:8100", "LONGHAND_ENV": "production"}), gateway=FakeGateway(), static_dir=None)
+        create_app(store=Store("sqlite://"), settings=Settings.from_env({"APP_URL": "http://localhost:8100", "TRAIL_ENV": "production"}), gateway=FakeGateway(), static_dir=None)
 
 
 def test_localhost_keeps_dev_defaults(tmp_path):
