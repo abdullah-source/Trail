@@ -1,0 +1,11 @@
+/* Engineering-owned styles. The palette, @theme mapping, base typography and the replay's
+   component classes (.marginal, .display, .essay, .caret, .prov-*, .range, .ruled, .link)
+   all live in src/design/tokens.css (design agent). Only what the app pages need on top of
+   that goes here. */
+
+@layer components {
+  /* the "…" essay menu is a <details>; hide the default disclosure triangle */
+  details > summary.list-none::-webkit-details-marker {
+    display: none;
+  }
+}

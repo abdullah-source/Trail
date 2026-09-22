@@ -1,0 +1,353 @@
+/* ---------------------------------------------------------------------------
+   Longhand design tokens. Owned by design (see web/DESIGN.md).
+   Engineering imports this file from src/index.css and never edits it.
+
+   Concept: a manuscript page. Light is paper under a desk lamp; dark is the
+   same desk at 1am. Typed text is plain ink. Pasted text is highlighter.
+   The pen (accent) is fountain-pen blue. The notebook margin is a thin red rule.
+--------------------------------------------------------------------------- */
+/* Fonts: self-hosted, see fonts.css (imported first from src/index.css). */
+
+:root {
+  /* surfaces */
+  --paper: #f2eee4;
+  --sheet: #fbf9f3;
+  --well: #e9e4d7;
+  /* text */
+  --ink: #18181b;
+  --ink-soft: #57534b;
+  --ink-faint: #7c776d; /* 3.8:1 — large or decorative text only */
+  /* lines */
+  --rule: #d8d2c4;
+  --rule-strong: #b4ac9c;
+  --margin: #b8422f; /* the notebook margin line; never body text */
+  /* provenance */
+  --typed: #1c6b4c;
+  --paste: #a84e0c;
+  --mixed: #7f6410;
+  --unobserved: #6e6a62;
+  --typed-wash: rgba(28, 107, 76, 0.1);
+  --paste-wash: rgba(255, 176, 44, 0.32); /* highlighter */
+  --paste-wash-soft: rgba(255, 176, 44, 0.16);
+  --unobserved-wash: rgba(110, 106, 98, 0.16);
+  /* pen */
+  --accent: #1e3ea3;
+  --accent-ink: #fbf9f3;
+  --accent-wash: rgba(30, 62, 163, 0.08);
+  /* misc */
+  --shadow: 0 1px 0 rgba(24, 24, 27, 0.04), 0 14px 36px -20px rgba(24, 24, 27, 0.28);
+  --focus: var(--accent);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121110;
+    --sheet: #1a1917;
+    --well: #22201d;
+    --ink: #ece7dc;
+    --ink-soft: #aba497;
+    --ink-faint: #7d776c;
+    --rule: #2c2925;
+    --rule-strong: #47433c;
+    --margin: #e0685a;
+    --typed: #63c08f;
+    --paste: #f0a050;
+    --mixed: #d9b54a;
+    --unobserved: #8c877b;
+    --typed-wash: rgba(99, 192, 143, 0.12);
+    --paste-wash: rgba(240, 160, 80, 0.3);
+    --paste-wash-soft: rgba(240, 160, 80, 0.15);
+    --unobserved-wash: rgba(140, 135, 123, 0.2);
+    --accent: #9fb5ff;
+    --accent-ink: #0f1424;
+    --accent-wash: rgba(159, 181, 255, 0.12);
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 18px 44px -22px rgba(0, 0, 0, 0.75);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #121110;
+  --sheet: #1a1917;
+  --well: #22201d;
+  --ink: #ece7dc;
+  --ink-soft: #aba497;
+  --ink-faint: #7d776c;
+  --rule: #2c2925;
+  --rule-strong: #47433c;
+  --margin: #e0685a;
+  --typed: #63c08f;
+  --paste: #f0a050;
+  --mixed: #d9b54a;
+  --unobserved: #8c877b;
+  --typed-wash: rgba(99, 192, 143, 0.12);
+  --paste-wash: rgba(240, 160, 80, 0.3);
+  --paste-wash-soft: rgba(240, 160, 80, 0.15);
+  --unobserved-wash: rgba(140, 135, 123, 0.2);
+  --accent: #9fb5ff;
+  --accent-ink: #0f1424;
+  --accent-wash: rgba(159, 181, 255, 0.12);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 18px 44px -22px rgba(0, 0, 0, 0.75);
+  color-scheme: dark;
+}
+
+/* Tailwind v4 theme: every utility below resolves to a variable, so
+   `bg-paper text-ink` is right in both themes without dark: variants. */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-well: var(--well);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-margin: var(--margin);
+  --color-typed: var(--typed);
+  --color-paste: var(--paste);
+  --color-mixed: var(--mixed);
+  --color-unobserved: var(--unobserved);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+
+  --font-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-display: var(--font-serif);
+  --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* spacing scale: 4px base, sections breathe on 8/12/16 rhythm */
+  --spacing: 0.25rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+  --text-5xl: 4.25rem;
+
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --shadow-sheet: var(--shadow);
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern", "liga";
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.012em;
+    line-height: 1.08;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h1 {
+    font-variation-settings: "opsz" 72;
+  }
+  h2 {
+    font-variation-settings: "opsz" 48;
+  }
+  p {
+    text-wrap: pretty;
+    margin: 0;
+  }
+  a {
+    color: inherit;
+  }
+  ::selection {
+    background: var(--paste-wash);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* mono caps: the pencil note in the margin */
+  .marginal {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .display {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-variation-settings: "opsz" 72;
+    letter-spacing: -0.012em;
+  }
+  /* essay body text, the one place serif runs at reading size */
+  .essay {
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 16;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    text-decoration-color: var(--rule-strong);
+    transition: text-decoration-color 150ms var(--ease-out);
+  }
+  .link:hover {
+    text-decoration-color: var(--accent);
+  }
+  /* ruled paper: hairlines every 1.6em */
+  .ruled {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(1.6em - 1px),
+      var(--rule) calc(1.6em - 1px),
+      var(--rule) 1.6em
+    );
+    background-attachment: local;
+  }
+  .caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    vertical-align: -0.18em;
+    background: var(--accent);
+    margin-left: 1px;
+    animation: caret-blink 1s steps(2, start) infinite;
+  }
+  @keyframes caret-blink {
+    to {
+      visibility: hidden;
+    }
+  }
+  .prov-typed {
+    color: var(--ink);
+  }
+  .prov-paste {
+    background: var(--paste-wash);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    border-radius: 2px;
+    padding: 0.04em 0.08em;
+  }
+  .prov-paste-edited {
+    background: var(--paste-wash-soft);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    border-radius: 2px;
+    padding: 0.04em 0.08em;
+  }
+  .prov-unobserved {
+    background: var(--unobserved-wash);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    border-radius: 2px;
+  }
+  .strike {
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: var(--margin);
+    color: var(--ink-faint);
+  }
+  /* scrubber */
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 28px;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 2px;
+    background: var(--rule-strong);
+  }
+  .range::-moz-range-track {
+    height: 2px;
+    background: var(--rule-strong);
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--sheet);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .range::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--sheet);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .range:focus-visible {
+    outline: none;
+  }
+  .range:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 4px var(--accent-wash), 0 0 0 2px var(--accent);
+  }
+  .range:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 4px var(--accent-wash), 0 0 0 2px var(--accent);
+  }
+}
+
+/* scrubber with its track drawn by the component (progress + ticks) */
+.range.bare::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.range.bare::-moz-range-track {
+  background: transparent;
+}

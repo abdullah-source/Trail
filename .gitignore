@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# Local data and secrets (signing keys, SQLite) — never commit
+trail-data/
+.env
+.env.*
+!.env.example
+*.pem
+
+# Generated output
+backtest-out/
+demo-out/
+trail/server/static/
+
+# Web
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+web/.env.local
+
+# Extension build output
+extension/dist/
+extension/manifest.json
+
+# Tooling
+.gstack/
+**/.gstack/
+.DS_Store

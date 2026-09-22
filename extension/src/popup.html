@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+:root{color-scheme:light dark;--ink:#1b1917;--soft:#5e5850;--rule:#dad3c4;--paper:#fffdf8;--typed:#1f6b4a;--paste:#c2611e}
+@media(prefers-color-scheme:dark){:root{--ink:#ede7da;--soft:#a39c8f;--rule:#2e2924;--paper:#1c1915;--typed:#5dba8b;--paste:#e5924e}}
+body{font:13px/1.45 -apple-system,"Segoe UI",sans-serif;margin:0;padding:14px;width:288px;color:var(--ink);background:var(--paper)}
+h1{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:8px;font-family:Georgia,serif;font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--rule)}.dot.on{background:var(--typed)}.dot.paused{background:var(--paste)}
+.k{color:var(--soft);font-size:11.5px}.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--rule)}
+button{margin-top:8px;width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;background:transparent;color:inherit;cursor:pointer;font:inherit}
+button.p{background:var(--ink);color:var(--paper);border-color:var(--ink)}button:disabled{opacity:.5;cursor:default}
+textarea{width:100%;box-sizing:border-box;font:inherit;margin-top:8px;min-height:44px;border:1px solid var(--rule);border-radius:6px;padding:6px;background:transparent;color:inherit}
+#conn{margin-top:10px}
+</style></head><body>
+<h1><span class="dot" id="dot"></span>Longhand</h1>
+<div id="status" class="k">Checking this page…</div>
+<div id="stats"></div>
+<textarea id="note" placeholder="Used an AI tool for this document? Note it, e.g. 'ChatGPT: brainstormed the outline'." hidden></textarea>
+<button id="noteBtn" hidden>Add AI-use note</button>
+<button id="pause" hidden>Pause recording on this site</button>
+<button id="cp">Sign a checkpoint now</button>
+<button id="open" class="p">Open my writing record</button>
+<div id="conn" class="k"></div>
+<script type="module" src="popup.js"></script></body></html>

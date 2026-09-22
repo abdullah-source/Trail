@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trail"
+version = "0.1.0"
+description = "Longhand: a student's own writing record. Records how a document was written, signs it, and turns it into replays, patterns, honest AI-use declarations, and a verifiable evidence pack."
+requires-python = ">=3.11"
+dependencies = ["cryptography>=42"]
+
+[project.optional-dependencies]
+server = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "pydantic>=2", "sqlalchemy>=2.0", "alembic>=1.13",
+          "psycopg[binary]>=3.1", "stripe>=10", "httpx>=0.27", "python-multipart>=0.0.9"]
+dev = ["pytest>=8", "httpx>=0.27", "fastapi>=0.110", "uvicorn[standard]>=0.29", "sqlalchemy>=2.0", "alembic>=1.13",
+       "psycopg[binary]>=3.1", "stripe>=10"]
+sentry = ["sentry-sdk[fastapi]>=2"]
+
+[project.scripts]
+trail = "trail.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["trail*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

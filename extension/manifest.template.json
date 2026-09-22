@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Longhand — see how you write",
+  "version": "0.2.0",
+  "description": "Keeps your own record of how each essay gets written, on your device. Replay your drafts, see your patterns, and get an honest AI-use statement written from what actually happened.",
+  "permissions": ["storage", "alarms", "tabs"],
+  "host_permissions": [
+    "https://docs.google.com/document/*",
+    "https://www.notion.so/*",
+    "https://*.notion.site/*",
+    "https://word.cloud.microsoft/*",
+    "https://*.officeapps.live.com/*",
+    "https://*.sharepoint.com/*",
+    "https://*.instructure.com/*",
+    "https://*.moodle.org/*",
+    "https://*.blackboard.com/*",
+    "https://*.brightspace.com/*"
+  ],
+  "background": { "service_worker": "src/background.js", "type": "module" },
+  "action": { "default_popup": "src/popup.html", "default_title": "Longhand" },
+  "externally_connectable": { "matches": ["__APP_ORIGIN__/*"] },
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["src/copytrack.js"], "run_at": "document_start", "all_frames": true },
+    {
+      "matches": [
+        "https://docs.google.com/document/*",
+        "https://www.notion.so/*",
+        "https://*.notion.site/*",
+        "https://word.cloud.microsoft/*",
+        "https://*.officeapps.live.com/*",
+        "https://*.sharepoint.com/*",
+        "https://*.instructure.com/*",
+        "https://*.moodle.org/*",
+        "https://*.blackboard.com/*",
+        "https://*.brightspace.com/*"
+      ],
+      "js": ["src/recorder.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "icons": { "128": "icons/icon128.png" }
+}

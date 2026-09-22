@@ -1,0 +1,17 @@
+.git
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.egg-info
+trail-data
+backtest-out
+demo-out
+web/node_modules
+web/dist
+web/*.tsbuildinfo
+trail/server/static
+extension
+tests
+.env
+.env.*
+!web/.env.production
