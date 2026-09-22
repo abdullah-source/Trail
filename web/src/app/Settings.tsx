@@ -194,6 +194,11 @@ function ExtensionCard() {
             Get Trail for Chrome
           </ButtonLink>
         )}
+        {!installed && st.status === 'ready' && (
+          <p className="text-xs text-ink-soft self-center">
+            Already loaded it unpacked? Click the Trail icon in Chrome's toolbar, then "Open my writing record", so the app learns its id.
+          </p>
+        )}
         {installed && (
           <Button
             variant="secondary"

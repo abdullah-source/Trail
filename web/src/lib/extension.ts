@@ -11,13 +11,19 @@ declare global {
 /** Extension id: set VITE_EXTENSION_ID at build time (Chrome Web Store id). For unpacked
  *  dev builds the popup opens the app with `?ext=<id>`, which is remembered in
  *  `localStorage.trail_extension_id` (settable by hand too). */
-export function extensionId(): string | null {
+// Capture ?ext=<id> the moment the app loads, before the router can redirect (e.g. to /login)
+// and drop the query string.
+(() => {
   try {
     const fromUrl = new URLSearchParams(location.search).get('ext');
-    if (fromUrl && /^[a-p]{32}$/.test(fromUrl)) {
-      localStorage.setItem('trail_extension_id', fromUrl);
-      return fromUrl;
-    }
+    if (fromUrl && /^[a-p]{32}$/.test(fromUrl)) localStorage.setItem('trail_extension_id', fromUrl);
+  } catch {
+    /* storage may be unavailable */
+  }
+})();
+
+export function extensionId(): string | null {
+  try {
     const local = localStorage.getItem('trail_extension_id');
     if (local) return local;
   } catch {
