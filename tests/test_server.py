@@ -218,3 +218,29 @@ def test_free_access_mode_has_no_trial_clock_and_nothing_to_buy(store, mailer, g
         assert client.post("/v1/pack", json={"events": [e.to_dict() for e in d["events"]]}).status_code == 200
         r = client.post("/v1/billing/checkout", json={"plan": "semester"})
         assert r.status_code == 409 and "free" in r.json()["detail"]
+
+
+def test_clerk_sign_in_exchanges_a_verified_token_for_our_session(store, mailer, gateway, tmp_path):
+    from trail.server.clerk import FakeClerk, frontend_api_from_publishable_key
+
+    assert frontend_api_from_publishable_key("pk_test_Zm9vLmNsZXJrLmFjY291bnRzLmRldiQ") == "https://foo.clerk.accounts.dev"
+    assert frontend_api_from_publishable_key("garbage") is None
+    clerk = FakeClerk(tokens={"tok_good_1234567890abcdef": "Student@Uni.Example"})
+    settings = make_settings(TRAIL_DATA_DIR=str(tmp_path / "data"))
+    app = create_app(store=store, signer=Signer.generate(), settings=settings, mailer=mailer, gateway=gateway, static_dir=None, clerk=clerk)
+    with TestClient(app, base_url=APP_URL) as client:
+        assert client.get("/v1/config").json()["clerkPublishableKey"] == clerk.publishable_key
+        r = client.post("/v1/auth/clerk", json={"token": "tok_bad_1234567890abcdef"})
+        assert r.status_code == 401
+        r = client.post("/v1/auth/clerk", json={"token": "tok_good_1234567890abcdef"})
+        assert r.status_code == 200 and r.json()["first"] is True and "trail_session=" in r.headers["set-cookie"]
+        me = client.get("/v1/me").json()
+        assert me["email"] == "student@uni.example"
+        # second time: same account, not first
+        assert client.post("/v1/auth/clerk", json={"token": "tok_good_1234567890abcdef"}).json()["first"] is False
+        assert mailer.sent == []  # no magic link involved
+
+
+def test_clerk_endpoint_is_absent_when_not_configured(client):
+    assert client.get("/v1/config").json()["clerkPublishableKey"] is None
+    assert client.post("/v1/auth/clerk", json={"token": "tok_whatever_1234567890"}).status_code == 404

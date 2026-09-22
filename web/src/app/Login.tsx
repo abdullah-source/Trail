@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSiteConfig } from '../lib/config';
-import { Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { data } from '../lib/data';
 import { useAsync, usePageTitle } from '../components/useAsync';
 import { Button, Field, Marginal, Sheet, inputCls } from '../components/ui';
@@ -12,12 +12,74 @@ export default function Login() {
   const [params] = useSearchParams();
   const { code } = useParams();
   const me = useAsync(() => data.me(), []);
+  const referral = params.get('ref') || code || undefined;
+  if (me.status === 'ready' && me.value) return <Navigate to="/app" replace />;
+  if (cfg.clerkPublishableKey && me.status === 'ready') return <ClerkLogin referral={referral} freeAccess={cfg.freeAccess} />;
+  return <MagicLinkLogin referral={referral} freeAccess={cfg.freeAccess} expired={params.get('error') === 'expired'} />;
+}
+
+/** Clerk's hosted box (Google, email code). Once Clerk has a session, its token is exchanged
+ *  for our own httpOnly cookie; Clerk never learns anything about the writing record. */
+function ClerkLogin({ referral, freeAccess }: { referral?: string; freeAccess: boolean }) {
+  const [Ui, setUi] = useState<null | typeof import('@clerk/clerk-react')>(null);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    import('@clerk/clerk-react').then((m) => setUi(() => m));
+  }, []);
+  if (!Ui) return <PublicShell><div className="max-w-md mx-auto text-sm text-ink-soft">Loading sign-in…</div></PublicShell>;
+  const { SignIn, useAuth } = Ui;
+  function Exchange() {
+    const { isSignedIn, getToken } = useAuth();
+    const started = useRef(false);
+    useEffect(() => {
+      if (!isSignedIn || started.current) return;
+      started.current = true;
+      (async () => {
+        try {
+          const token = await getToken();
+          if (!token) throw new Error('Clerk gave no session token.');
+          const r = await data.clerkSignIn(token, referral);
+          navigate(r.first ? '/app/welcome' : '/app?connect=1', { replace: true });
+        } catch (e) {
+          setError((e as Error).message);
+          started.current = false;
+        }
+      })();
+    }, [isSignedIn, getToken]);
+    return null;
+  }
+  return (
+    <PublicShell>
+      <div className="max-w-md mx-auto grid gap-4">
+        <Exchange />
+        <Sheet className="p-4 sm:p-6 grid gap-3">
+          <Marginal>Sign in</Marginal>
+          <h1 className="text-2xl">Sign in with Google or your email.</h1>
+          <p className="text-ink-soft text-sm">Any address works; .edu is not required. {freeAccess ? 'Free during early access, no card.' : '14-day trial, no card.'} Your writing never leaves your device.</p>
+          {referral && (
+            <p className="text-sm text-ink-soft">
+              Invited with code <span className="font-mono text-ink">{referral}</span>. Your first replay counts toward your friend's free semester.
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="text-sm text-paste">
+              {error}
+            </p>
+          )}
+          <div className="grid place-items-center">
+            <SignIn routing="hash" signUpUrl="/login" forceRedirectUrl="/login" />
+          </div>
+        </Sheet>
+      </div>
+    </PublicShell>
+  );
+}
+
+function MagicLinkLogin({ referral, freeAccess, expired }: { referral?: string; freeAccess: boolean; expired: boolean }) {
+  const cfg = { freeAccess };
   const [email, setEmail] = useState('');
   const [state, setState] = useState<{ kind: 'idle' } | { kind: 'busy' } | { kind: 'sent'; created: boolean } | { kind: 'error'; message: string }>({ kind: 'idle' });
-  const referral = params.get('ref') || code || undefined;
-  const expired = params.get('error') === 'expired';
-
-  if (me.status === 'ready' && me.value) return <Navigate to="/app" replace />;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();

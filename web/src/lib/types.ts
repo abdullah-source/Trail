@@ -190,4 +190,4 @@ export type VerifyResult = { ok: boolean; checks: VerifyCheck[] };
 export type ExtensionStatus = { installed: boolean; connected: boolean; version?: string };
 
 /** GET /v1/config: public, unauthenticated. Lets the marketing pages say the true thing about pricing. */
-export type SiteConfig = { freeAccess: boolean; billingConfigured: boolean; trialDays: number; signupOpen: boolean };
+export type SiteConfig = { freeAccess: boolean; billingConfigured: boolean; trialDays: number; signupOpen: boolean; clerkPublishableKey: string | null };

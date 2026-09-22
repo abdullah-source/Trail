@@ -82,9 +82,20 @@ export const data = {
     return api('/v1/auth/request', { method: 'POST', body: JSON.stringify({ email, referral: referral || null }) });
   },
 
+  /** Clerk: exchange Clerk's session token for our httpOnly session cookie. */
+  async clerkSignIn(token: string, referral?: string): Promise<{ user: string; first: boolean }> {
+    if (MOCK) return { user: 'mock', first: false };
+    return api('/v1/auth/clerk', { method: 'POST', body: JSON.stringify({ token, referral: referral || null }) });
+  },
+
   async logout(): Promise<void> {
     if (MOCK) return;
     await api('/v1/auth/logout', { method: 'POST' });
+    try {
+      await (window as any).Clerk?.signOut?.();
+    } catch {
+      /* Clerk not loaded */
+    }
   },
 
   /** First replay shown: start the 14-day clock (idempotent). */

@@ -10,6 +10,8 @@
     SIGNUP_OPEN             "1" (default) or "0": whether new emails may create accounts
     MAIL_TO_LOG             "1": run in production without an email provider; sign-in links are
                             written to the server log (early access only, read them with railway logs)
+    CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY   optional hosted sign-in (Google, email codes); with both
+                            set the web app shows Clerk's sign-in box and magic links become the fallback
     FREE_ACCESS             "1": every account has every feature, no trial clock, no paywall.
                             Defaults to "1" while STRIPE_SECRET_KEY is unset, "0" once it is set.
     TRAIL_ENV            "production" forces the production checks even on an http APP_URL
@@ -47,6 +49,8 @@ class Settings:
     app_url: str
     resend_api_key: str | None
     resend_from: str
+    clerk_publishable_key: str | None
+    clerk_secret_key: str | None
     stripe_secret_key: str | None
     stripe_webhook_secret: str | None
     stripe_price_semester: str | None
@@ -73,8 +77,8 @@ class Settings:
             missing.append("SESSION_SECRET (at least 32 random characters; the dev default hashes every session and token)")
         if not self.signing_key_pem:
             missing.append("TRAIL_SIGNING_KEY (PEM contents; without it a new key would be generated on every deploy)")
-        if not self.resend_api_key and not self.mail_to_log:
-            missing.append("RESEND_API_KEY (without it magic links are printed to the log instead of emailed; set MAIL_TO_LOG=1 to accept that on purpose)")
+        if not self.resend_api_key and not self.mail_to_log and not (self.clerk_publishable_key and self.clerk_secret_key):
+            missing.append("RESEND_API_KEY (without it magic links are printed to the log instead of emailed; set MAIL_TO_LOG=1 to accept that on purpose, or configure Clerk)")
         return missing
 
     def require_production_config(self) -> None:
@@ -97,6 +101,8 @@ class Settings:
             app_url=(e.get("APP_URL") or "http://localhost:8100").rstrip("/"),
             resend_api_key=e.get("RESEND_API_KEY") or None,
             resend_from=e.get("RESEND_FROM") or "Trail <hello@trail.app>",
+            clerk_publishable_key=e.get("CLERK_PUBLISHABLE_KEY") or None,
+            clerk_secret_key=e.get("CLERK_SECRET_KEY") or None,
             mail_to_log=(e.get("MAIL_TO_LOG") or "0") == "1",
             stripe_secret_key=e.get("STRIPE_SECRET_KEY") or None,
             stripe_webhook_secret=e.get("STRIPE_WEBHOOK_SECRET") or None,

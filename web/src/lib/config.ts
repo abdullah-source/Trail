@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import type { SiteConfig } from './types';
 import { API_BASE, MOCK } from './data';
 
-export const DEFAULT_CONFIG: SiteConfig = { freeAccess: true, billingConfigured: false, trialDays: 14, signupOpen: true };
+export const DEFAULT_CONFIG: SiteConfig = { freeAccess: true, billingConfigured: false, trialDays: 14, signupOpen: true, clerkPublishableKey: null };
 
 let cached: SiteConfig | null = null;
 let pending: Promise<SiteConfig> | null = null;

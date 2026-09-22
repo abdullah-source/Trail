@@ -83,6 +83,7 @@ export default function Privacy() {
         <Heading title="Who else touches anything" />
         <dl className="mt-6">
           <Row term="Stripe">Payments. They see your email and card. We see a customer id and a plan.</Row>
+          <Row term="Clerk">Sign-in, when enabled: they hold your email and how you signed in (Google or a code). They never see anything about your writing; we only ask them who you are.</Row>
           <Row term="Resend">Sends login links and renewal reminders to your email.</Row>
           <Row term="Railway">Hosts the server and the database, in the United States.</Row>
           <Row term="Fonts">Served from trail.app itself. Nothing on this site loads from Google or any other third party.</Row>

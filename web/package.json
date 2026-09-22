@@ -11,6 +11,7 @@
     "fixtures": "../../.venv/bin/python scripts/make_fixtures.py"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
     "framer-motion": "^11.11.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

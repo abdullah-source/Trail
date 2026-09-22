@@ -94,6 +94,16 @@ cookies are `Secure`, magic links use the right host, and the CSRF origin check 
    from the same image with schedule `0 9 * * *` and command `trail renewal-reminders`, sharing
    the same variables. It emails via Resend and marks each period so nobody is reminded twice.
 
+## 6a. Clerk (hosted sign-in, recommended before Resend)
+
+1. clerk.com → Create application → name "Trail" → enable **Email** (one-time code) and **Google**.
+2. API Keys → copy the publishable key (`pk_…`) and secret key (`sk_…`).
+3. Railway → Trail service → Variables: `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`. Redeploy.
+4. Clerk → Configure → Domains: add the app origin (the Railway URL, later the custom domain) so
+   its sign-in box is allowed to run there. The dev instance (`pk_test_`) already allows any origin.
+5. Check: `/v1/config` shows `clerkPublishableKey`; `/login` shows Clerk's box; after sign-in
+   `/v1/me` answers. `MAIL_TO_LOG` can then be removed (magic links become a fallback only).
+
 ## 6. Resend
 
 1. Domains → **Add domain** `trail.app`; add the DKIM/SPF (and optional DMARC) records it

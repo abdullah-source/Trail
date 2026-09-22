@@ -76,3 +76,9 @@ def test_mail_to_log_satisfies_the_mailer_check():
     del env["RESEND_API_KEY"]
     assert any("RESEND_API_KEY" in m for m in Settings.from_env(env).missing_for_production())
     assert Settings.from_env({**env, "MAIL_TO_LOG": "1"}).missing_for_production() == []
+
+
+def test_clerk_counts_as_a_sign_in_path_for_the_production_guard():
+    env = {**GOOD}
+    del env["RESEND_API_KEY"]
+    assert Settings.from_env({**env, "CLERK_PUBLISHABLE_KEY": "pk_test_x", "CLERK_SECRET_KEY": "sk_test_x"}).missing_for_production() == []

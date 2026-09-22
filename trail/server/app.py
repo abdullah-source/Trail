@@ -34,6 +34,7 @@ from trail.events import Event
 from trail.pack import build_pack, render_html
 from trail.record import build_record
 from trail.server import billing as billing_mod
+from trail.server.clerk import ClerkClient, ClerkVerifier
 from trail.server.billing import PLANS, FakeGateway, Gateway, StripeGateway, handle_webhook
 from trail.server.mail import ConsoleMailer, Mailer, ResendMailer, magic_link_message
 from trail.server.models import schema_description
@@ -106,6 +107,11 @@ def client_ip(request: Request) -> str:
 # ---- request models --------------------------------------------------------------------------------
 
 
+class ClerkSignIn(BaseModel):
+    token: str = Field(min_length=20, max_length=4096)
+    referral: str | None = Field(default=None, max_length=16)
+
+
 class AuthRequest(BaseModel):
     email: str = Field(max_length=254)
     referral: str | None = Field(default=None, max_length=16)
@@ -153,6 +159,7 @@ def create_app(
     mailer: Mailer | None = None,
     gateway: Gateway | None = None,
     static_dir: Path | None = None,
+    clerk: ClerkVerifier | None = None,
 ) -> FastAPI:
     settings = settings or Settings.from_env()
     if signup_open is not None:
@@ -165,6 +172,8 @@ def create_app(
     store.free_access = settings.free_access
     signer = signer or load_signer(settings)
     mailer = mailer or (ResendMailer(settings.resend_api_key, settings.resend_from) if settings.resend_api_key else ConsoleMailer())
+    if clerk is None:
+        clerk = ClerkClient(settings.clerk_publishable_key, settings.clerk_secret_key)
     if gateway is None:
         gateway = StripeGateway(settings.stripe_secret_key, settings.stripe_webhook_secret, settings.stripe_price_semester, settings.stripe_price_monthly)
     static = static_dir if static_dir is not None else default_static_dir()
@@ -250,7 +259,8 @@ def create_app(
     def config() -> dict[str, Any]:
         """Public, unauthenticated: what the marketing pages need to say the true thing about pricing."""
         return {"freeAccess": settings.free_access, "billingConfigured": gateway.configured,
-                "trialDays": settings.trial_days, "signupOpen": settings.signup_open}
+                "trialDays": settings.trial_days, "signupOpen": settings.signup_open,
+                "clerkPublishableKey": clerk.publishable_key if clerk.configured else None}
 
     @app.get("/v1/public-key")
     def public_key() -> Response:
@@ -311,6 +321,24 @@ def create_app(
             resp: Response = JSONResponse({"user": user.id, "token": store.create_api_token(user.id), "first": first})
         else:
             resp = RedirectResponse(f"{settings.app_url}/app/welcome" if first else f"{settings.app_url}/app?connect=1", status_code=303)
+        set_session_cookie(resp, session)
+        return resp
+
+    @app.post("/v1/auth/clerk")
+    def auth_clerk(req: ClerkSignIn, request: Request) -> Response:
+        """Exchange a verified Clerk session token for our session cookie. Clerk holds the
+        student's email and login method; the writing record never goes near it."""
+        if not clerk.configured:
+            raise HTTPException(404, "Clerk sign-in is not enabled on this server.")
+        email = clerk.email_for_token(req.token)
+        if not email:
+            raise HTTPException(401, "Clerk did not accept that sign-in. Try again.")
+        referrer = store.user_by_referral_code(req.referral) if req.referral else None
+        user, first = store.get_or_create_user(clean_email(email), referred_by=referrer.id if referrer else None, allow_create=settings.signup_open)
+        if not user:
+            raise HTTPException(403, "Sign-ups are closed right now.")
+        session = store.create_session(user.id)
+        resp: Response = JSONResponse({"user": user.id, "first": first})
         set_session_cookie(resp, session)
         return resp
 
