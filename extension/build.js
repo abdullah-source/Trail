@@ -24,7 +24,7 @@ if (!/^https?:\/\/[^/]+$/.test(origin)) {
   console.error(`APP_ORIGIN must be scheme + host only, e.g. https://trail.app (got ${origin})`);
   process.exit(1);
 }
-const extra = dev ? ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8100"] : [];
+const extra = dev ? ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8100", "http://127.0.0.1:8100"] : [];
 const origins = [origin, ...extra.filter((o) => o !== origin)];
 
 const template = JSON.parse(readFileSync(join(here, "manifest.template.json"), "utf8"));
