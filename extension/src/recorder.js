@@ -62,7 +62,41 @@
   let batch = null;               // {kind, pos, text|len, dts, t0, tLast}
   let lastActivity = 0;
   let sessionOpen = false;
+  let sessionSince = null;       // ms: when the current session's recording started
   let lastSnapshot = 0;
+
+  // ---- Google Docs: the editor is a canvas, so keystrokes alone cannot tell us what the
+  // document says. The document's own plain-text export (same origin, the user's session)
+  // is the truth we reconcile against: at session start, every few minutes, and shortly
+  // after anything we cannot follow keystroke by keystroke (undo, cut, word/line delete,
+  // deleting a selection, moving the caret with the mouse or arrow keys).
+  const gdocId = editor === "docs" ? docId.slice("gdoc:".length) : null;
+  const DOCS_MIN_FETCH_MS = 4000;
+  let docsBaseline = null;       // text fetched before the session opened
+  let docsFetchAt = 0;
+  let docsTimer = null;
+  let docsFetching = null;
+  async function docsText() {
+    const r = await fetch(`https://docs.google.com/document/d/${gdocId}/export?format=txt`, { credentials: "include", cache: "no-store" });
+    if (!r.ok) throw new Error("export " + r.status);
+    let t = await r.text();
+    if (t.charCodeAt(0) === 0xfeff) t = t.slice(1);
+    return t.replace(/\r\n/g, "\n").replace(/\n+$/, "");
+  }
+  function docsReconcile(delayMs) {
+    if (editor !== "docs") return Promise.resolve();
+    clearTimeout(docsTimer);
+    const wait = Math.max(delayMs || 0, DOCS_MIN_FETCH_MS - (Date.now() - docsFetchAt));
+    if (wait > 0) { docsTimer = setTimeout(() => docsReconcile(0), wait); return Promise.resolve(); }
+    if (docsFetching) return docsFetching;
+    docsFetchAt = Date.now();
+    docsFetching = docsText().then((actual) => {
+      if (!sessionOpen) { docsBaseline = actual; return; }
+      flush();
+      if (actual !== model) { send({ type: "event", kind: "resync", ts: Date.now(), data: { text: actual } }); model = actual; }
+    }).catch(() => {}).finally(() => { docsFetching = null; });
+    return docsFetching;
+  }
 
   function send(msg) { try { chrome.runtime.sendMessage({ ...msg, doc: docId, editor, host }); } catch {} }
 
@@ -78,8 +112,11 @@
       if (sessionOpen) send({ type: "session.end", reason: "idle" });
       send({ type: "session.start", data: { editor, host, title_hash: null, goal_words: null, goal_minutes: null } });
       sessionOpen = true;
-      model = rootText(root);
+      sessionSince = now;
+      // In Docs the hidden iframe holds only the current selection, never the document.
+      model = editor === "docs" ? (docsBaseline || "") : rootText(root);
       if (model) send({ type: "event", kind: "resync", ts: now, data: { text: model } });
+      if (editor === "docs" && docsBaseline === null) docsReconcile(0);
     }
     lastActivity = now;
   }
@@ -92,6 +129,7 @@
   // ---- events --------------------------------------------------------------------
   function onBeforeInput(e) {
     if (!root) return;
+    if (editor === "docs") return;  // Docs: keydown/paste/cut are the only path, so nothing is counted twice
     ensureSession();
     const now = Date.now();
     const t = e.inputType || "";
@@ -131,37 +169,68 @@
     }
   }
   // Google Docs does not fire beforeinput on its hidden iframe reliably; fall back to keydown/paste there.
+  const NAV_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown", "Tab"]);
+  function docsDelete(len, now) {
+    if (batch && batch.kind === "delete" && now - batch.tLast < BATCH_GAP_MS && len === 1) { batch.dts.push(now - batch.tLast); batch.len += 1; batch.tLast = now; }
+    else { flush(); batch = { kind: "delete", pos: -1, len, dts: [0], t0: now, tLast: now }; }
+    applyModel("delete", -1, len);
+  }
   function onKeyDown(e) {
     if (editor !== "docs" || !root) return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    ensureSession();
     const now = Date.now();
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      // Undo/redo, cut, word or line deletes, and shortcuts we cannot follow: let the export tell us.
+      if (/^[zyx]$/i.test(e.key) || e.key === "Backspace" || e.key === "Delete") { ensureSession(); flush(); docsReconcile(1200); }
+      return;
+    }
+    if (NAV_KEYS.has(e.key)) { flush(); if (sessionOpen) docsReconcile(2500); return; }
+    ensureSession();
+    // Docs mirrors the current selection into its hidden iframe; a non-empty selection is
+    // about to be replaced or removed by whatever key this is.
+    // Only trust it when it is really a piece of the document.
+    const selected = rootText(root).replace(/\n+$/, "");
+    const isSelection = selected.length > 0 && selected.length <= model.length && model.includes(selected);
+    const replacing = isSelection && (e.key.length === 1 || e.key === "Enter" || e.key === "Backspace" || e.key === "Delete");
+    if (replacing) { docsDelete(selected.length, now); docsReconcile(1500); }
     if (e.key.length === 1 || e.key === "Enter") {
       const text = e.key === "Enter" ? "\n" : e.key;
-      if (batch && batch.kind === "insert" && now - batch.tLast < BATCH_GAP_MS) { batch.dts.push(now - batch.tLast); batch.text += text; batch.tLast = now; }
+      if (!replacing && batch && batch.kind === "insert" && now - batch.tLast < BATCH_GAP_MS) { batch.dts.push(now - batch.tLast); batch.text += text; batch.tLast = now; }
       else { flush(); batch = { kind: "insert", pos: -1, text, dts: [0], t0: now, tLast: now }; }
       applyModel("insert", -1, text);
-    } else if (e.key === "Backspace" || e.key === "Delete") {
-      if (batch && batch.kind === "delete" && now - batch.tLast < BATCH_GAP_MS) { batch.dts.push(now - batch.tLast); batch.len += 1; batch.tLast = now; }
-      else { flush(); batch = { kind: "delete", pos: -1, len: 1, dts: [0], t0: now, tLast: now }; }
-      applyModel("delete", -1, 1);
+    } else if ((e.key === "Backspace" || e.key === "Delete") && !replacing) {
+      docsDelete(1, now);
     }
+  }
+  function onCutDocs() {
+    if (editor !== "docs" || !root) return;
+    ensureSession();
+    const selected = rootText(root).replace(/\n+$/, "");
+    if (selected.length && model.includes(selected)) docsDelete(selected.length, Date.now());
+    docsReconcile(1200);
+  }
+  function onMouseDownDocs() {
+    if (editor !== "docs" || !sessionOpen) return;
+    flush(); docsReconcile(2500);
   }
   function onPasteDocs(e) {
     if (editor !== "docs") return;
     ensureSession();
     const text = e.clipboardData && e.clipboardData.getData("text/plain");
     if (!text) return;
+    const selected = root ? rootText(root).replace(/\n+$/, "") : "";
+    if (selected.length && model.includes(selected)) docsDelete(selected.length, Date.now());
     flush();
     send({ type: "paste", ts: Date.now(), data: { pos: -1, text } });
     applyModel("insert", -1, text);
+    docsReconcile(1500);
   }
-  function snapshot(force) {
+  async function snapshot(force) {
     if (!root || !sessionOpen) return;
     const now = Date.now();
     if (!force && now - lastSnapshot < SNAPSHOT_MS) return;
     lastSnapshot = now;
     flush();
+    if (editor === "docs") await docsReconcile(0);
     const actual = rootText(root);
     if (positionsKnown && actual !== model) {
       // Something changed that we did not observe (undo, collaborator, autocorrect). Resync.
@@ -178,6 +247,8 @@
     d.addEventListener("beforeinput", onBeforeInput, true);
     d.addEventListener("keydown", onKeyDown, true);
     d.addEventListener("paste", onPasteDocs, true);
+    d.addEventListener("cut", onCutDocs, true);
+    if (editor === "docs") { document.addEventListener("mousedown", onMouseDownDocs, true); docsReconcile(0); }
     d.addEventListener("blur", () => { flush(); send({ type: "event", kind: "focus", ts: Date.now(), data: { state: "blur" } }); }, true);
     d.addEventListener("focus", () => send({ type: "event", kind: "focus", ts: Date.now(), data: { state: "focus" } }), true);
   }
@@ -187,6 +258,6 @@
   window.addEventListener("beforeunload", () => { flush(); snapshot(true); if (sessionOpen) send({ type: "session.end", reason: "unload" }); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) { flush(); snapshot(true); } });
   chrome.runtime.onMessage.addListener((m, _s, reply) => {
-    if (m.type === "status") reply({ recording: !!root, doc: docId, editor, chars: model.length, session: sessionOpen });
+    if (m.type === "status") reply({ recording: !!root, doc: docId, editor, chars: model.length, session: sessionOpen, since: sessionOpen ? sessionSince : null });
   });
 })();

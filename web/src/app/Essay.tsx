@@ -53,7 +53,10 @@ export default function EssayPage() {
         <div className="grid gap-1">
           <Marginal>{essay ? editorName(essay.editor) : 'Essay'}</Marginal>
           <span className="font-mono text-xs text-ink-soft tabular">
-            {fmtDateLong(a.first_event)} → {fmtDateLong(a.last_event)}
+            Recording started {fmtDateTime(a.first_event)}
+          </span>
+          <span className="font-mono text-xs text-ink-soft tabular">
+            Last edit {fmtDateTime(a.last_event)} · {a.sessions.length} session{a.sessions.length === 1 ? '' : 's'}
           </span>
         </div>
         <div className="flex flex-wrap items-start gap-4">

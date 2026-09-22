@@ -25,7 +25,8 @@ const send = (m) => new Promise((r) => chrome.runtime.sendMessage(m, (x) => r(x 
   if (st && st.recording) {
     dot.classList.add("on");
     status.textContent = `Recording in ${st.editor}. Everything stays on this device.`;
-    stats.innerHTML = `<div class="row"><span class="k">Document</span><span>${st.doc.slice(0, 18)}…</span></div><div class="row"><span class="k">Characters now</span><span>${st.chars.toLocaleString()}</span></div>`;
+    const since = st.since ? new Date(st.since).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : null;
+    stats.innerHTML = `<div class="row"><span class="k">Recording since</span><span>${since || "your next keystroke"}</span></div><div class="row"><span class="k">Characters now</span><span>${st.chars.toLocaleString()}</span></div>`;
     $("note").hidden = false; $("noteBtn").hidden = false;
     $("noteBtn").onclick = async () => {
       const note = $("note").value.trim(); if (!note) return;

@@ -6,7 +6,7 @@ import { timeline } from '../lib/analysis';
 import { useAsync, usePageTitle } from '../components/useAsync';
 import { Sparkline, ShareBar } from '../components/Sparkline';
 import { ButtonLink, EmptyState, ErrorNote, Loading, Marginal, SectionHead, Skeleton } from '../components/ui';
-import { editorName, num, relative } from '../components/format';
+import { editorName, fmtDateTime, num, relative } from '../components/format';
 import { CHROME_STORE_URL } from './shared';
 
 export default function Essays() {
@@ -68,7 +68,7 @@ function EssayRow({ essay }: { essay: Essay }) {
         <div className="min-w-0 grid gap-1">
           <span className="display text-lg leading-tight truncate">{essay.title || `Untitled ${editorName(essay.editor)} document`}</span>
           <span className="text-xs text-ink-soft tabular">
-            {editorName(essay.editor)} · {num(essay.words)} words · {essay.sessions} session{essay.sessions === 1 ? '' : 's'} · last {relative(essay.lastSeen)}
+            {editorName(essay.editor)} · {num(essay.words)} words · {essay.sessions} session{essay.sessions === 1 ? '' : 's'} · started {fmtDateTime(essay.firstSeen)} · last {relative(essay.lastSeen)}
           </span>
           <ShareBar typed={typedShare} className="max-w-[12rem]" />
         </div>

@@ -92,8 +92,11 @@ async function endSession(docId, reason, tsMs) {
 }
 
 // ---- messages from content scripts and the popup ------------------------------------------------
+// Messages from one page arrive in order but were handled concurrently, so a session.start
+// and the first event could race and mint two sessions (or two doc ids). Handle them one at a time.
+let queue = Promise.resolve();
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
-  (async () => {
+  const job = async () => {
     if (m.type === "copy") { lastCopy = { host: m.host, hash: m.hash, len: m.len, ts: m.ts, tab: sender.tab && sender.tab.id }; return; }
     if (m.type === "checkpointAll") return checkpointAll();
     if (m.type === "status.bg") { const { token } = await chrome.storage.local.get("token"); return { connected: !!token, paused: [...(await pausedHosts())] }; }
@@ -125,7 +128,8 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       return;
     }
     if (m.type === "ai.note") { await append(m.doc, "ai.note", { tool: m.tool, note: m.note }, Date.now()); return; }
-  })().then((result) => reply && reply({ ok: true, result })).catch((e) => reply && reply({ ok: false, error: String(e) }));
+  };
+  queue = queue.then(job, job).then((result) => reply && reply({ ok: true, result }), (e) => reply && reply({ ok: false, error: String(e) }));
   return true;
 });
 
