@@ -69,3 +69,10 @@ def test_free_access_defaults_to_on_until_stripe_is_configured():
     assert Settings.from_env({"APP_URL": "http://localhost", "STRIPE_SECRET_KEY": "sk_test_x"}).free_access is False
     assert Settings.from_env({"APP_URL": "http://localhost", "STRIPE_SECRET_KEY": "sk_test_x", "FREE_ACCESS": "1"}).free_access is True
     assert Settings.from_env({"APP_URL": "http://localhost", "FREE_ACCESS": "0"}).free_access is False
+
+
+def test_mail_to_log_satisfies_the_mailer_check():
+    env = {**GOOD}
+    del env["RESEND_API_KEY"]
+    assert any("RESEND_API_KEY" in m for m in Settings.from_env(env).missing_for_production())
+    assert Settings.from_env({**env, "MAIL_TO_LOG": "1"}).missing_for_production() == []
