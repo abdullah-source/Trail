@@ -1,7 +1,7 @@
 # Deploying Trail on Railway
 
 > **Live since 2026-09-22:** project `discerning-connection`, service `Trail`, deployed from GitHub `abdullah-source/Trail` main,
-> URL https://trail-production-36dc.up.railway.app, Postgres attached, free-access mode. Sign-in is Clerk (app `app_3JhjwVxdLj9PVWjj2VS6B3Rdyd4`,
+> URL https://trail-hmc.up.railway.app, Postgres attached, free-access mode. Sign-in is Clerk (app `app_3JhjwVxdLj9PVWjj2VS6B3Rdyd4`,
 > dev instance keys; the CLI is linked from `trail/`, keys pulled with `clerk env pull --file .env.clerk`). `MAIL_TO_LOG=1` keeps magic links as a log-only fallback. `/install` carries the waitlist and the unpacked zip
 > (`web/public/trail-extension.zip`, rebuild with `cd extension && node build.js --origin <APP_URL> --dev && zip -r ../web/public/trail-extension.zip manifest.json icons src`).
 > Signing key id `7f7bf4ea294207a7`; the private PEM is in the Railway variable `TRAIL_SIGNING_KEY` and in `trail-data/railway-signer.pem` on the founder's Mac.
