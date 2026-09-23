@@ -10,6 +10,10 @@ One Railway service runs the FastAPI API and serves the built web app; a Railway
 holds the (text-free) tables. Stripe and Resend are external. The Chrome extension is built
 from `extension/` for the app origin and submitted to the Chrome Web Store.
 
+## Demo records
+
+The server signs the six demo essays in `web/public/demo/` at boot and publishes the checkpoints to its transparency log, so `/demo` and `/verify?demo=<id>` pass on the live site. Regenerating demos (`python -m trail.demo_data --out web/public/demo`) changes their events; keep the same ids only if you accept that the old checkpoints will no longer match (the server logs a warning and lists the demo as `signed: false`). Prefer new ids (e.g. `demo-human-1b`) when regenerating after a deploy.
+
 ## 0. Before you start
 
 - A domain: `trail.app` (fallback `gettrail.app`).

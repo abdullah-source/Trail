@@ -2,7 +2,7 @@
 // the browser (lib/verify.ts). Nothing is uploaded. For a professor who does not trust us.
 // "Try it with a sample record" fetches a signed demo pack from this server; "Now tamper with
 // it" changes one event in memory and re-runs, so the visitor sees the chain break.
-import { useState, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { data } from '../lib/data';
 import type { VerifyCheck, VerifyResult } from '../lib/types';
@@ -92,6 +92,16 @@ export default function Verify() {
       setResult(await verifyRecordFiles(sample.files, sample.trust));
     });
 
+  // Arriving from the demo page ("Verify this record") runs the sample straight away.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (params.get('demo') && !autoRan.current) {
+      autoRan.current = true;
+      trySample();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setDrag(false);
@@ -158,7 +168,7 @@ export default function Verify() {
 
         {tamper && (
           <p className="text-sm max-w-prose border-l-2 border-paste pl-3" role="status">
-            We changed one letter in event <span className="font-mono">#{tamper.index + 1}</span> (<span className="font-mono">“{tamper.before.trim().slice(0, 24)}”</span> became <span className="font-mono">“{tamper.after.trim().slice(0, 24)}”</span>) and recomputed that event's own fingerprint, the way a careful forger would. The event looks fine on its own. The one after it still points at the old fingerprint, so the chain breaks there, and every signed checkpoint after it no longer matches.
+            We changed one letter in event <span className="font-mono">#{tamper.index + 1}</span> (<span className="font-mono">“{tamper.before.trim().slice(0, 24)}”</span> became <span className="font-mono">“{tamper.after.trim().slice(0, 24)}”</span>) and recomputed that event's own fingerprint, the way a careful forger would. The event looks fine on its own; the file's fingerprint and the link from the next event both give it away, and the check below names the exact spot.
           </p>
         )}
 
@@ -321,7 +331,7 @@ function verdict(r: VerifyResult, tampered: boolean): { text: string; tone: 'ok'
   }
   const key = r.checks.find((c) => c.name === "signed by Trail's key" && c.status === 'FAIL');
   if (key && !tampered) return { text: "This record was not signed by Trail's key. It could have been made by anyone.", tone: 'bad' };
-  if (s?.brokenAt) return { text: `This record was altered after event #${s.brokenAt.index + 1}${s.brokenAt.ts ? ` (${fmtDateTime(s.brokenAt.ts)})` : ''}.`, tone: 'bad' };
+  if (s?.brokenAt) return { text: `This record was altered at event #${s.brokenAt.index + 1}${s.brokenAt.ts ? ` (${fmtDateTime(s.brokenAt.ts)})` : ''}: the chain breaks there, and nothing after it can be trusted.`, tone: 'bad' };
   const n = r.checks.filter((c) => c.status === 'FAIL').length;
   return { text: `This record failed ${n} check${n === 1 ? '' : 's'}.`, tone: 'bad' };
 }

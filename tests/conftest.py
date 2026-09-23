@@ -42,7 +42,7 @@ def gateway() -> FakeGateway:
 @pytest.fixture
 def app(store, mailer, gateway, tmp_path):
     return create_app(store=store, signer=Signer.generate(), settings=make_settings(TRAIL_DATA_DIR=str(tmp_path / "data")),
-                      mailer=mailer, gateway=gateway, static_dir=None)
+                      mailer=mailer, gateway=gateway, static_dir=tmp_path / "no-static")  # not web/dist: it may hold demo files
 
 
 @pytest.fixture

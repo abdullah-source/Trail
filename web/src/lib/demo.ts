@@ -13,8 +13,8 @@ export type DemoTruth = {
   /** share of the final text that was typed, 0..1 */
   typed_share?: number | null;
   pasted_chars?: number | null;
-  /** host names the pastes came from, e.g. ["chatgpt.com"] */
-  paste_sources?: string[] | null;
+  /** the pastes' sources: host names, or objects with a host (the pipeline writes {host, kind, chars}) */
+  paste_sources?: (string | { host?: string | null; kind?: string; chars?: number })[] | null;
   /** true when the "typing" was produced by a script rather than a person */
   scripted?: boolean | null;
   [k: string]: unknown;
@@ -55,9 +55,9 @@ export const KIND_LABEL: Record<DemoKind, string> = {
 const ALIASES: Record<string, DemoKind> = {
   typed: 'typed', honest: 'typed', student: 'typed', human: 'typed',
   'ai-paste': 'ai-paste', ai: 'ai-paste', 'ai-pasted': 'ai-paste', pasted: 'ai-paste', chatgpt: 'ai-paste', 'heavy-paster': 'ai-paste', 'heavy-paste': 'ai-paste',
-  chunked: 'chunked', mixed: 'chunked', reworded: 'chunked', 'chunked-reword': 'chunked', 'chunks-reworded': 'chunked',
-  autotyped: 'autotyped', autotyper: 'autotyped', scripted: 'autotyped', bot: 'autotyped', 'jittered-bot': 'autotyped', script: 'autotyped',
-  'web-quotes': 'web-quotes', web: 'web-quotes', quotes: 'web-quotes', gapped: 'web-quotes', 'typed-web-quotes': 'web-quotes',
+  chunked: 'chunked', 'ai-chunks': 'chunked', 'ai-chunked': 'chunked', chunks: 'chunked', reworded: 'chunked', 'chunked-reword': 'chunked', 'chunks-reworded': 'chunked',
+  autotyped: 'autotyped', 'ai-autotyped': 'autotyped', autotyper: 'autotyped', scripted: 'autotyped', bot: 'autotyped', 'jittered-bot': 'autotyped', script: 'autotyped',
+  'web-quotes': 'web-quotes', web: 'web-quotes', quotes: 'web-quotes', mixed: 'web-quotes', gapped: 'web-quotes', 'typed-web-quotes': 'web-quotes',
 };
 
 /** Map whatever the manifest says to one of the five badge kinds. Unknown strings fall back to `typed`. */
@@ -69,6 +69,12 @@ export function demoKind(kind: string | undefined | null): DemoKind {
 export function kindLabel(kind: string | undefined | null): string {
   const k = demoKind(kind);
   return ALIASES[String(kind || '').toLowerCase().replace(/[_\s]+/g, '-')] ? KIND_LABEL[k] : kind || KIND_LABEL[k];
+}
+
+/** Host names from a manifest's paste_sources, whichever shape it uses. */
+export function sourceHosts(sources: DemoTruth['paste_sources']): string[] | null {
+  if (!Array.isArray(sources)) return null;
+  return [...new Set(sources.map((s) => (typeof s === 'string' ? s : s?.host || '')).filter(Boolean))];
 }
 
 export const DEMO_BASE = '/demo';

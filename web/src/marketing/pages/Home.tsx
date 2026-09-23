@@ -4,6 +4,7 @@ import { useSiteConfig } from '../../lib/config';
 import { WaitlistCard } from './Install';
 import { FadeUp, Stagger, StaggerItem } from '../../design/motion';
 import { ReplayHero } from '../../design/ReplayHero';
+import { TypedHeadline } from '../../design/TypedHeadline';
 import { Provenance, type ProvenanceLine, type ProvenancePaste } from '../../design/Provenance';
 
 /* Sample data for the evidence-pack section. Shapes match lib/analysis output. */
@@ -35,17 +36,17 @@ export default function Home() {
           <div className="lg:col-span-5 grid gap-6">
             <div className="grid gap-4">
               <Eyebrow>A free Chrome extension for students</Eyebrow>
-              <h1 className="text-4xl sm:text-5xl">See how you write.</h1>
+              <TypedHeadline />
             </div>
             <p className="text-lg sm:text-xl text-ink-soft max-w-md">
-              Trail keeps your own record of how each essay gets written: every draft, every session, every source you had open. Replay it. Learn your patterns. And if anyone ever questions your work, the record is already there.
+              Trail keeps your own record of how each essay gets written. Replay it. Learn your patterns. And if anyone ever questions your work, the record is already there.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <ButtonLink to={CHROME_STORE_URL} external size="lg">
-                Add to Chrome
+              <ButtonLink to="/demo" size="lg">
+                Watch a real essay replay
               </ButtonLink>
-              <ButtonLink to="/how-it-works" variant="ghost" size="lg">
-                How it works
+              <ButtonLink to={CHROME_STORE_URL} external variant="ghost" size="lg">
+                Add to Chrome
               </ButtonLink>
             </div>
             <p className="text-sm text-ink-soft">{cfg.freeAccess ? 'Free during early access. No card, no clock. Recording never locks.' : 'Free for 14 days, no card. Then $12 a semester. Recording never locks.'} Chrome Web Store listing in review; install today or get notified.</p>
@@ -85,6 +86,7 @@ export default function Home() {
                 <Eyebrow tick={false}>Sessions</Eyebrow>
                 <span className="font-mono text-xs text-ink-soft">4 sessions, 2h 55m</span>
               </div>
+              <p className="text-xs text-ink-soft mb-3">Each bar is one sitting: when it started and how many active minutes it lasted. Example record.</p>
               <ol className="grid gap-3">
                 {SESSIONS.map((s) => (
                   <li key={s.day + s.time} className="grid grid-cols-[3.5rem_1fr_3rem] items-center gap-3 font-mono text-xs text-ink-soft tabular">
@@ -111,16 +113,16 @@ export default function Home() {
         </FadeUp>
         <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-10">
           <StaggerItem>
-            <Stat label="Best hour" value="11 pm" detail="most words per minute" />
+            <Stat label="Best hour" value="11 pm" detail="most words per minute" info="The hour of the day, in your local time, in which you add the most words per active minute across all your essays." />
           </StaggerItem>
           <StaggerItem>
-            <Stat label="Median session" value="42 min" detail="before a break" />
+            <Stat label="Median session" value="42 min" detail="before a break" info="The middle value of your sessions' active minutes. A session ends after a long silence or when the editor is closed." />
           </StaggerItem>
           <StaggerItem>
-            <Stat label="Typed share" value="91%" detail="of final text, in your hand" tone="typed" />
+            <Stat label="Typed share" value="91%" detail="of final text, in your hand" tone="typed" info="Characters typed one at a time that survive in the final text, divided by the final length, across all your essays." />
           </StaggerItem>
           <StaggerItem>
-            <Stat label="Deleted" value="1.4k" detail="characters per page" />
+            <Stat label="Deleted" value="1.4k" detail="characters per page" info="Characters typed or pasted and later removed, per 500 words of final text. Rewriting shows up here." />
           </StaggerItem>
         </Stagger>
         <p className="font-mono text-[11px] text-ink-soft mt-4">Example numbers. Yours come from your own record after a few sessions.</p>
@@ -159,7 +161,8 @@ export default function Home() {
         </FadeUp>
         <FadeUp inView delay={0.1} className="mt-10">
           <Card>
-            <Provenance lines={SAMPLE_LINES} pastes={SAMPLE_PASTES} />
+            <Provenance lines={SAMPLE_LINES} pastes={SAMPLE_PASTES} animate />
+            <p className="text-xs text-ink-soft mt-3">Example record. One cell per line of the final essay; the table lists every paste with its source and how much of it survived.</p>
             <dl className="grid sm:grid-cols-3 gap-4 mt-8 pt-6 border-t border-rule text-sm">
               <div>
                 <dt className="marginal">Signed checkpoints</dt>
@@ -224,8 +227,11 @@ export default function Home() {
             <ButtonLink to={CHROME_STORE_URL} external size="lg">
               Add to Chrome
             </ButtonLink>
-            <span className="text-sm text-ink-soft">Chrome on a laptop. Works with Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard and Brightspace.</span>
+            <ButtonLink to="/demo" variant="ghost" size="lg">
+              Watch the demo first
+            </ButtonLink>
           </div>
+          <p className="text-sm text-ink-soft mt-4">Chrome on a laptop. Works with Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard and Brightspace.</p>
           <div className="mt-8 max-w-lg">
             <WaitlistCard source="home" compact />
           </div>

@@ -199,7 +199,7 @@ function ExtensionCard() {
             Already loaded it unpacked? Click the Trail icon in Chrome's toolbar, then "Open my writing record", so the app learns its id.
           </p>
         )}
-        {installed && (
+        {installed && !connected && (
           <Button
             variant="secondary"
             disabled={connecting}
@@ -211,7 +211,7 @@ function ExtensionCard() {
               st.reload();
             }}
           >
-            {connecting ? 'Connecting…' : connected ? 'Reconnect' : 'Connect'}
+            {connecting ? 'Connecting…' : 'Connect'}
           </Button>
         )}
         {note && (

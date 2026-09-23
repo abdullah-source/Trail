@@ -111,12 +111,12 @@ export function PasteList({ pastes, limit = 40, className, empty = 'No pastes re
 }
 
 /** Strip + list together, as in the evidence pack. */
-export function Provenance({ lines, pastes, className }: { lines: ProvenanceLine[]; pastes: ProvenancePaste[]; className?: string }) {
+export function Provenance({ lines, pastes, className, animate }: { lines: ProvenanceLine[]; pastes: ProvenancePaste[]; className?: string; animate?: boolean }) {
   return (
     <div className={cx('grid gap-6', className)}>
       <div className="grid gap-3">
         <h3 className="text-xl">Where each line came from</h3>
-        <ProvenanceStrip lines={lines} />
+        <ProvenanceStrip lines={lines} animate={animate} />
       </div>
       <div className="grid gap-3">
         <h3 className="text-xl">Pastes</h3>

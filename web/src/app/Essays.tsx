@@ -44,7 +44,9 @@ export default function Essays() {
           <EssayRow key={e.id} essay={e} />
         ))}
       </ol>
-      <p className="text-xs text-ink-faint">Read from this computer's extension. Nothing here is stored on Trail's servers.</p>
+      <p className="text-xs text-ink-soft">
+        The thin bar under each title is the typed share (green) against the pasted share (orange) of the final text; the small line is how the essay grew over time. Read from this computer's extension; nothing here is stored on Trail's servers.
+      </p>
     </div>
   );
 }
@@ -72,7 +74,7 @@ function EssayRow({ essay }: { essay: Essay }) {
           </span>
           <ShareBar typed={typedShare} className="max-w-[12rem]" />
         </div>
-        <div className="text-typed">{tl ? <Sparkline timeline={tl} /> : <Skeleton className="w-24 h-6" />}</div>
+        <div className="text-typed" title="How the essay grew over time">{tl ? <Sparkline timeline={tl} /> : <Skeleton className="w-24 h-6" />}</div>
         <Marginal className="hidden sm:block">Replay →</Marginal>
       </Link>
     </li>

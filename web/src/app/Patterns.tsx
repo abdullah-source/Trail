@@ -50,16 +50,16 @@ export default function Patterns() {
       <SectionHead kicker="Your patterns" title="How you write, across everything." lede={`${p.documents} essay${p.documents === 1 ? '' : 's'}, ${p.sessions} session${p.sessions === 1 ? '' : 's'}, ${num(p.total_words)} words. Computed on this computer from your own record.`} />
 
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
-        <StatTile label="Typical session" value={fmtMinutes(p.median_session_minutes)} detail="median active time" />
-        <StatTile label="Pace" value={p.words_per_minute ? num(p.words_per_minute) : '—'} detail="words a minute while active" />
-        <StatTile label="Typed share" value={pct(p.typed_share)} detail="of your final text is typed" tone="typed" />
-        <StatTile label="Revision" value={pct(p.correction_ratio)} detail="of typed characters later deleted" />
+        <StatTile label="Typical session" value={fmtMinutes(p.median_session_minutes)} detail="median active time" info="The middle value of your sessions' active minutes, across every essay. Active means at least one keystroke every two minutes." />
+        <StatTile label="Pace" value={p.words_per_minute ? num(p.words_per_minute) : '—'} detail="words a minute while active" info="Words added divided by active minutes, across every essay." />
+        <StatTile label="Typed share" value={pct(p.typed_share)} detail="of your final text is typed" tone="typed" info="Characters typed one at a time that survive in the final text, divided by the final length, summed over every essay." />
+        <StatTile label="Revision" value={pct(p.correction_ratio)} detail="of typed characters later deleted" info="Characters you typed and later removed, divided by all characters typed. Higher means more rewriting." />
       </section>
 
       <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
         <div className="grid gap-1 content-start">
           <Marginal>When you write</Marginal>
-          <span className="text-xs text-ink-soft">Active minutes by hour, your local time.</span>
+          <span className="text-xs text-ink-soft">Active minutes by hour of the day, your local time, summed over every session. The tallest bar is marked.</span>
         </div>
         <HourChart hours={localHours} />
       </section>
@@ -67,13 +67,16 @@ export default function Patterns() {
       <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
         <div className="grid gap-1 content-start">
           <Marginal>Session length</Marginal>
-          <span className="text-xs text-ink-soft">How long you usually stay at it.</span>
+          <span className="text-xs text-ink-soft">How many sessions fell into each length band, by active minutes.</span>
         </div>
         <Histogram values={sessionMinutes} />
       </section>
 
       <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <Marginal>Revision habits</Marginal>
+        <div className="grid gap-1 content-start">
+          <Marginal>Revision habits</Marginal>
+          <span className="text-xs text-ink-soft">Per essay: how much typed text was later deleted, and how much of the final text was typed.</span>
+        </div>
         <ul className="grid gap-2 text-sm max-w-2xl">
           {analyses.map((a, i) => (
             <li key={a.document.doc || i} className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-baseline border-b border-rule py-1.5 tabular">

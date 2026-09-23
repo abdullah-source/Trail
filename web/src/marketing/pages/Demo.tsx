@@ -7,7 +7,7 @@ import { FadeUp, usePrefersReducedMotion } from '../../design/motion';
 import { useAsync } from '../../components/useAsync';
 import { Loading } from '../../components/ui';
 import { analyse } from '../../lib/analysis';
-import { demoKind, kindLabel, loadDemoEvents, loadDemoManifest, loadServerDemos, mergeDemos, DemoUnavailable, type DemoEntry } from '../../lib/demo';
+import { demoKind, kindLabel, loadDemoEvents, loadDemoManifest, loadServerDemos, mergeDemos, sourceHosts, DemoUnavailable, type DemoEntry } from '../../lib/demo';
 import type { TrailEvent } from '../../lib/types';
 import { EssayView } from '../../app/EssayView';
 import { num, pct } from '../../components/format';
@@ -30,7 +30,7 @@ export default function Demo() {
     <>
       <Section flush wide code="00:00" label="Choose">
         <FadeUp>
-          <Heading as="h1" eyebrow="Live demo" title="Watch a real essay get written." lede="Five essays, five ways of writing. Pick one and see the whole record: the replay, where each line came from, every paste with its source, and the AI-use statement drafted from it." />
+          <Heading as="h1" eyebrow="Live demo" title="Watch a real essay get written." lede="Real essays, five ways of writing. Pick one and see the whole record: the replay, where each line came from, every paste with its source, and the AI-use statement drafted from it." />
           <p className="mt-4 text-sm text-ink-soft max-w-prose border-l-2 border-margin/60 pl-3">
             Real essays from public datasets; the writing sessions are simulated so you can see what a record looks like. Install the extension to record your own.
           </p>
@@ -141,7 +141,7 @@ function GroundTruth({ entry, events }: { entry: DemoEntry; events: TrailEvent[]
   const kind = demoKind(entry.kind);
   const truthTyped = t.typed_share ?? x.typed_share ?? null;
   const truthPasted = t.pasted_chars ?? x.pasted_chars ?? null;
-  const truthSources = Array.isArray(t.paste_sources) ? t.paste_sources.map(norm) : null;
+  const truthSources = sourceHosts(t.paste_sources)?.map(norm) ?? null;
   const truthScripted = t.scripted ?? x.regularity_flagged ?? (kind === 'autotyped' ? true : null);
   const foundSources = [...new Set(a.pastes.items.map((p) => (p.source_host ? norm(p.source_host) : p.from_self ? 'this document' : 'unknown')))];
   const rows: { label: string; truth: string; found: string; match: boolean | null; info: string }[] = [

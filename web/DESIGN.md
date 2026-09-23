@@ -67,3 +67,8 @@ Scale (rem): 0.75 / 0.875 / 1 / 1.125 / 1.375 / 1.75 / 2.25 / 3 / 4.25. Body 16p
 `tokens.css` (variables, base type, `.marginal .display .essay .link .ruled .caret .strike .prov-paste .prov-paste-edited .prov-unobserved .range .tabular`) · `motion.tsx`: `FadeUp`, `Stagger`, `StaggerItem`, `Motion`, `usePrefersReducedMotion`, `EASE` · `components.tsx`: `Button`, `ButtonLink`, `Eyebrow`, `Mark`, `Wordmark`, `ThemeToggle`, `Nav`, `Footer`, `MarketingLayout`, `Section`, `Card`, `Stat`, `Badge`, `PriceCard`, `Heading`, `Prose`, `Row`, `Disclosure`, `useTitle`, `useFonts`, `cx`, `CHROME_STORE_URL`, `FONTS_HREF` · `ReplayHero.tsx`: `ReplayHero`, `SCRIPT`, `ReplayOp` · `Provenance.tsx`: `Provenance`, `ProvenanceStrip`, `PasteList`, `Swatch`.
 
 Focus: 2px `--accent` outline, 3px offset, on every interactive element; the scrubber thumb gets a 4px accent halo. All text is real text; the only images are `public/favicon.svg` and `public/wordmark.svg`.
+
+
+## Addendum (2026-09-23)
+
+Two motion additions beyond "only the replay moves": the hero `TypedHeadline` (headline and one line typed in with a caret, a paste washed in with its source chip, two characters deleted; ~4 s, reduced-motion renders the final text) and a one-time left-to-right light-up of the provenance strip when it scrolls into view. Both live in `src/design/`.
