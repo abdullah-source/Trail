@@ -113,6 +113,14 @@ class Doc(Base):
     last_checkpoint: Mapped[str | None] = mapped_column(String(32))  # ts of the latest signed checkpoint
 
 
+class WaitlistEntry(Base):
+    """People who asked to be told when the Chrome Web Store listing is live. Email only."""
+    __tablename__ = "waitlist"
+    email: Mapped[str] = mapped_column(String(254), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source: Mapped[str | None] = mapped_column(String(40))
+
+
 Index("ix_magic_links_user", MagicLink.user_id)
 Index("ix_sessions_user", WebSession.user_id)
 Index("ix_api_tokens_user", ApiToken.user_id)
@@ -195,6 +203,11 @@ DESCRIPTIONS: dict[str, tuple[str, dict[str, str]]] = {
         "prev": "the previous entry's fingerprint",
         "checkpoint_hash": "fingerprint of the checkpoint",
         "ts": "when it was signed",
+    }),
+    "waitlist": ("People who asked to hear when the Chrome Web Store listing is live.", {
+        "email": "the address they typed",
+        "created_at": "when they asked",
+        "source": "which page had the form",
     }),
     "docs": ("One row per document the extension has had signed, so the app can show when it was last signed.", {
         "user_id": "whose document",

@@ -156,7 +156,7 @@ def test_public_endpoints(client):
     assert client.get("/healthz").json()["ok"] is True
     assert client.get("/v1/public-key").text.startswith("-----BEGIN PUBLIC KEY-----")
     tables = {t["table"] for t in client.get("/v1/schema").json()["tables"]}
-    assert {"users", "magic_links", "sessions", "api_tokens", "docs", "checkpoints", "transparency_log", "referrals", "subscriptions"} == tables
+    assert {"users", "magic_links", "sessions", "api_tokens", "docs", "checkpoints", "transparency_log", "referrals", "subscriptions", "waitlist"} == tables
     plans = client.get("/v1/billing/plans").json()
     assert plans["plans"]["semester"]["price_usd"] == "12.00" and plans["plans"]["monthly"]["price_usd"] == "3.99" and plans["trialDays"] == 14
 
@@ -244,3 +244,10 @@ def test_clerk_sign_in_exchanges_a_verified_token_for_our_session(store, mailer,
 def test_clerk_endpoint_is_absent_when_not_configured(client):
     assert client.get("/v1/config").json()["clerkPublishableKey"] is None
     assert client.post("/v1/auth/clerk", json={"token": "tok_whatever_1234567890"}).status_code == 404
+
+
+def test_waitlist_needs_no_account_and_dedupes(client):
+    r = client.post("/v1/waitlist", json={"email": "Someone+tag@Uni.Example", "source": "home"})
+    assert r.status_code == 200 and r.json() == {"joined": True, "new": True}
+    assert client.post("/v1/waitlist", json={"email": "someone@uni.example"}).json()["new"] is False
+    assert client.post("/v1/waitlist", json={"email": "not-an-email"}).status_code == 422

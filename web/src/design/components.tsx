@@ -4,7 +4,8 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 /* Trail design system components. See web/DESIGN.md. */
 
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ');
-export const CHROME_STORE_URL = 'https://chromewebstore.google.com/';
+/** The Web Store listing once it exists (VITE_CHROME_STORE_URL); until then the install page. */
+export const CHROME_STORE_URL: string = ((import.meta as any).env?.VITE_CHROME_STORE_URL as string | undefined) || '/install';
 
 /* ------------------------------------------------------------------ Button */
 
@@ -29,7 +30,7 @@ export type ButtonLinkProps = { to: string; variant?: Variant; size?: Size; clas
 
 export function ButtonLink({ to, variant = 'primary', size = 'md', className, children, external }: ButtonLinkProps) {
   const cls = cx(btnBase, btnVariant[variant], btnSize[size], className);
-  if (external)
+  if (external && !to.startsWith('/'))
     return (
       <a href={to} className={cls} target="_blank" rel="noreferrer">
         {children}
@@ -220,7 +221,7 @@ export function Footer() {
           <div className={col}>
             <Eyebrow tick={false}>Account</Eyebrow>
             <Link className={a} to="/login">Log in</Link>
-            <a className={a} href={CHROME_STORE_URL} target="_blank" rel="noreferrer">Add to Chrome</a>
+            {CHROME_STORE_URL.startsWith('/') ? <Link className={a} to={CHROME_STORE_URL}>Add to Chrome</Link> : <a className={a} href={CHROME_STORE_URL} target="_blank" rel="noreferrer">Add to Chrome</a>}
           </div>
         </nav>
         <p className="md:col-span-12 font-mono text-xs text-ink-soft">2026 Trail. Built for students, not against them.</p>

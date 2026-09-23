@@ -20,7 +20,7 @@ from trail.core.canonical import GENESIS_HASH, hash_value
 from trail.core.signing import Checkpoint, Signer, changed_heads, make_checkpoint
 from trail.core.timeutil import now_ts
 from trail.server.models import (
-    ApiToken, Base, CheckpointRow, Doc, MagicLink, Referral, Subscription, TransparencyEntry, User, WebSession,
+    ApiToken, Base, CheckpointRow, Doc, MagicLink, Referral, Subscription, TransparencyEntry, User, WaitlistEntry, WebSession,
 )
 
 TRIAL_DAYS = 14
@@ -173,6 +173,16 @@ class Store:
             return u, first
 
     # -- web sessions -----------------------------------------------------------------------
+
+    def join_waitlist(self, email: str, source: str | None = None) -> bool:
+        """True when the address is new."""
+        email = email.strip().lower()
+        with self.session() as s:
+            if s.get(WaitlistEntry, email):
+                return False
+            s.add(WaitlistEntry(email=email, created_at=utcnow(), source=(source or None)))
+            s.commit()
+            return True
 
     def create_session(self, uid: str) -> str:
         token = "lhs_" + secrets.token_urlsafe(32)

@@ -82,6 +82,11 @@ export const data = {
     return api('/v1/auth/request', { method: 'POST', body: JSON.stringify({ email, referral: referral || null }) });
   },
 
+  async joinWaitlist(email: string, source: string): Promise<{ joined: boolean; new: boolean }> {
+    if (MOCK) return { joined: true, new: true };
+    return api('/v1/waitlist', { method: 'POST', body: JSON.stringify({ email, source }) });
+  },
+
   /** Clerk: exchange Clerk's session token for our httpOnly session cookie. */
   async clerkSignIn(token: string, referral?: string): Promise<{ user: string; first: boolean }> {
     if (MOCK) return { user: 'mock', first: false };

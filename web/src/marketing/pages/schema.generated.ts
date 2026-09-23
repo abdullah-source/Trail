@@ -96,6 +96,27 @@ export const STORED_TABLES: StoredTable[] = [
     ]
   },
   {
+    "table": "waitlist",
+    "why": "People who asked to hear when the Chrome Web Store listing is live.",
+    "columns": [
+      {
+        "name": "email",
+        "type": "VARCHAR(254)",
+        "what": "the address they typed"
+      },
+      {
+        "name": "created_at",
+        "type": "DATETIME",
+        "what": "when they asked"
+      },
+      {
+        "name": "source",
+        "type": "VARCHAR(40)",
+        "what": "which page had the form"
+      }
+    ]
+  },
+  {
     "table": "api_tokens",
     "why": "Lets the extension ask us to sign checkpoints.",
     "columns": [

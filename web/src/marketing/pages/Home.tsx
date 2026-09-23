@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Badge, ButtonLink, Card, CHROME_STORE_URL, Eyebrow, Heading, Prose, Section, Stat, useTitle } from '../../design/components';
 import { useSiteConfig } from '../../lib/config';
+import { WaitlistCard } from './Install';
 import { FadeUp, Stagger, StaggerItem } from '../../design/motion';
 import { ReplayHero } from '../../design/ReplayHero';
 import { Provenance, type ProvenanceLine, type ProvenancePaste } from '../../design/Provenance';
@@ -47,7 +48,7 @@ export default function Home() {
                 How it works
               </ButtonLink>
             </div>
-            <p className="text-sm text-ink-soft">{cfg.freeAccess ? 'Free during early access. No card, no clock. Recording never locks.' : 'Free for 14 days, no card. Then $12 a semester. Recording never locks.'}</p>
+            <p className="text-sm text-ink-soft">{cfg.freeAccess ? 'Free during early access. No card, no clock. Recording never locks.' : 'Free for 14 days, no card. Then $12 a semester. Recording never locks.'} Chrome Web Store listing in review; install today or get notified.</p>
           </div>
           <div className="lg:col-span-7 grid gap-3">
             <ReplayHero />
@@ -224,6 +225,9 @@ export default function Home() {
               Add to Chrome
             </ButtonLink>
             <span className="text-sm text-ink-soft">Chrome on a laptop. Works with Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard and Brightspace.</span>
+          </div>
+          <div className="mt-8 max-w-lg">
+            <WaitlistCard source="home" compact />
           </div>
         </FadeUp>
       </Section>

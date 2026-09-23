@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Loading } from './components/ui';
-import Login from './app/Login';
+import Login, { ClerkDone } from './app/Login';
 import Verify from './app/Verify';
 import NotFound from './app/NotFound';
 
@@ -17,6 +17,7 @@ const Welcome = lazy(() => import('./app/Welcome'));
 
 // Marketing pages and layout are owned by the design agent (src/marketing/pages, src/design).
 import { Home, HowItWorks, Pricing, Privacy, Terms, MarketingLayout } from './marketing/pages';
+import Install from './marketing/pages/Install';
 
 export default function App() {
   return (
@@ -35,7 +36,9 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/install" element={<Install />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login/done" element={<ClerkDone />} />
           <Route path="/invite/:code" element={<Login />} />
           <Route path="*" element={<NotFound />} />
         </Route>

@@ -107,6 +107,16 @@ def client_ip(request: Request) -> str:
 # ---- request models --------------------------------------------------------------------------------
 
 
+class WaitlistRequest(BaseModel):
+    email: str = Field(max_length=254)
+    source: str | None = Field(default=None, max_length=40)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        return clean_email(v)
+
+
 class ClerkSignIn(BaseModel):
     token: str = Field(min_length=20, max_length=4096)
     referral: str | None = Field(default=None, max_length=16)
@@ -323,6 +333,13 @@ def create_app(
             resp = RedirectResponse(f"{settings.app_url}/app/welcome" if first else f"{settings.app_url}/app?connect=1", status_code=303)
         set_session_cookie(resp, session)
         return resp
+
+    @app.post("/v1/waitlist")
+    def waitlist(req: WaitlistRequest, request: Request) -> dict[str, Any]:
+        """No account needed: just an address to tell when the Web Store listing is live."""
+        if ip_limited(client_ip(request)):
+            raise HTTPException(429, "Too many requests from this network. Try again in 15 minutes.")
+        return {"joined": True, "new": store.join_waitlist(req.email, req.source)}
 
     @app.post("/v1/auth/clerk")
     def auth_clerk(req: ClerkSignIn, request: Request) -> Response:
