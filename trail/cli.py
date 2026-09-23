@@ -1,6 +1,6 @@
 """Trail command line (package name `trail`).
 
-    trail backtest [--lines N] [--seed S] [--out DIR]
+    trail backtest [--lines N] [--seed S] [--out DIR] [--real]   (--real: real texts, simulated processes)
     trail demo [--out DIR] [--profile honest|mixed|heavy_paster|autotyper|gapped]
     trail analyse EVENTS.jsonl
     trail pack EVENTS.jsonl [--checkpoints C.jsonl] [--key signer.pem] [--out record.tar.gz] [--title T]
@@ -27,6 +27,9 @@ def _events(path: str):
 
 
 def cmd_backtest(a):
+    if a.real:
+        from trail.backtest import main_real
+        return main_real(a.seed, a.out)
     from trail.backtest import main
     return main(a.lines, a.seed, a.out)
 
@@ -119,7 +122,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="trail", description="Trail: your writing record")
     p.add_argument("--version", action="version", version=f"trail {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
-    s = sub.add_parser("backtest"); s.add_argument("--lines", type=int, default=10_000); s.add_argument("--seed", type=int, default=42); s.add_argument("--out", default="backtest-out"); s.set_defaults(fn=cmd_backtest)
+    s = sub.add_parser("backtest"); s.add_argument("--lines", type=int, default=10_000); s.add_argument("--seed", type=int, default=42); s.add_argument("--out", default="backtest-out"); s.add_argument("--real", action="store_true"); s.set_defaults(fn=cmd_backtest)
     s = sub.add_parser("demo"); s.add_argument("--out", default="demo-out"); s.add_argument("--profile", default="mixed"); s.add_argument("--seed", type=int, default=7); s.set_defaults(fn=cmd_demo)
     s = sub.add_parser("analyse"); s.add_argument("events"); s.set_defaults(fn=cmd_analyse)
     s = sub.add_parser("pack"); s.add_argument("events"); s.add_argument("--checkpoints"); s.add_argument("--key"); s.add_argument("--out"); s.add_argument("--html"); s.add_argument("--title"); s.add_argument("--student"); s.add_argument("--course"); s.set_defaults(fn=cmd_pack)

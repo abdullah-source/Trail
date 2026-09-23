@@ -19,7 +19,7 @@ APP_URL = "http://testserver"
 
 def make_settings(**over) -> Settings:
     # FREE_ACCESS=0: the suite exercises the trial and paywall; test_free_access flips it on.
-    env = {"APP_URL": APP_URL, "SESSION_SECRET": "test-secret", "SIGNUP_OPEN": "1", "FREE_ACCESS": "0"}
+    env = {"APP_URL": APP_URL, "SESSION_SECRET": "test-secret", "SIGNUP_OPEN": "1", "FREE_ACCESS": "0", "DEMO_REPO_FALLBACK": "0"}
     env.update(over)
     return Settings.from_env(env)
 

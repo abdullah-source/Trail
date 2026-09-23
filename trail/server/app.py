@@ -36,6 +36,7 @@ from trail.record import build_record
 from trail.server import billing as billing_mod
 from trail.server.clerk import ClerkClient, ClerkVerifier
 from trail.server.billing import PLANS, FakeGateway, Gateway, StripeGateway, handle_webhook
+from trail.server.demo import DEMO_EMAIL, DemoRegistry, find_demo_dir, record_filename
 from trail.server.mail import ConsoleMailer, Mailer, ResendMailer, magic_link_message
 from trail.server.models import schema_description
 from trail.server.settings import Settings
@@ -90,6 +91,8 @@ def clean_email(v: str) -> str:
     local = local.split("+", 1)[0]
     if not local:
         raise ValueError("That does not look like an email address.")
+    if f"{local}@{domain}" == DEMO_EMAIL:  # the system account that owns the demo records
+        raise ValueError("That address is reserved.")
     return f"{local}@{domain}"
 
 
@@ -202,6 +205,13 @@ def create_app(
     app.state.settings = settings
     app.state.mailer = mailer
     app.state.gateway = gateway
+    # Demo records (web/public/demo -> <static>/demo): signed once at boot, idempotent, never fatal.
+    demos = DemoRegistry(store, signer)
+    try:
+        demos.load(find_demo_dir(static, [REPO_ROOT / "web" / "public"] if settings.demo_repo_fallback else []))
+    except Exception:
+        log.exception("demo records could not be loaded; the app runs without them")
+    app.state.demos = demos
     ip_hits: dict[str, list[float]] = {}
 
     def ip_limited(ip: str) -> bool:
@@ -481,14 +491,38 @@ def create_app(
                 return HTMLResponse(render_html(p))
             if req.format == "record":
                 with tempfile.TemporaryDirectory() as tmp:
-                    safe = re.sub(r"[^A-Za-z0-9_-]+", "-", (req.title or evs[0].doc[:12])).strip("-") or "essay"
-                    path = Path(tmp) / f"{safe[:60]}.trail.tar.gz"
+                    path = Path(tmp) / record_filename(req.title, evs[0].doc)
                     build_record(path, events=evs, checkpoints=cps, verifier=signer.public_key, signer=signer, pack=p)
                     data = path.read_bytes()
                 return Response(data, media_type="application/gzip", headers={"Content-Disposition": f'attachment; filename="{path.name}"'})
             raise HTTPException(400, "format must be json, html or record")
         finally:
             log.info("pack user=%s events=%d ms=%.0f", uid, len(evs), (time.perf_counter() - t0) * 1000)
+
+    # -- demo records (public, no account) ----------------------------------------------------------------
+
+    @app.get("/v1/demo")
+    def demo_list() -> list[dict[str, Any]]:
+        """Every demo essay this server signed at boot, with its checkpoint times and pack URL."""
+        return demos.list()
+
+    @app.get("/v1/demo/{demo_id}/pack")
+    def demo_pack(demo_id: str, format: str = "record") -> Any:
+        """The demo's evidence pack, built exactly as /v1/pack builds a real one: format=record
+        (default) is the .trail.tar.gz with verify.py, this server's public key and the signed
+        checkpoints; json and html return the pack itself."""
+        demo = demos.get(demo_id)
+        if demo is None:
+            raise HTTPException(404, "no such demo")
+        if format == "json":
+            return JSONResponse(demos.pack(demo))
+        if format == "html":
+            return HTMLResponse(render_html(demos.pack(demo)))
+        if format != "record":
+            raise HTTPException(400, "format must be record, json or html")
+        name, data = demos.record(demo)
+        return Response(data, media_type="application/gzip",
+                        headers={"Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "no-cache"})
 
     # -- billing --------------------------------------------------------------------------------------------
 

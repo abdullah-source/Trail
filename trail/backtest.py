@@ -231,3 +231,242 @@ def main(target_lines: int = 10_000, seed: int = 42, out: str = "backtest-out") 
     (p / "report.md").write_text(md)
     print(md)
     return 0 if "PASS" in md.splitlines()[2] else 1
+
+
+# -- real texts, simulated processes -------------------------------------------------------
+#
+#     trail backtest --real [--seed S] [--out DIR]     writes backtest-out/real-report.md
+#
+# Real human essays and real ChatGPT essays (corpus/real/) are pushed through simulated
+# writing processes (trail.synthetic.RealWriter). Trail records the process; it does not
+# detect AI text, and this report does not claim that it does.
+
+import statistics
+
+from trail.synthetic import SCENARIOS, make_real_corpus
+
+SCENARIO_NAMES = {
+    "human_typed": "human essay typed by hand over several sessions",
+    "ai_pasted_whole": "AI essay pasted whole from chatgpt.com, light edits after",
+    "ai_pasted_chunks": "AI essay pasted in chunks from chatgpt.com, partly reworded",
+    "ai_autotyped": "AI essay auto-typed by a script (uniform rhythm)",
+    "mixed_quotes": "human essay typed by hand with quotations pasted from a web source",
+}
+
+
+def _dist(xs: list[float]) -> dict[str, float | None]:
+    if not xs:
+        return {"min": None, "median": None, "mean": None, "max": None}
+    return {"min": round(min(xs), 4), "median": round(statistics.median(xs), 4), "mean": round(statistics.mean(xs), 4), "max": round(max(xs), 4)}
+
+
+def run_real(seed: int = 42, limit: int | None = None) -> dict[str, Any]:
+    t0 = time.perf_counter()
+    docs = make_real_corpus(seed=seed, limit=limit)
+    gen_s = time.perf_counter() - t0
+    per: dict[str, dict[str, Any]] = {s: {"docs": 0, "lines": 0, "words": 0, "events": 0, "sessions": 0, "exact": 0, "chain_ok": 0,
+                                          "line_correct": 0, "line_total": 0, "char_correct": 0, "char_total": 0,
+                                          "paste_count_ok": 0, "paste_source_ok": 0, "flagged": 0, "any_signal": 0,
+                                          "typed_shares": [], "typed_share_abs_err": [], "pastes": 0, "pasted_chars": 0} for s in SCENARIOS}
+    confusion = {a: {b: 0 for b in LABELS} for a in LABELS}
+    sources_seen: dict[str, int] = {}
+    analysis_s = 0.0
+    for d in docs:
+        p = per[d["scenario"]]
+        p["docs"] += 1
+        p["events"] += len(d["events"])
+        p["sessions"] += d["truth"]["sessions"]
+        p["words"] += len(d["truth_text"].split())
+        sources_seen[d["source"]] = sources_seen.get(d["source"], 0) + 1
+        if verify_chain(d["events"]).ok:
+            p["chain_ok"] += 1
+        doc = replay(d["events"])
+        if doc.text == d["truth_text"]:
+            p["exact"] += 1
+        lines = doc.lines()
+        truth = d["truth_lines"]
+        p["lines"] += len(truth)
+        for a, b in zip(lines, truth):
+            confusion[b["label"]][a.label] += 1
+            p["line_total"] += 1
+            if a.label == b["label"]:
+                p["line_correct"] += 1
+        p["line_total"] += abs(len(lines) - len(truth))
+        for o_a, o_b in zip(doc.origin, d["truth_origin"]):
+            p["char_total"] += 1
+            if (o_a.startswith("paste:")) == (o_b.startswith("paste:")) and (o_a == o_b or o_a.startswith("paste:")):
+                p["char_correct"] += 1
+        p["char_total"] += abs(len(doc.origin) - len(d["truth_origin"]))
+        ta = time.perf_counter()
+        a = analyse(d["events"])
+        analysis_s += time.perf_counter() - ta
+        # paste accounting: count, chars, surviving chars, and per-source (host and kind) totals
+        tp = d["truth"]
+        pr = a["pastes"]
+        if pr["count"] == len(tp["paste_sources"]) and pr["pasted_chars"] == tp["pasted_chars"] and pr["pasted_chars_surviving"] == tp["pasted_chars_surviving"]:
+            p["paste_count_ok"] += 1
+        truth_by_kind: dict[str, int] = {}
+        truth_hosts: dict[str, int] = {}
+        for s in tp["paste_sources"]:
+            truth_by_kind[s["kind"]] = truth_by_kind.get(s["kind"], 0) + s["chars"]
+            truth_hosts[s["host"]] = truth_hosts.get(s["host"], 0) + s["chars"]
+        rec_hosts: dict[str, int] = {}
+        for it in pr["items"]:
+            rec_hosts[it["source_host"]] = rec_hosts.get(it["source_host"], 0) + it["chars"]
+        if pr["by_source_kind"] == truth_by_kind and rec_hosts == truth_hosts:
+            p["paste_source_ok"] += 1
+        p["pastes"] += pr["count"]
+        p["pasted_chars"] += pr["pasted_chars"]
+        p["typed_shares"].append(a["document"]["typed_share"] or 0.0)
+        p["typed_share_abs_err"].append(abs((a["document"]["typed_share"] or 0.0) - tp["typed_share"]))
+        if a["regularity"]["flagged"]:
+            p["flagged"] += 1
+        if a["regularity"]["signals"]:
+            p["any_signal"] += 1
+
+    scen = {}
+    for s, p in per.items():
+        scen[s] = {
+            "description": SCENARIO_NAMES[s], "documents": p["docs"], "lines": p["lines"], "words": p["words"], "events": p["events"],
+            "sessions": p["sessions"], "exact_reconstruction": p["exact"], "chain_verified": p["chain_ok"],
+            "line_accuracy": round(p["line_correct"] / p["line_total"], 4) if p["line_total"] else None,
+            "char_accuracy": round(p["char_correct"] / p["char_total"], 5) if p["char_total"] else None,
+            "typed_share": _dist(p["typed_shares"]), "typed_share_max_abs_error": round(max(p["typed_share_abs_err"]), 5) if p["typed_share_abs_err"] else None,
+            "pastes": p["pastes"], "pasted_chars": p["pasted_chars"],
+            "paste_accounting_exact": p["paste_count_ok"], "paste_source_exact": p["paste_source_ok"],
+            "flagged_scripted": p["flagged"], "any_signal": p["any_signal"],
+        }
+    human_scen = ("human_typed", "mixed_quotes")
+    humans = sum(scen[s]["documents"] for s in human_scen)
+    humans_flagged = sum(scen[s]["flagged_scripted"] for s in human_scen)
+    bots = scen["ai_autotyped"]["documents"]
+    bots_flagged = scen["ai_autotyped"]["flagged_scripted"]
+    line_total = sum(per[s]["line_total"] for s in SCENARIOS)
+    char_total = sum(per[s]["char_total"] for s in SCENARIOS)
+    return {
+        "seed": seed,
+        "corpus": {"documents": len(docs), "lines": sum(p["lines"] for p in per.values()), "words": sum(p["words"] for p in per.values()),
+                   "events": sum(p["events"] for p in per.values()), "sessions": sum(p["sessions"] for p in per.values()),
+                   "sources": dict(sorted(sources_seen.items())), "human_texts": len({d["source_id"] for d in docs if d["source_kind"] == "human"}),
+                   "ai_texts": len({d["source_id"] for d in docs if d["source_kind"] == "ai"})},
+        "scenarios": scen,
+        "overall": {
+            "exact_reconstruction": sum(p["exact"] for p in per.values()), "chain_verified": sum(p["chain_ok"] for p in per.values()),
+            "line_accuracy": round(sum(p["line_correct"] for p in per.values()) / line_total, 4) if line_total else None,
+            "char_accuracy": round(sum(p["char_correct"] for p in per.values()) / char_total, 5) if char_total else None,
+            "confusion": confusion,
+            "paste_accounting_exact": sum(p["paste_count_ok"] for p in per.values()), "paste_source_exact": sum(p["paste_source_ok"] for p in per.values()),
+            "humans": humans, "humans_flagged": humans_flagged, "false_positive_rate": round(humans_flagged / humans, 4) if humans else None,
+            "autotyped": bots, "autotyped_flagged": bots_flagged, "true_positive_rate": round(bots_flagged / bots, 4) if bots else None,
+            "ai_pasted_flagged": scen["ai_pasted_whole"]["flagged_scripted"] + scen["ai_pasted_chunks"]["flagged_scripted"],
+        },
+        "performance": {"generate_s": round(gen_s, 2), "analysis_ms_per_doc": round(1000 * analysis_s / len(docs), 1) if docs else None},
+    }
+
+
+def real_verdict(r: dict[str, Any]) -> bool:
+    o, c = r["overall"], r["corpus"]
+    return all([
+        o["exact_reconstruction"] == c["documents"], o["chain_verified"] == c["documents"],
+        (o["line_accuracy"] or 0) >= 0.99, (o["char_accuracy"] or 0) >= 0.999,
+        o["paste_accounting_exact"] == c["documents"], o["paste_source_exact"] == c["documents"],
+        o["humans_flagged"] == 0, o["autotyped"] > 0 and o["autotyped_flagged"] == o["autotyped"],
+    ])
+
+
+def to_markdown_real(r: dict[str, Any]) -> str:
+    c, o, s = r["corpus"], r["overall"], r["scenarios"]
+    conf = o["confusion"]
+    header = "| truth \\ recorded | " + " | ".join(LABELS) + " |\n|---|" + "---|" * len(LABELS) + "\n"
+    rows = "".join(f"| {a} | " + " | ".join(str(conf[a][b]) for b in LABELS) + " |\n" for a in LABELS)
+    scen_rows = "".join(
+        f"| {k} | {v['documents']} | {v['sessions']} | {v['lines']:,} | {v['words']:,} | {v['pastes']} | {v['pasted_chars']:,} |\n" for k, v in s.items())
+    acc_rows = "".join(
+        f"| {k} | {v['exact_reconstruction']}/{v['documents']} | {v['line_accuracy']:.2%} | {v['char_accuracy']:.3%} | {v['paste_accounting_exact']}/{v['documents']} | {v['paste_source_exact']}/{v['documents']} |\n"
+        for k, v in s.items())
+    ts_rows = "".join(
+        f"| {k} | {v['typed_share']['min']:.3f} | {v['typed_share']['median']:.3f} | {v['typed_share']['mean']:.3f} | {v['typed_share']['max']:.3f} | {v['typed_share_max_abs_error']:.5f} |\n"
+        for k, v in s.items())
+    flag_rows = "".join(f"| {k} | {v['flagged_scripted']}/{v['documents']} | {v['any_signal']}/{v['documents']} |\n" for k, v in s.items())
+    fp_note = ("None of the honest human documents were flagged." if o["humans_flagged"] == 0 else
+               f"**{o['humans_flagged']} honest human documents were flagged as scripted.** This is a false positive rate of {o['false_positive_rate']:.2%} and must be investigated before this signal is shown to a student.")
+    sources = "".join(f"- {k}: {v} simulated documents\n" for k, v in c["sources"].items())
+    return f"""# Trail backtest on real texts
+
+**Result: {"PASS" if real_verdict(r) else "FAIL"}** (seed {r['seed']})
+
+**What this is and is not.** Trail does not detect AI-written text and this report does not
+claim that it can. Trail records the *process* by which a document was written: keystrokes,
+pastes and where they came from, sessions over time. Here, real human essays and real
+ChatGPT essays from public datasets (see `corpus/real/SOURCES.md`) are pushed through
+simulated writing processes, and the report measures whether the record of the process is
+reconstructed and attributed correctly. The same AI essay appears three times with three
+different processes; the text is identical, only the record differs. Nothing in the text
+itself is used by the analysis.
+
+## Corpus
+- {c['human_texts']} real human texts and {c['ai_texts']} real AI texts; {c['documents']} simulated documents, {c['sessions']} writing sessions, {c['events']:,} events
+- **{c['lines']:,} lines and {c['words']:,} words processed**
+{sources}
+## Scenarios
+
+| scenario | documents | sessions | lines | words | pastes | pasted chars |
+|---|---|---|---|---|---|---|
+{scen_rows}
+{"".join(f"- `{k}`: {v['description']}" + chr(10) for k, v in s.items())}
+## 1. Reconstruction and provenance
+- Documents rebuilt byte-for-byte from events: **{o['exact_reconstruction']} / {c['documents']}**; sessions chain-verified: **{o['chain_verified']} / {c['documents']}**
+- Line provenance accuracy: **{o['line_accuracy']:.2%}**; character provenance accuracy: **{o['char_accuracy']:.3%}**
+
+| scenario | exact | line accuracy | char accuracy | paste accounting exact | paste sources exact |
+|---|---|---|---|---|---|
+{acc_rows}
+{header}{rows}
+## 2. Typed share by scenario (what the student's record shows)
+
+| scenario | min | median | mean | max | max abs error vs truth |
+|---|---|---|---|---|---|
+{ts_rows}
+A human who typed everything shows 1.000. A human who quoted one or two sources shows
+a bit less, with the pastes attributed to the web host they came from. An AI essay pasted
+whole shows near zero, with the paste attributed to chatgpt.com. An AI essay *auto-typed*
+by a script shows 1.000 typed share: the paste record cannot see it, only the rhythm can.
+
+## 3. Paste-source accounting
+- Documents where paste count, pasted characters and surviving characters match truth: **{o['paste_accounting_exact']} / {c['documents']}**
+- Documents where characters per source host and per source kind (ai / web / self) match truth: **{o['paste_source_exact']} / {c['documents']}**
+
+## 4. Scripted-typing signal
+
+| scenario | flagged as consistent with scripted typing | any signal at all |
+|---|---|---|
+{flag_rows}
+- Honest human documents flagged: **{o['humans_flagged']} / {o['humans']}**. {fp_note}
+- Auto-typed documents flagged: **{o['autotyped_flagged']} / {o['autotyped']}** (true positive rate {o['true_positive_rate']:.1%})
+- AI essays that were pasted (not typed) flagged: {o['ai_pasted_flagged']}; there the record already shows the paste, so no rhythm signal is expected.
+
+## 5. Performance
+- {c['documents']} documents simulated in {r['performance']['generate_s']} s; analysis {r['performance']['analysis_ms_per_doc']} ms per document
+
+## Limits
+- The processes are simulated. Human cadence is a lognormal model with typos, false starts and
+  pauses; the auto-typer is a fixed 55 ms interval. A script that imitates human jitter is
+  covered by the `jittered_bot` profile in the synthetic backtest, not here.
+- A person who reads an AI essay off a second screen and retypes it by hand produces a record
+  that looks like honest typing. Trail does not claim to detect that, and this report shows why:
+  the `ai_autotyped` scenario is only caught by its rhythm.
+- The texts are real but the scenarios were assigned by the simulator: a human essay is always
+  typed, an AI essay is always pasted or scripted. The analysis never reads the text, so this
+  assignment cannot leak into the results; it only makes the demo honest about what each text is.
+"""
+
+
+def main_real(seed: int = 42, out: str = "backtest-out", limit: int | None = None) -> int:
+    r = run_real(seed, limit=limit)
+    p = Path(out)
+    p.mkdir(parents=True, exist_ok=True)
+    (p / "real-report.json").write_text(json.dumps(r, indent=2))
+    md = to_markdown_real(r)
+    (p / "real-report.md").write_text(md)
+    print(md)
+    return 0 if real_verdict(r) else 1

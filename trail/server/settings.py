@@ -58,6 +58,7 @@ class Settings:
     sentry_dsn: str | None
     signup_open: bool
     free_access: bool = True
+    demo_repo_fallback: bool = True  # DEMO_REPO_FALLBACK=0: never load web/public/demo when static has no demo dir (tests)
     mail_to_log: bool = False  # MAIL_TO_LOG=1: acknowledged no-email deploy; links go to the log
     production: bool = False
     trial_days: int = 14
@@ -111,5 +112,6 @@ class Settings:
             sentry_dsn=e.get("SENTRY_DSN") or None,
             signup_open=(e.get("SIGNUP_OPEN") or e.get("TRAIL_SIGNUP_OPEN") or "1") == "1",
             free_access=(e.get("FREE_ACCESS") or ("0" if e.get("STRIPE_SECRET_KEY") else "1")) == "1",
+            demo_repo_fallback=(e.get("DEMO_REPO_FALLBACK") or "1") == "1",
             production=(e.get("TRAIL_ENV") == "production") or (e.get("APP_URL") or "").startswith("https://"),
         )

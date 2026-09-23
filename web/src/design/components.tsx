@@ -103,25 +103,34 @@ export function ThemeToggle({ className }: { className?: string }) {
     mq.addEventListener('change', on);
     return () => mq.removeEventListener('change', on);
   }, [pref]);
-  const next: Record<Pref, Pref> = { system: 'light', light: 'dark', dark: 'system' };
-  const label: Record<Pref, string> = { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' };
+  // What is on screen right now decides what the button offers: dark → offer light, and vice versa.
+  const isDark = pref === 'dark' || (pref === 'system' && typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const next: Pref = isDark ? 'light' : 'dark';
   return (
     <button
       type="button"
-      className={cx('h-9 px-2.5 rounded-md border border-rule text-xs font-mono text-ink-soft hover:text-ink hover:border-rule-strong', className)}
-      aria-label={`${label[pref]}. Switch to ${next[pref]}`}
-      title={label[pref]}
+      className={cx('h-9 w-9 rounded-md border border-rule text-ink-soft hover:text-ink hover:border-rule-strong grid place-items-center', className)}
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
       onClick={() => {
-        const p = next[pref];
         try {
-          localStorage.setItem(THEME_KEY, p);
+          localStorage.setItem(THEME_KEY, next);
         } catch {
           /* ignore */
         }
-        setPref(p);
+        setPref(next);
       }}
     >
-      {pref === 'system' ? 'auto' : pref}
+      {isDark ? (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </svg>
+      ) : (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+        </svg>
+      )}
     </button>
   );
 }
@@ -130,9 +139,10 @@ export function ThemeToggle({ className }: { className?: string }) {
 
 const LINKS = [
   { to: '/how-it-works', label: 'How it works' },
+  { to: '/demo', label: 'Live demo' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/privacy', label: 'Privacy' },
-  { to: '/verify', label: 'Verify a record' },
+  { to: '/verify', label: 'Verify' },
 ];
 
 export function Nav() {
@@ -158,7 +168,7 @@ export function Nav() {
             Log in
           </NavLink>
           <ButtonLink to={CHROME_STORE_URL} external>
-            Add to Chrome
+            Get Trail
           </ButtonLink>
         </div>
         <button
@@ -184,7 +194,7 @@ export function Nav() {
           <div className="flex items-center justify-between pt-3 border-t border-rule">
             <ThemeToggle />
             <ButtonLink to={CHROME_STORE_URL} external>
-              Add to Chrome
+              Get Trail
             </ButtonLink>
           </div>
         </nav>
@@ -209,6 +219,7 @@ export function Footer() {
           <div className={col}>
             <Eyebrow tick={false}>Product</Eyebrow>
             <Link className={a} to="/how-it-works">How it works</Link>
+            <Link className={a} to="/demo">Live demo</Link>
             <Link className={a} to="/pricing">Pricing</Link>
             <Link className={a} to="/verify">Verify a record</Link>
           </div>
@@ -221,7 +232,7 @@ export function Footer() {
           <div className={col}>
             <Eyebrow tick={false}>Account</Eyebrow>
             <Link className={a} to="/login">Log in</Link>
-            {CHROME_STORE_URL.startsWith('/') ? <Link className={a} to={CHROME_STORE_URL}>Add to Chrome</Link> : <a className={a} href={CHROME_STORE_URL} target="_blank" rel="noreferrer">Add to Chrome</a>}
+            {CHROME_STORE_URL.startsWith('/') ? <Link className={a} to={CHROME_STORE_URL}>Get Trail</Link> : <a className={a} href={CHROME_STORE_URL} target="_blank" rel="noreferrer">Get Trail</a>}
           </div>
         </nav>
         <p className="md:col-span-12 font-mono text-xs text-ink-soft">2026 Trail. Built for students, not against them.</p>
@@ -293,10 +304,54 @@ export function Card({ children, className, as: Tag = 'div' }: { children: React
   return <Tag className={cx('bg-sheet border border-rule rounded-lg p-5 sm:p-6', className)}>{children}</Tag>;
 }
 
-export function Stat({ label, value, detail, tone, className }: { label: string; value: ReactNode; detail?: ReactNode; tone?: 'typed' | 'paste' | 'accent'; className?: string }) {
+/* ------------------------------------------------------------------ Info */
+
+let infoSeq = 0;
+
+/**
+ * A small "?" that reveals one sentence on hover, focus or tap: what a widget shows and how it
+ * is computed. Every stat, chart and table on the site carries one (or a visible caption).
+ */
+export function Info({ text, className }: { text: string; className?: string }) {
+  const [open, setOpen] = useState(false);
+  const [id] = useState(() => `info-${++infoSeq}`);
+  return (
+    <span className={cx('relative inline-flex align-middle', className)}>
+      <button
+        type="button"
+        aria-label="What is this?"
+        aria-describedby={id}
+        aria-expanded={open}
+        className="w-4 h-4 rounded-full border border-rule-strong text-[10px] leading-none font-mono text-ink-soft hover:text-ink hover:border-ink grid place-items-center select-none"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onClick={() => setOpen((o) => !o)}
+      >
+        ?
+      </button>
+      <span
+        role="tooltip"
+        id={id}
+        className={cx(
+          'absolute left-0 top-full mt-1.5 z-30 w-60 bg-sheet border border-rule-strong rounded-md shadow-sheet px-3 py-2 text-xs leading-relaxed text-ink normal-case tracking-normal font-sans text-left',
+          open ? 'block' : 'hidden',
+        )}
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
+export function Stat({ label, value, detail, tone, className, info }: { label: string; value: ReactNode; detail?: ReactNode; tone?: 'typed' | 'paste' | 'accent'; className?: string; info?: string }) {
   return (
     <div className={cx('border-t border-rule-strong pt-3', className)}>
-      <span className="marginal">{label}</span>
+      <span className="marginal inline-flex items-center gap-1.5">
+        {label}
+        {info && <Info text={info} />}
+      </span>
       <div className={cx('display text-3xl leading-none mt-2 tabular', tone === 'typed' && 'text-typed', tone === 'paste' && 'text-paste', tone === 'accent' && 'text-accent')}>{value}</div>
       {detail && <div className="text-sm text-ink-soft mt-1.5">{detail}</div>}
     </div>

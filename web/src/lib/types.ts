@@ -184,8 +184,18 @@ export type Referrals = {
 
 export type ServerDoc = { doc: string; first_seen: string; last_seen: string; last_checkpoint: string | null };
 
-export type VerifyCheck = { status: 'PASS' | 'FAIL' | 'SKIP'; name: string; detail: string };
-export type VerifyResult = { ok: boolean; checks: VerifyCheck[] };
+export type VerifyCheck = { status: 'PASS' | 'FAIL' | 'SKIP'; name: string; detail: string; plain?: string };
+/** summary is optional so older callers keep working; the /verify page uses it for the verdict sentence. */
+export type VerifySummary = {
+  events: number;
+  sessions: number;
+  checkpoints: number;
+  /** ISO timestamps of the signed checkpoints, oldest first */
+  signedAt: string[];
+  /** first event whose hash or link no longer holds, if any */
+  brokenAt: { seq: number; index: number; session: string; ts: string | null } | null;
+};
+export type VerifyResult = { ok: boolean; checks: VerifyCheck[]; summary?: VerifySummary };
 
 export type ExtensionStatus = { installed: boolean; connected: boolean; version?: string };
 

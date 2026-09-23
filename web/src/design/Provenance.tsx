@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { motion } from 'framer-motion';
 import { Badge, cx } from './components';
+import { usePrefersReducedMotion } from './motion';
 
 /*
  * Provenance: "where each line came from" strip + paste list.
@@ -31,18 +33,26 @@ export function Swatch({ label, className }: { label: ProvenanceLabel; className
   return <i aria-hidden className={cx('inline-block w-2.5 h-2.5 rounded-[2px] align-[-1px]', bg[label], className)} />;
 }
 
-/** One cell per line, in reading order. */
-export function ProvenanceStrip({ lines, className }: { lines: ProvenanceLine[]; className?: string }) {
+/** One cell per line, in reading order. With `animate`, the cells light up left to right once when scrolled into view. */
+export function ProvenanceStrip({ lines, className, animate = false }: { lines: ProvenanceLine[]; className?: string; animate?: boolean }) {
+  const reduced = usePrefersReducedMotion();
   const counts = {} as Record<ProvenanceLabel, number>;
   for (const l of lines) counts[l.label] = (counts[l.label] || 0) + 1;
   const summary = LABELS.filter((l) => counts[l.key]).map((l) => `${counts[l.key]} ${l.name}`).join(', ');
+  const lit = animate && !reduced;
+  // the whole pass takes ~0.9s however many lines there are
+  const step = lines.length ? Math.min(0.06, 0.9 / lines.length) : 0;
+  const Bar: any = lit ? motion.div : 'div';
+  const Cell: any = lit ? motion.span : 'span';
+  const barProps = lit ? { initial: 'dim', whileInView: 'lit', viewport: { once: true, margin: '-10% 0px' }, variants: { lit: { transition: { staggerChildren: step } } } } : {};
+  const cellVariants = { dim: { opacity: 0.18 }, lit: { opacity: 1, transition: { duration: 0.35 } } };
   return (
     <div className={cx('grid gap-2', className)}>
-      <div className="flex h-4 rounded-sm overflow-hidden border border-rule gap-px bg-rule" role="img" aria-label={`Where each line came from: ${summary || 'no lines'}`}>
+      <Bar className="flex h-4 rounded-sm overflow-hidden border border-rule gap-px bg-rule" role="img" aria-label={`Where each line came from: ${summary || 'no lines'}`} {...barProps}>
         {lines.map((l) => (
-          <span key={l.index} className={cx('flex-1 min-w-[2px]', bg[l.label] || 'bg-unobserved')} title={`Line ${l.index + 1}: ${l.label}${l.text ? ` — ${l.text.slice(0, 60)}` : ''}`} />
+          <Cell key={l.index} className={cx('flex-1 min-w-[2px]', bg[l.label] || 'bg-unobserved')} title={`Line ${l.index + 1}: ${l.label}${l.text ? ` — ${l.text.slice(0, 60)}` : ''}`} {...(lit ? { variants: cellVariants } : {})} />
         ))}
-      </div>
+      </Bar>
       <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-soft tabular">
         {LABELS.filter((l) => l.key !== 'unobserved' || counts.unobserved).map((l) => (
           <li key={l.key}>

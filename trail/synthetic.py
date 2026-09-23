@@ -363,3 +363,289 @@ def make_corpus(*, target_lines: int = 10_000, seed: int = 42, start: datetime |
         total += len(d["truth_lines"])
         i += 1
     return docs
+
+
+# -- real texts, simulated processes --------------------------------------------------
+#
+# The writers above compose their essays from corpus sentences. RealWriter takes a
+# real essay (corpus/real/*.jsonl: human student essays and ChatGPT essays from public
+# datasets, see corpus/real/SOURCES.md) and simulates *how* it could have entered the
+# editor. Trail records process, not content: the same AI essay is run through three
+# different processes and only the process differs in the record.
+#
+# Scenarios:
+#     human_typed       typed by hand over several sessions, human cadence, typos, false starts
+#     ai_pasted_whole   pasted in one go from chatgpt.com, a few light edits afterwards
+#     ai_pasted_chunks  pasted paragraph by paragraph from chatgpt.com, some sentences reworded
+#     ai_autotyped      "typed" by a script at a fixed interval, no corrections, no pauses
+#     mixed_quotes      typed by hand with one or two quotations pasted from a web source
+
+import json
+import re
+
+REAL_CORPUS = CORPUS / "real"
+SCENARIOS = ("human_typed", "ai_pasted_whole", "ai_pasted_chunks", "ai_autotyped", "mixed_quotes")
+QUOTE_HOSTS = ["www.jstor.org", "en.wikipedia.org", "plato.stanford.edu"]
+REWORDS = [
+    ("However, ", "But "), ("Moreover, ", "Also, "), ("Furthermore, ", "Also, "), ("Additionally, ", "On top of that, "),
+    ("In conclusion, ", "To sum up, "), ("Overall, ", "All in all, "), ("significant", "important"), ("utilize", "use"),
+    ("in order to", "to"), ("demonstrates", "shows"), ("individuals", "people"), ("crucial", "key"), ("numerous", "many"),
+    ("essential", "necessary"), ("various", "different"), ("a wide range of", "many"), ("plays a vital role", "matters a lot"),
+    ("It is important to note that ", "Note that "), ("ultimately", "in the end"), ("facilitate", "help"),
+]
+SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def load_real(name: str) -> list[dict[str, Any]]:
+    """corpus/real/<name>.jsonl -> list of {id, text, words, source, url, licence}."""
+    p = REAL_CORPUS / f"{name}.jsonl"
+    if not p.exists():
+        return []
+    return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+
+
+def reword(sentence: str, rng: random.Random) -> str:
+    """A light human rewording of one sentence: a few substitutions, or a new opener."""
+    out = sentence
+    hits = [(a, b) for a, b in REWORDS if a in out]
+    rng.shuffle(hits)
+    for a, b in hits[:2]:
+        out = out.replace(a, b, 1)
+    if out == sentence:
+        opener = rng.choice(["Put simply, ", "In other words, ", "Basically, ", "What this means is that "])
+        out = opener + sentence[0].lower() + sentence[1:]
+    return out
+
+
+class RealWriter(Writer):
+    """Simulate one of the SCENARIOS over a real essay. Ground truth as in Writer."""
+
+    def __init__(self, *, scenario: str, text: str, seed: int, start: datetime, quotes: list[dict[str, Any]] | None = None,
+                 human_lines: list[str] | None = None, sessions: int | None = None, session_gap_hours: tuple[float, float] = (3.0, 40.0)):
+        if scenario not in SCENARIOS:
+            raise ValueError(f"unknown scenario {scenario!r}")
+        profile = "autotyper" if scenario == "ai_autotyped" else "honest"
+        super().__init__(profile=profile, seed=seed, start=start, human_lines=human_lines or load_lines("human.txt"),
+                         paste_lines=[], target_lines=0)
+        self.scenario = scenario
+        self.text = text.strip()
+        self.paragraphs = [p for p in self.text.split("\n") if p.strip()]
+        self.quotes = quotes or []
+        self.session_gap_hours = session_gap_hours
+        r = self.rng
+        if sessions is None:
+            sessions = {"human_typed": r.randint(2, 4), "mixed_quotes": r.randint(2, 4), "ai_pasted_whole": 1,
+                        "ai_pasted_chunks": r.randint(1, 2), "ai_autotyped": 1}[scenario]
+        self.n_sessions = max(1, min(sessions, len(self.paragraphs)))
+        self.editor = r.choice(["notion", "word", "generic"])
+        self._done_events: list[Event] = []
+        self.paste_sources: list[dict[str, Any]] = []
+        self.session_ids: list[str] = []
+
+    # -- sessions ---------------------------------------------------------------------
+
+    def _start_session(self) -> None:
+        self.session_id = self._id()
+        self.session_ids.append(self.session_id)
+        self.chain = Chain(session=self.session_id, doc=self.doc_id)
+        host = {"notion": "www.notion.so", "word": "word.cloud.microsoft", "generic": "canvas.university.edu"}[self.editor]
+        self._emit("session.start", {"editor": self.editor, "host": host, "title_hash": sha256_hex(self.text[:60].encode("utf-8")),
+                                     "goal_words": 500, "goal_minutes": 60})
+
+    def _end_session(self, last: bool) -> None:
+        self.snapshot()
+        self._emit("session.end", {"reason": "completed" if last else "closed"})
+        self._done_events.extend(self.chain.events)
+        if not last:
+            lo, hi = self.session_gap_hours
+            self.now += timedelta(hours=self.rng.uniform(lo, hi))
+
+    # -- typing that keeps the text exact ---------------------------------------------
+
+    def type_exact(self, text: str) -> None:
+        """Type `text` so that it ends up verbatim: typos are corrected, false starts and
+        second thoughts are deleted again. Scripts type it straight through."""
+        if self.profile == "autotyper":
+            self.type_text(text)
+            return
+        r = self.rng
+        words = text.split(" ")
+        for wi, w in enumerate(words):
+            token = w + (" " if wi < len(words) - 1 else "")
+            if r.random() < 0.05 and len(w) > 3:
+                k = r.randint(1, len(w) - 1)
+                self.type_text(w[:k] + r.choice("qwertyuiopasdfghjklzxcvbnm"))
+                self.think(0.2, 0.9)
+                self.delete_back(1)
+                self.type_text(w[k:] + (" " if wi < len(words) - 1 else ""))
+                self.stats["typos"] += 1
+            else:
+                self.type_text(token)
+            if r.random() < 0.03 and wi >= 3:
+                # second thoughts: delete the last couple of words, pause, retype them
+                tail = " ".join(words[wi - 1:wi + 1]) + (" " if wi < len(words) - 1 else "")
+                self.delete_back(len(tail))
+                self.think(1.0, 5.0)
+                self.type_text(tail)
+                self.stats["revisions"] += 1
+
+    def type_paragraph(self, par: str, newline: bool) -> None:
+        r = self.rng
+        for si, s in enumerate(SENTENCE_RE.split(par)):
+            if self.profile != "autotyper" and r.random() < 0.12:
+                # false start: a few words of something else, then deleted
+                junk = " ".join(r.choice(self.human_lines).split()[: r.randint(2, 5)])
+                self.type_text(junk)
+                self.think(0.8, 4.0)
+                self.delete_back(len(junk))
+                self.stats["revisions"] += 1
+            self.type_exact(s)
+            if si < len(SENTENCE_RE.split(par)) - 1:
+                self.type_text(" ")
+                if self.profile != "autotyper" and r.random() < 0.3:
+                    self.think(2, 25)
+        if newline:
+            self.type_text("\n")
+        if self.profile != "autotyper" and r.random() < 0.4:
+            self.think(5, 90)
+
+    # -- pasting and rewording ---------------------------------------------------------
+
+    def paste_from(self, text: str, host: str) -> str:
+        pid = self.paste(text, host)
+        self.paste_sources.append({"host": host, "kind": classify_source(host), "chars": len(text), "paste_id": pid})
+        return pid
+
+    def reword_inside(self, start: int, length: int) -> None:
+        """Replace one full sentence inside [start, start+length) with a typed rewording."""
+        region = "".join(self.truth.chars[start:start + length])
+        pos = 0
+        spans = []
+        for s in SENTENCE_RE.split(region.replace("\n", " ")):
+            i = region.find(s, pos)
+            if i >= 0 and len(s) > 30:
+                spans.append((i, len(s)))
+                pos = i + len(s)
+        if not spans:
+            return
+        i, n = self.rng.choice(spans)
+        self.cursor = start + i + n
+        self.delete_back(n)
+        self.think(2.0, 12.0)
+        self.type_exact(reword(region[i:i + n], self.rng))
+        self.cursor = len(self.truth.chars)
+
+    # -- the scenarios -------------------------------------------------------------------
+
+    def _plan_sessions(self) -> list[list[int]]:
+        """Which paragraph indexes are written in each session."""
+        n = len(self.paragraphs)
+        cuts = sorted(self.rng.sample(range(1, n), self.n_sessions - 1)) if self.n_sessions > 1 else []
+        bounds = [0] + cuts + [n]
+        return [list(range(bounds[k], bounds[k + 1])) for k in range(len(bounds) - 1)]
+
+    def write(self) -> dict[str, Any]:
+        r = self.rng
+        plan = self._plan_sessions()
+        last_par = len(self.paragraphs) - 1
+        for si, pars in enumerate(plan):
+            self._start_session()
+            last_session = si == len(plan) - 1
+            if self.scenario in ("human_typed", "mixed_quotes"):
+                for h in r.sample(WEB_HOSTS, r.randint(1, 2)):
+                    self.visit(h)
+                self.think(20, 180)
+                quote_slots = set()
+                if self.scenario == "mixed_quotes" and self.quotes:
+                    want = r.randint(1, 2) if si == 0 else 0
+                    quote_slots = set(r.sample(pars, min(want, len(pars))))
+                for k, pi in enumerate(pars):
+                    par = self.paragraphs[pi]
+                    if pi in quote_slots:
+                        # type the paragraph, then a quotation from a web source inside it
+                        self.type_exact(par)
+                        q = r.choice(self.quotes)
+                        host = r.choice(QUOTE_HOSTS)
+                        self.visit(host)
+                        self.think(10, 60)
+                        self.type_text(" " + r.choice(["As one source puts it, ", "One overview notes that ", "It has been observed that "]) + "“")
+                        self.paste_from(q["text"], host)
+                        self.think(0.5, 3.0)
+                        self.type_text("” " + r.choice(["(see the cited overview).", "(source cited in the bibliography).", "(quoted from the source above)."]))
+                        if pi != last_par:
+                            self.type_text("\n")
+                        self.stats["quotes"] = self.stats.get("quotes", 0) + 1
+                    else:
+                        self.type_paragraph(par, newline=pi != last_par)
+                    if k and k % r.randint(2, 4) == 0:
+                        self.snapshot()
+            elif self.scenario == "ai_pasted_whole":
+                self.visit("chatgpt.com")
+                self.think(30, 240)
+                start = self.cursor
+                self.paste_from(self.text, "chatgpt.com")
+                self.think(20, 120)
+                for _ in range(r.randint(1, 3)):
+                    self.reword_inside(start, len(self.truth.chars) - start)
+                    self.think(5, 60)
+            elif self.scenario == "ai_pasted_chunks":
+                self.visit("chatgpt.com")
+                self.think(30, 240)
+                for k, pi in enumerate(pars):
+                    chunk = self.paragraphs[pi] + ("\n" if pi != last_par else "")
+                    start = self.cursor
+                    self.paste_from(chunk, "chatgpt.com")
+                    self.think(15, 150)
+                    if r.random() < 0.5:
+                        self.reword_inside(start, len(chunk))
+                        self.think(5, 40)
+                    if k and k % 3 == 0:
+                        self.snapshot()
+            elif self.scenario == "ai_autotyped":
+                for pi in pars:
+                    self.type_paragraph(self.paragraphs[pi], newline=pi != last_par)
+            self._end_session(last_session)
+
+        events = list(self._done_events)
+        total = max(1, len(self.truth.chars))
+        typed_alive = sum(1 for o in self.truth.origin if o == "typed")
+        return {
+            "profile": self.profile,
+            "scenario": self.scenario,
+            "doc": self.doc_id,
+            "sessions": self.session_ids,
+            "events": events,
+            "truth_text": self.truth.text,
+            "truth_lines": self.truth.line_labels(),
+            "truth_origin": list(self.truth.origin),
+            "truth": {
+                "typed_share": round(typed_alive / total, 4),
+                "pasted_chars": self.stats["pasted"],
+                "pasted_chars_surviving": total - typed_alive,
+                "paste_sources": self.paste_sources,
+                "sessions": len(self.session_ids),
+            },
+            "stats": dict(self.stats),
+        }
+
+
+def make_real_corpus(*, seed: int = 42, start: datetime | None = None, limit: int | None = None) -> list[dict[str, Any]]:
+    """Every human essay as human_typed and mixed_quotes; every AI essay as each AI scenario."""
+    rng = random.Random(seed)
+    human = load_real("human")[:limit]
+    ai = load_real("ai")[:limit]
+    quotes = load_real("quotes")
+    lines = load_lines("human.txt")
+    start = start or datetime(2026, 10, 5, 18, 0, tzinfo=timezone.utc)
+    docs = []
+    jobs = [(t, s) for t in human for s in ("human_typed", "mixed_quotes")] + \
+           [(t, s) for t in ai for s in ("ai_pasted_whole", "ai_pasted_chunks", "ai_autotyped")]
+    for i, (item, scenario) in enumerate(jobs):
+        w = RealWriter(scenario=scenario, text=item["text"], seed=rng.getrandbits(32), start=start + timedelta(hours=2 * i),
+                       quotes=quotes, human_lines=lines)
+        d = w.write()
+        d["source_id"] = item["id"]
+        d["source"] = item["source"]
+        d["source_kind"] = "human" if scenario in ("human_typed", "mixed_quotes") else "ai"
+        docs.append(d)
+    return docs

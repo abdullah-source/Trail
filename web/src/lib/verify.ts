@@ -6,16 +6,34 @@
 // published public key and transparency log, fetched by the page from the same origin) the
 // verifier also checks that the archive was signed by Trail's key and that every checkpoint
 // is in the public log. Without an anchor those checks are reported as SKIP, never PASS.
-import type { VerifyCheck, VerifyResult } from './types';
+import type { VerifyCheck, VerifyResult, VerifySummary } from './types';
 import { canonical, GENESIS_HASH } from './canonical';
 import { sha256Bytes, sha256Hex, sha256HexBytes } from './sha256';
+
+/** One plain-English line per check name, for readers who are not engineers. */
+export const PLAIN: Record<string, string> = {
+  archive: 'The file could be opened as a Trail record',
+  manifest: 'The record lists its own contents',
+  events: 'The events file could be read',
+  'manifest file hashes': 'Every file in the pack still matches its fingerprint',
+  'event hashes': 'Every event still matches its own fingerprint',
+  'chain linkage': 'Every event points at the one before it, so nothing was inserted, removed or edited',
+  'event count': 'The pack holds as many events as it says it does',
+  "signed by Trail's key": "The signatures come from Trail's key, fetched from this site rather than from inside the file",
+  checkpoints: 'Each signed checkpoint matches the chain as it stood at that moment',
+  'checkpoint linkage and heads': 'Each signed checkpoint matches the chain as it stood at that moment',
+  'checkpoint coverage': 'Some writing sessions had not been checkpointed yet when the pack was built',
+  'checkpoint signatures': "Trail's signatures on the checkpoints are valid",
+  'checkpoints in the public log': "Every checkpoint appears in Trail's public, append-only log",
+  'manifest signature': 'The pack as a whole was signed by Trail',
+};
 
 class Report {
   checks: VerifyCheck[] = [];
   failed = 0;
-  ok(name: string, detail = '') { this.checks.push({ status: 'PASS', name, detail }); }
-  fail(name: string, detail = '') { this.failed += 1; this.checks.push({ status: 'FAIL', name, detail }); }
-  skip(name: string, detail = '') { this.checks.push({ status: 'SKIP', name, detail }); }
+  ok(name: string, detail = '') { this.checks.push({ status: 'PASS', name, detail, plain: PLAIN[name] }); }
+  fail(name: string, detail = '') { this.failed += 1; this.checks.push({ status: 'FAIL', name, detail, plain: PLAIN[name] }); }
+  skip(name: string, detail = '') { this.checks.push({ status: 'SKIP', name, detail, plain: PLAIN[name] }); }
 }
 
 // ---- gzip + tar ------------------------------------------------------------------------------------
@@ -102,20 +120,69 @@ function normalisePem(pem: string): string {
 
 // ---- verify ---------------------------------------------------------------------------------------------------
 
+/** Unpack a .trail.tar.gz (or plain tar) into its files. Throws when the bytes are not an archive. */
+export async function unpackRecord(data: Uint8Array): Promise<Map<string, Uint8Array>> {
+  const isGzip = data[0] === 0x1f && data[1] === 0x8b;
+  return untar(isGzip ? await gunzip(data) : data);
+}
+
 export async function verifyRecordBytes(data: Uint8Array, trust?: TrustAnchor): Promise<VerifyResult> {
-  const r = new Report();
   let files: Map<string, Uint8Array>;
   try {
-    const isGzip = data[0] === 0x1f && data[1] === 0x8b;
-    files = untar(isGzip ? await gunzip(data) : data);
+    files = await unpackRecord(data);
   } catch (e) {
+    const r = new Report();
     r.fail('archive', `could not read archive: ${(e as Error).message}`);
     return { ok: false, checks: r.checks };
   }
-  // Strip the single top-level directory.
+  return verifyRecordFiles(files, trust);
+}
+
+function rootOf(files: Map<string, Uint8Array>): string {
   const names = [...files.keys()];
   const roots = new Set(names.map((n) => n.split('/')[0]));
-  const root = roots.size === 1 && names.every((n) => n.includes('/')) ? [...roots][0] + '/' : '';
+  return roots.size === 1 && names.every((n) => n.includes('/')) ? [...roots][0] + '/' : '';
+}
+
+/**
+ * Alter one event in an unpacked record the way a forger would: change its text and recompute
+ * its own hash so the event looks self-consistent. The next event's `prev` link no longer
+ * matches, so the chain check names exactly where the record was changed. Returns the altered
+ * files (a copy) and which event was touched, or null when there is nothing to alter.
+ */
+export function tamperRecordFiles(files: Map<string, Uint8Array>): { files: Map<string, Uint8Array>; seq: number; index: number; session: string; ts: string | null; before: string; after: string } | null {
+  const root = rootOf(files);
+  const dec = new TextDecoder();
+  const manifestBytes = files.get(root + 'manifest.json');
+  const manifest = manifestBytes ? JSON.parse(dec.decode(manifestBytes)) : {};
+  const evName = root + (manifest.events_file || 'events.jsonl');
+  const evBytes = files.get(evName);
+  if (!evBytes) return null;
+  const events: any[] = readJsonl(evBytes);
+  // pick a typed insert somewhere in the middle of the record so the break is visibly mid-essay
+  const candidates = events.map((e, i) => [e, i] as const).filter(([e]) => (e.kind === 'insert' || e.kind === 'paste') && typeof e.data?.text === 'string' && e.data.text.trim().length >= 3);
+  if (!candidates.length) return null;
+  const [ev, index] = candidates[Math.floor(candidates.length * 0.6)];
+  const before = String(ev.data.text);
+  // swap the first letter for a different one
+  const m = before.match(/[A-Za-z]/);
+  const at = m?.index ?? 0;
+  const ch = before[at] || 'a';
+  const swap = ch === 'e' ? 'a' : 'e';
+  const after = before.slice(0, at) + swap + before.slice(at + 1);
+  const altered = { ...ev, data: { ...ev.data, text: after } };
+  const { hash: _drop, ...body } = altered;
+  altered.hash = sha256Hex(canonical(body));
+  events[index] = altered;
+  const out = new Map(files);
+  out.set(evName, new TextEncoder().encode(events.map((e) => JSON.stringify(e)).join('\n') + '\n'));
+  return { files: out, seq: ev.seq, index, session: ev.session, ts: ev.ts ?? null, before, after };
+}
+
+export async function verifyRecordFiles(files: Map<string, Uint8Array>, trust?: TrustAnchor): Promise<VerifyResult> {
+  const r = new Report();
+  // Strip the single top-level directory.
+  const root = rootOf(files);
   const get = (rel: string) => files.get(root + rel);
   const dec = new TextDecoder();
 
@@ -142,27 +209,36 @@ export async function verifyRecordBytes(data: Uint8Array, trust?: TrustAnchor): 
   const events: any[] = evBytes ? readJsonl(evBytes) : [];
   const bySession = new Map<string, any[]>();
   let hashErrors = 0;
-  for (const ev of events) {
+  let brokenAt: VerifySummary['brokenAt'] = null;
+  const mark = (ev: any, index: number) => {
+    if (!brokenAt) brokenAt = { seq: ev.seq, index, session: ev.session, ts: ev.ts ?? null };
+  };
+  events.forEach((ev, i) => {
     const { hash, ...body } = ev;
-    if (sha256Hex(canonical(body)) !== hash) hashErrors += 1;
+    if (sha256Hex(canonical(body)) !== hash) {
+      hashErrors += 1;
+      mark(ev, i);
+    }
     if (!bySession.has(ev.session)) bySession.set(ev.session, []);
     bySession.get(ev.session)!.push(ev);
-  }
-  if (hashErrors) r.fail('event hashes', `${hashErrors} of ${events.length} events do not match their contents`);
+  });
+  if (hashErrors) r.fail('event hashes', `${hashErrors} of ${events.length} events do not match their contents; first at event #${brokenAt!.index + 1}`);
   else r.ok('event hashes', `${events.length} events`);
 
   const chainErrors: string[] = [];
+  const sessionOrder = [...bySession.keys()];
   for (const [session, evs] of [...bySession.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
     evs.sort((a, b) => a.seq - b.seq);
     let prev = GENESIS_HASH;
     evs.forEach((ev, i) => {
-      if (ev.seq !== i) chainErrors.push(`session ${session}: seq gap at ${i}`);
-      if (ev.prev !== prev) chainErrors.push(`session ${session} seq ${ev.seq}: prev mismatch`);
+      const index = events.indexOf(ev);
+      if (ev.seq !== i) { chainErrors.push(`session ${sessionOrder.indexOf(session) + 1}: seq gap at ${i}`); mark(ev, index); }
+      if (ev.prev !== prev) { chainErrors.push(`event #${index + 1} (session ${sessionOrder.indexOf(session) + 1}, seq ${ev.seq}) points at a previous event that no longer exists: the record was changed at or before event #${index}`); mark(events[index - 1] ?? ev, Math.max(0, index - 1)); }
       prev = ev.hash;
     });
   }
-  if (chainErrors.length) r.fail('chain linkage', chainErrors.slice(0, 5).join('; '));
-  else r.ok('chain linkage', `${bySession.size} sessions`);
+  if (chainErrors.length) r.fail('chain linkage', chainErrors.slice(0, 3).join('; '));
+  else r.ok('chain linkage', `${bySession.size} session${bySession.size === 1 ? '' : 's'}, ${events.length} links`);
   if (manifest.event_count != null && manifest.event_count !== events.length) {
     r.fail('event count', `manifest says ${manifest.event_count}, archive has ${events.length}`);
   }
@@ -254,7 +330,14 @@ export async function verifyRecordBytes(data: Uint8Array, trust?: TrustAnchor): 
   } else {
     r.skip('manifest signature', 'manifest.sig.json not present');
   }
-  return { ok: r.failed === 0, checks: r.checks };
+  const summary: VerifySummary = {
+    events: events.length,
+    sessions: bySession.size,
+    checkpoints: checkpoints.length,
+    signedAt: checkpoints.map((cp) => String(cp.body?.ts ?? '')).filter(Boolean),
+    brokenAt,
+  };
+  return { ok: r.failed === 0, checks: r.checks, summary };
 }
 
 /** A bare events.jsonl (raw export): event hashes and chain links only; no checkpoints to check. */

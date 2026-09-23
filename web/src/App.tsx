@@ -14,6 +14,8 @@ const Patterns = lazy(() => import('./app/Patterns'));
 const Invite = lazy(() => import('./app/Invite'));
 const Settings = lazy(() => import('./app/Settings'));
 const Welcome = lazy(() => import('./app/Welcome'));
+// The public demo shares the app's replay engine, so it is lazy too: the marketing bundle stays small.
+const Demo = lazy(() => import('./marketing/pages/Demo'));
 
 // Marketing pages and layout are owned by the design agent (src/marketing/pages, src/design).
 import { Home, HowItWorks, Pricing, Privacy, Terms, MarketingLayout } from './marketing/pages';
@@ -32,6 +34,7 @@ export default function App() {
         <Route element={<MarketingLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/demo" element={<Demo />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />

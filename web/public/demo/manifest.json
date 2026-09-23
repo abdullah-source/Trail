@@ -1,0 +1,275 @@
+[
+ {
+  "id": "demo-human-1",
+  "title": "The role of the medical office assistant",
+  "kind": "human",
+  "blurb": "Every character was typed by hand over 3 sessions, with typos corrected and pauses between sentences; no pastes, 156 characters deleted along the way.",
+  "description": "Every character was typed by hand over 3 sessions, with typos corrected and pauses between sentences; no pastes, 156 characters deleted along the way.",
+  "source": "ghostbuster essay/human",
+  "source_id": "gb-human-5",
+  "source_url": "https://github.com/vivek3141/ghostbuster-data/blob/master/essay/human/5.txt",
+  "licence": "CC BY 3.0",
+  "words": 395,
+  "sessions": 3,
+  "first_event": "2026-09-11T11:40:56.062990Z",
+  "last_event": "2026-09-13T06:42:13.721778Z",
+  "truth": {
+   "typed_share": 1.0,
+   "pasted_chars": 0,
+   "paste_sources": [],
+   "scripted": false
+  },
+  "expect": {
+   "typed_share": 1.0,
+   "pasted_chars": 0,
+   "pasted_chars_surviving": 0,
+   "ai_pastes": 0,
+   "by_source_kind": {},
+   "regularity_flagged": false,
+   "regularity_signals": [],
+   "line_labels": {
+    "typed": 3
+   },
+   "sessions": 3,
+   "active_minutes": 10.4,
+   "events": 479
+  }
+ },
+ {
+  "id": "demo-human-2",
+  "title": "Why clinical experience matters in medical education",
+  "kind": "human",
+  "blurb": "Every character was typed by hand over 3 sessions, with typos corrected and pauses between sentences; no pastes, 100 characters deleted along the way.",
+  "description": "Every character was typed by hand over 3 sessions, with typos corrected and pauses between sentences; no pastes, 100 characters deleted along the way.",
+  "source": "ghostbuster essay/human",
+  "source_id": "gb-human-152",
+  "source_url": "https://github.com/vivek3141/ghostbuster-data/blob/master/essay/human/152.txt",
+  "licence": "CC BY 3.0",
+  "words": 342,
+  "sessions": 3,
+  "first_event": "2026-09-12T18:38:03.235181Z",
+  "last_event": "2026-09-15T19:16:42.161776Z",
+  "truth": {
+   "typed_share": 1.0,
+   "pasted_chars": 0,
+   "paste_sources": [],
+   "scripted": false
+  },
+  "expect": {
+   "typed_share": 1.0,
+   "pasted_chars": 0,
+   "pasted_chars_surviving": 0,
+   "ai_pastes": 0,
+   "by_source_kind": {},
+   "regularity_flagged": false,
+   "regularity_signals": [],
+   "line_labels": {
+    "typed": 3
+   },
+   "sessions": 3,
+   "active_minutes": 8.4,
+   "events": 402
+  }
+ },
+ {
+  "id": "demo-ai-pasted-1",
+  "title": "What globalization means for managers",
+  "kind": "ai_pasted",
+  "blurb": "One paste of 3,581 characters from chatgpt.com, then a few sentences reworded by hand; 2% of the final text was typed.",
+  "description": "One paste of 3,581 characters from chatgpt.com, then a few sentences reworded by hand; 2% of the final text was typed.",
+  "source": "ghostbuster essay/gpt",
+  "source_id": "gb-gpt-81",
+  "source_url": "https://github.com/vivek3141/ghostbuster-data/blob/master/essay/gpt/81.txt",
+  "licence": "CC BY 3.0",
+  "words": 477,
+  "sessions": 1,
+  "first_event": "2026-09-11T22:05:11.701533Z",
+  "last_event": "2026-09-11T22:09:43.209404Z",
+  "truth": {
+   "typed_share": 0.0244,
+   "pasted_chars": 3581,
+   "paste_sources": [
+    {
+     "host": "chatgpt.com",
+     "kind": "ai",
+     "chars": 3581
+    }
+   ],
+   "scripted": false
+  },
+  "expect": {
+   "typed_share": 0.0244,
+   "pasted_chars": 3581,
+   "pasted_chars_surviving": 3517,
+   "ai_pastes": 1,
+   "by_source_kind": {
+    "ai": 3581
+   },
+   "regularity_flagged": false,
+   "regularity_signals": [],
+   "line_labels": {
+    "pasted": 6,
+    "pasted-edited": 1
+   },
+   "sessions": 1,
+   "active_minutes": 2.5,
+   "events": 20
+  }
+ },
+ {
+  "id": "demo-ai-chunks-1",
+  "title": "Philosophical and mathematical logic",
+  "kind": "ai_chunks",
+  "blurb": "6 pastes from chatgpt.com, one paragraph at a time over 1 session, with some paragraphs partly reworded; 15% of the final text was typed.",
+  "description": "6 pastes from chatgpt.com, one paragraph at a time over 1 session, with some paragraphs partly reworded; 15% of the final text was typed.",
+  "source": "ghostbuster essay/gpt",
+  "source_id": "gb-gpt-69",
+  "source_url": "https://github.com/vivek3141/ghostbuster-data/blob/master/essay/gpt/69.txt",
+  "licence": "CC BY 3.0",
+  "words": 436,
+  "sessions": 1,
+  "first_event": "2026-09-16T07:56:45.235934Z",
+  "last_event": "2026-09-16T08:11:54.401867Z",
+  "truth": {
+   "typed_share": 0.1538,
+   "pasted_chars": 3051,
+   "paste_sources": [
+    {
+     "host": "chatgpt.com",
+     "kind": "ai",
+     "chars": 496
+    },
+    {
+     "host": "chatgpt.com",
+     "kind": "ai",
+     "chars": 615
+    },
+    {
+     "host": "chatgpt.com",
+     "kind": "ai",
+     "chars": 512
+    },
+    {
+     "host": "chatgpt.com",
+     "kind": "ai",
+     "chars": 448
+    },
+    {
+     "host": "chatgpt.com",
+     "kind": "ai",
+     "chars": 351
+    },
+    {
+     "host": "chatgpt.com",
+     "kind": "ai",
+     "chars": 629
+    }
+   ],
+   "scripted": false
+  },
+  "expect": {
+   "typed_share": 0.1538,
+   "pasted_chars": 3051,
+   "pasted_chars_surviving": 2608,
+   "ai_pastes": 6,
+   "by_source_kind": {
+    "ai": 3051
+   },
+   "regularity_flagged": false,
+   "regularity_signals": [],
+   "line_labels": {
+    "pasted": 2,
+    "pasted-edited": 4
+   },
+   "sessions": 1,
+   "active_minutes": 11.2,
+   "events": 95
+  }
+ },
+ {
+  "id": "demo-ai-autotyped-1",
+  "title": "Supply and demand in market economies",
+  "kind": "ai_autotyped",
+  "blurb": "No pastes and a 100% typed share, but the keystroke rhythm is uniform (spread 0.0) with no corrections in 3,186 characters: consistent with scripted typing, which Trail reports as a signal, not a verdict.",
+  "description": "No pastes and a 100% typed share, but the keystroke rhythm is uniform (spread 0.0) with no corrections in 3,186 characters: consistent with scripted typing, which Trail reports as a signal, not a verdict.",
+  "source": "ghostbuster essay/gpt",
+  "source_id": "gb-gpt-220",
+  "source_url": "https://github.com/vivek3141/ghostbuster-data/blob/master/essay/gpt/220.txt",
+  "licence": "CC BY 3.0",
+  "words": 482,
+  "sessions": 1,
+  "first_event": "2026-09-19T09:36:20.613329Z",
+  "last_event": "2026-09-19T09:39:15.843329Z",
+  "truth": {
+   "typed_share": 1.0,
+   "pasted_chars": 0,
+   "paste_sources": [],
+   "scripted": true
+  },
+  "expect": {
+   "typed_share": 1.0,
+   "pasted_chars": 0,
+   "pasted_chars_surviving": 0,
+   "ai_pastes": 0,
+   "by_source_kind": {},
+   "regularity_flagged": true,
+   "regularity_signals": [
+    "uniform_rhythm",
+    "no_corrections",
+    "no_pauses",
+    "identical_intervals"
+   ],
+   "line_labels": {
+    "typed": 5
+   },
+   "sessions": 1,
+   "active_minutes": 2.9,
+   "events": 170
+  }
+ },
+ {
+  "id": "demo-mixed-1",
+  "title": "European colonial powers in the Caribbean",
+  "kind": "mixed",
+  "blurb": "Typed by hand over 3 sessions with 1 quotation pasted from en.wikipedia.org; 92% of the final text was typed.",
+  "description": "Typed by hand over 3 sessions with 1 quotation pasted from en.wikipedia.org; 92% of the final text was typed.",
+  "source": "ghostbuster essay/human",
+  "source_id": "gb-human-247",
+  "source_url": "https://github.com/vivek3141/ghostbuster-data/blob/master/essay/human/247.txt",
+  "licence": "CC BY 3.0",
+  "words": 362,
+  "sessions": 3,
+  "first_event": "2026-09-14T05:56:52.364099Z",
+  "last_event": "2026-09-19T02:34:26.128580Z",
+  "truth": {
+   "typed_share": 0.9161,
+   "pasted_chars": 194,
+   "paste_sources": [
+    {
+     "host": "en.wikipedia.org",
+     "kind": "web",
+     "chars": 194
+    }
+   ],
+   "scripted": false
+  },
+  "expect": {
+   "typed_share": 0.9161,
+   "pasted_chars": 194,
+   "pasted_chars_surviving": 194,
+   "ai_pastes": 0,
+   "by_source_kind": {
+    "web": 194
+   },
+   "regularity_flagged": false,
+   "regularity_signals": [],
+   "line_labels": {
+    "mixed": 1,
+    "typed": 2
+   },
+   "sessions": 3,
+   "active_minutes": 9.3,
+   "events": 395
+  }
+ }
+]

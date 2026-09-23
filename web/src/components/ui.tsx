@@ -1,5 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { Info } from '../design/components';
+export { Info };
 
 const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ');
 export { cx };
@@ -142,10 +144,13 @@ export function SectionHead({ kicker, title, lede, className }: { kicker?: strin
   );
 }
 
-export function StatTile({ label, value, detail, tone }: { label: string; value: ReactNode; detail?: ReactNode; tone?: 'typed' | 'paste' }) {
+export function StatTile({ label, value, detail, tone, info }: { label: string; value: ReactNode; detail?: ReactNode; tone?: 'typed' | 'paste'; info?: string }) {
   return (
     <div className="border-t border-rule pt-3">
-      <Marginal>{label}</Marginal>
+      <Marginal className="inline-flex items-center gap-1.5">
+        {label}
+        {info && <Info text={info} />}
+      </Marginal>
       <div className={cx('display text-3xl leading-none mt-2 tabular', tone === 'typed' && 'text-typed', tone === 'paste' && 'text-paste')}>{value}</div>
       {detail && <div className="text-sm text-ink-soft mt-1">{detail}</div>}
     </div>
