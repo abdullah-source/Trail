@@ -14,12 +14,25 @@ const send = (m) => new Promise((r) => chrome.runtime.sendMessage(m, (x) => r(x 
 
   let st = null;
   try { st = await chrome.tabs.sendMessage(tab.id, { type: "status" }); } catch {}
+  // Screen time for homework: what this page is and how long it has been worked on today (local only).
+  let pr = null;
+  try { pr = await chrome.tabs.sendMessage(tab.id, { type: "presence.status" }); } catch {}
+  if (pr && pr.context) {
+    const c = pr.context;
+    const today = (await send({ type: "presence.today", item_key: c.item_key, editor_doc: c.editor_doc })) || { active_ms: 0 };
+    const ms = (today.active_ms || 0) + (pr.pending_ms || 0);
+    const mins = Math.round(ms / 60000);
+    const fmt = mins < 1 ? "under a minute today" : mins < 60 ? `${mins} min today` : `${Math.floor(mins / 60)} h ${mins % 60} min today`;
+    const where = c.course_label && c.course_label !== c.item_label ? ` (${c.course_label})` : "";
+    $("work").textContent = `Working on: ${c.item_label || c.course_label || "this page"}${where} · ${fmt}`;
+    $("work").hidden = false;
+  }
   const renderPause = () => {
-    if (!host || !st) return;
+    if (!host || !(st || (pr && pr.context))) return;
     const p = paused.has(host);
     $("pause").hidden = false;
     $("pause").textContent = p ? `Resume recording on ${host}` : `Pause recording on ${host}`;
-    dot.classList.toggle("paused", p); dot.classList.toggle("on", !p && st.recording);
+    dot.classList.toggle("paused", p); dot.classList.toggle("on", !p && ((st && st.recording) || !!(pr && pr.context)));
     if (p) status.textContent = `Paused on ${host}. Nothing is recorded here until you resume.`;
   };
   if (st && st.recording) {
@@ -34,6 +47,9 @@ const send = (m) => new Promise((r) => chrome.runtime.sendMessage(m, (x) => r(x 
       await send({ type: "ai.note", doc: st.doc, tool: tool.trim(), note: rest.join(":").trim() || note });
       $("note").value = ""; status.textContent = "Note added to the record.";
     };
+    renderPause();
+  } else if (pr && pr.context) {
+    status.textContent = "Keeping time on this page. Everything stays on this device.";
     renderPause();
   } else {
     status.textContent = "Not an editor Trail records. Supported: Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard, Brightspace.";

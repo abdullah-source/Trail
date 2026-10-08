@@ -1,7 +1,7 @@
 // Single data layer for the pages. With VITE_MOCK=1 every function returns fixtures from
 // ./mock.ts (real simulated events). Otherwise: essays/events come from the extension bridge,
 // account/billing/checkpoints/pack from the API (same origin, httpOnly session cookie).
-import type { Checkpoint, Essay, ExtensionStatus, Me, Referrals, ServerDoc, TrailEvent, VerifyResult } from './types';
+import type { Checkpoint, Essay, ExtensionStatus, Me, Referrals, ServerDoc, TrailEvent, VerifyResult, WorklogRow, WorklogSummary } from './types';
 import * as ext from './extension';
 import { verifyRecordFile, type TrustAnchor } from './verify';
 
@@ -231,6 +231,35 @@ export const data = {
   async clearLocalData(): Promise<void> {
     if (MOCK) return;
     await ext.clearLocal();
+  },
+
+  /** Homework time: active stints on school sites, from the extension's local work-log. Never from the server. */
+  async worklog(since?: string, until?: string): Promise<WorklogRow[]> {
+    if (MOCK) {
+      const rows = (await mock()).mockWorklog();
+      return rows.filter((r) => (!since || r.end >= since) && (!until || r.start < until));
+    }
+    return ext.listWorklog(since, until);
+  },
+
+  /** The extension's own summary; the Time page computes its own from rows and only needs this as a fallback. */
+  async worklogSummary(since: string, until: string): Promise<WorklogSummary> {
+    if (MOCK) {
+      const { summarizeRows } = await import('./homework');
+      return summarizeRows(await data.worklog(since, until), new Date(since).getTime(), new Date(until).getTime());
+    }
+    return ext.worklogSummary(since, until);
+  },
+
+  /** Download of the whole work-log as JSON, built in the browser. */
+  async exportWorklog(): Promise<Blob> {
+    const rows = MOCK ? (await mock()).mockWorklog() : await ext.exportWorklog();
+    return new Blob([JSON.stringify({ kind: 'trail-worklog', v: 1, exported: new Date().toISOString(), rows }, null, 2)], { type: 'application/json' });
+  },
+
+  async deleteWorklog(): Promise<void> {
+    if (MOCK) return;
+    await ext.deleteWorklog();
   },
 
   async extensionStatus(): Promise<ExtensionStatus> {

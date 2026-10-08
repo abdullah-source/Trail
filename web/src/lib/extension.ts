@@ -1,6 +1,6 @@
 // Bridge to the Trail Chrome extension over chrome.runtime.sendMessage(EXTENSION_ID, ...)
 // (externally_connectable). Events never touch the server: the app reads them here.
-import type { Checkpoint, Essay, ExtensionStatus, TrailEvent } from './types';
+import type { Checkpoint, Essay, ExtensionStatus, TrailEvent, WorklogRow, WorklogSummary } from './types';
 
 declare global {
   interface Window {
@@ -101,4 +101,31 @@ export function checkpointNow(id: string): Promise<{ created: boolean }> {
 /** Wipe every recorded document on this device (extension IndexedDB). */
 export function clearLocal(): Promise<void> {
   return send<void>({ type: 'clearAll' }, 15000);
+}
+
+// ---- homework time (work-log) ------------------------------------------------------------------
+// Active time on school sites and editors, recorded by the extension into its own local store.
+// Read here, computed in the app (src/lib/homework.ts); nothing from it goes to the server.
+
+/** Every work-log row, optionally bounded by ISO timestamps (rows overlapping [since, until)). */
+export function listWorklog(since?: string, until?: string): Promise<WorklogRow[]> {
+  const msg: Msg = { type: 'listWorklog' };
+  if (since) msg.since = since;
+  if (until) msg.until = until;
+  return send<WorklogRow[]>(msg, 15000);
+}
+
+/** The extension's own summary for a window. Optional: the app prefers listWorklog + homework.ts. */
+export function worklogSummary(since: string, until: string): Promise<WorklogSummary> {
+  return send<WorklogSummary>({ type: 'worklogSummary', since, until }, 15000);
+}
+
+/** The whole work-log, for the student's own download. */
+export function exportWorklog(): Promise<WorklogRow[]> {
+  return send<WorklogRow[]>({ type: 'exportWorklog' }, 15000);
+}
+
+/** Delete the whole work-log on this device. */
+export function deleteWorklog(): Promise<void> {
+  return send<void>({ type: 'deleteWorklog' }, 15000);
 }

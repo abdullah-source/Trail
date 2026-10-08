@@ -16,9 +16,12 @@ let exportText = 'Existing first line.\r\n';
 
 const ctx = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), 'trail-')), {
   headless: true,
-  executablePath: EXE,
-  args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, '--headless=new'],
+  // Playwright's own Chromium must be opened through channel 'chromium' for extensions to load headless
+  // (Chrome 145 + Playwright 1.58); an explicit CHROME binary is launched as is.
+  ...(EXE ? { executablePath: EXE } : { channel: 'chromium' }),
+  args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`, ...(EXE ? ['--headless=new'] : [])],
 });
+
 await ctx.route('https://docs.google.com/**', (route) => {
   const url = route.request().url();
   if (url.includes('/export?format=txt')) return route.fulfill({ status: 200, contentType: 'text/plain', body: '﻿' + exportText });

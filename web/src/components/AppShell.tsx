@@ -17,6 +17,7 @@ export const useMe = (): Ctx => {
 
 const NAV = [
   { to: '/app', label: 'Essays', end: true },
+  { to: '/app/time', label: 'Time' },
   { to: '/app/patterns', label: 'Patterns' },
   { to: '/app/invite', label: 'Invite' },
   { to: '/app/settings', label: 'Settings' },

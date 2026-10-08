@@ -201,3 +201,35 @@ export type ExtensionStatus = { installed: boolean; connected: boolean; version?
 
 /** GET /v1/config: public, unauthenticated. Lets the marketing pages say the true thing about pricing. */
 export type SiteConfig = { freeAccess: boolean; billingConfigured: boolean; trialDays: number; signupOpen: boolean; clerkPublishableKey: string | null };
+
+/** One stint of ACTIVE time on a school site or editor, recorded locally by the extension (never sent anywhere).
+ *  `doc` is the essay's random doc id when the item is a recorded document, so the Time page can merge the
+ *  stint with the essay's writing sessions instead of counting both. */
+export type WorklogKind = 'assignment' | 'quiz' | 'discussion' | 'page' | 'module' | 'course' | 'writing' | string;
+export type WorklogRow = {
+  id: string;
+  host: string;
+  editor: string;
+  kind: WorklogKind;
+  course_key: string;
+  course_label: string;
+  item_key: string;
+  item_label: string;
+  doc: string | null;
+  /** ISO timestamps */
+  start: string;
+  end: string;
+  active_ms: number;
+  /** local calendar day, YYYY-MM-DD */
+  day: string;
+  heartbeats: number;
+};
+
+/** Optional server-free summary the extension can compute itself; the web app recomputes it from rows. */
+export type WorklogSummary = {
+  total_ms: number;
+  by_course: { course_key: string; course_label: string; active_ms: number; items: number }[];
+  by_item: { item_key: string; item_label: string; course_key: string; course_label: string; kind: WorklogKind; active_ms: number; stints: number; last: string; doc: string | null }[];
+  by_day: { day: string; active_ms: number }[];
+  by_hour: number[];
+};

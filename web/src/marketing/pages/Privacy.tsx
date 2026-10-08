@@ -10,7 +10,7 @@ import { STORED_TABLES } from './schema.generated';
 export type { StoredColumn, StoredTable } from './schema.generated';
 export { STORED_TABLES };
 
-export const NOT_STORED = ['The text of anything you write', 'Recorder events (typing, pastes, deletions)', 'Document titles', "The editor's document ids or URLs (the extension makes up a random id per document and keeps the mapping on your device)", 'Sites you had open while writing', 'Paste sources', 'Card numbers (Stripe holds those)', 'IP addresses in any table. Our access log records method, path, status and duration, never query strings or request bodies; our host, Railway, keeps those log lines for its own retention window.'];
+export const NOT_STORED = ['The text of anything you write', 'Recorder events (typing, pastes, deletions)', 'Document titles', 'Your homework time log: which school sites, courses and assignments you spent time on, and when', "The editor's document ids or URLs (the extension makes up a random id per document and keeps the mapping on your device)", 'Sites you had open while writing', 'Paste sources', 'Card numbers (Stripe holds those)', 'IP addresses in any table. Our access log records method, path, status and duration, never query strings or request bodies; our host, Railway, keeps those log lines for its own retention window.'];
 
 export default function Privacy() {
   useTitle('Privacy');
@@ -75,6 +75,9 @@ export default function Privacy() {
         <Heading title="What is on your device" />
         <Prose className="mt-6">
           <p>The extension keeps, in your browser's local database: the events it records in supported editors (text, timing, pastes with source host, deletions), a snapshot of the document text every three minutes, session starts and stops, host names of sites open while writing, document titles, the editor's document id next to the random id we use for it, and the checkpoints the server returned. You can export all of it as JSON from the app, on any plan, at any time.</p>
+          <p>
+            It also keeps a <strong>homework time log</strong>: for the school sites and editors it already records, the minutes a tab was in front and you were active, with the course and assignment names it read from the page. This powers the Time page in the app, for you alone. Course and assignment names never leave the device: there is no server endpoint that accepts them, and no teacher or institution view exists. You can export or delete the log from Settings.
+          </p>
           <p>Uninstalling the extension deletes this database, as Chrome does for any extension. Export first if you want to keep it.</p>
         </Prose>
       </Section>

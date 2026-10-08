@@ -11,6 +11,7 @@ const AppShell = lazy(() => import('./components/AppShell').then((m) => ({ defau
 const Essays = lazy(() => import('./app/Essays'));
 const EssayPage = lazy(() => import('./app/Essay'));
 const Patterns = lazy(() => import('./app/Patterns'));
+const Time = lazy(() => import('./app/Time'));
 const Invite = lazy(() => import('./app/Invite'));
 const Settings = lazy(() => import('./app/Settings'));
 const Welcome = lazy(() => import('./app/Welcome'));
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="/app" element={<AppShell />}>
           <Route index element={<Essays />} />
           <Route path="essays/:id" element={<EssayPage />} />
+          <Route path="time" element={<Time />} />
           <Route path="patterns" element={<Patterns />} />
           <Route path="invite" element={<Invite />} />
           <Route path="settings" element={<Settings />} />

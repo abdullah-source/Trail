@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Trail — see how you write",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Keeps your own record of how each essay gets written, on your device. Replay your drafts, see your patterns, and get an honest AI-use statement written from what actually happened.",
   "permissions": ["storage", "alarms", "tabs"],
   "host_permissions": [
@@ -34,7 +34,7 @@
         "https://*.blackboard.com/*",
         "https://*.brightspace.com/*"
       ],
-      "js": ["src/recorder.js"],
+      "js": ["src/context.js", "src/recorder.js", "src/presence.js"],
       "run_at": "document_idle",
       "all_frames": true
     }

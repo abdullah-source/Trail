@@ -91,6 +91,96 @@ async function endSession(docId, reason, tsMs) {
   sessions.delete(docId);
 }
 
+// ---- work log: screen time for homework ------------------------------------------------------------
+// presence.js sends {type:"presence", active_ms, ts, course_key, item_key, ...} every 30 s of active
+// time. One row is one continuous stint: heartbeats within 10 minutes of the row's end for the same
+// item extend it; otherwise a new row starts. Writing time stays derived from sessions in the web
+// app; these rows carry the document's random id so the two can be merged there, never here.
+const STINT_GAP_MS = 10 * 60_000;
+const localDay = (d) => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; };
+async function lookupDoc(editorId) {
+  if (!editorId) return null;
+  if (aliases.has(editorId)) return aliases.get(editorId);
+  const doc = (await db.byIndex("docs", "editorId", editorId))[0];
+  if (doc) aliases.set(editorId, doc.id);
+  return doc ? doc.id : null;
+}
+async function latestStint(itemKey) {
+  const rows = await db.byIndex("worklog", "item_key", itemKey);
+  return rows.sort((a, b) => (a.end < b.end ? 1 : a.end > b.end ? -1 : 0))[0] || null;
+}
+async function notePresence(m) {
+  const active = Number(m.active_ms) || 0;
+  if (!m.course_key || !m.item_key || active <= 0 || active > 6 * 3_600_000) return null;
+  const tsMs = Number(m.ts) || Date.now();
+  const startMs = tsMs - active;
+  const doc = await lookupDoc(m.editor_doc);
+  // Writing pages: the editor's own id is only a placeholder until the recorder has minted the random id.
+  const itemKey = doc || m.item_key;
+  let row = await latestStint(itemKey);
+  if (!row && doc && m.item_key !== doc) {
+    // earlier stints on this document were filed before its random id existed: adopt them
+    for (const old of await db.byIndex("worklog", "item_key", m.item_key)) { old.item_key = doc; old.doc = doc; await db.put("worklog", old); }
+    row = await latestStint(itemKey);
+  }
+  if (row && startMs - Date.parse(row.end) <= STINT_GAP_MS) {
+    row.end = nowTs(new Date(Math.max(tsMs, Date.parse(row.end))));
+    row.active_ms += active;
+    row.heartbeats += 1;
+    if (m.item_label) row.item_label = m.item_label;
+    if (m.course_label) row.course_label = m.course_label;
+    if (doc && !row.doc) row.doc = doc;
+    await db.put("worklog", row);
+    return row.id;
+  }
+  row = { id: "wl_" + uuid().replace(/-/g, ""), host: m.host || null, editor: m.editor || null, kind: m.kind || "other", course_key: m.course_key, course_label: m.course_label || null,
+          item_key: itemKey, item_label: m.item_label || null, doc, start: nowTs(new Date(startMs)), end: nowTs(new Date(tsMs)), active_ms: active, day: localDay(startMs), heartbeats: 1 };
+  await db.put("worklog", row);
+  return row.id;
+}
+async function worklogRows(since, until) {
+  const rows = await db.all("worklog");
+  const out = rows.filter((r) => (!since || r.start >= since) && (!until || r.start < until));
+  return out.sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+}
+async function worklogToday(itemKey, editorDoc) {
+  const doc = await lookupDoc(editorDoc);
+  const keys = new Set([itemKey, doc].filter(Boolean));
+  const today = localDay(Date.now());
+  let ms = 0;
+  for (const k of keys) for (const r of await db.byIndex("worklog", "item_key", k)) if (r.day === today) ms += r.active_ms;
+  return { active_ms: ms, doc };
+}
+async function worklogSummary(since, until) {
+  const rows = await worklogRows(since, until);
+  const courses = new Map(), items = new Map(), days = new Map(), hours = new Array(24).fill(0);
+  let total = 0;
+  for (const r of rows) {
+    total += r.active_ms;
+    const c = courses.get(r.course_key) || { course_key: r.course_key, course_label: r.course_label, active_ms: 0, _items: new Set() };
+    c.active_ms += r.active_ms; c._items.add(r.item_key); if (r.course_label) c.course_label = r.course_label; courses.set(r.course_key, c);
+    const it = items.get(r.item_key) || { item_key: r.item_key, item_label: r.item_label, course_key: r.course_key, course_label: r.course_label, kind: r.kind, active_ms: 0, stints: 0, last: r.end, doc: r.doc || null };
+    it.active_ms += r.active_ms; it.stints += 1; if (r.end > it.last) it.last = r.end; if (r.item_label) it.item_label = r.item_label; if (r.course_label) it.course_label = r.course_label; if (r.doc) it.doc = r.doc; items.set(r.item_key, it);
+    days.set(r.day, (days.get(r.day) || 0) + r.active_ms);
+    // spread the stint's active time over the clock hours it spans, in proportion to wall time
+    const s = Date.parse(r.start), e = Math.max(Date.parse(r.end), s + 1), span = e - s;
+    let t = s;
+    while (t < e) {
+      const d = new Date(t); const hourEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours() + 1).getTime();
+      const slice = Math.min(e, hourEnd) - t;
+      hours[d.getHours()] += Math.round((slice / span) * r.active_ms);
+      t = hourEnd;
+    }
+  }
+  return {
+    total_ms: total,
+    by_course: [...courses.values()].map(({ _items, ...c }) => ({ ...c, items: _items.size })).sort((a, b) => b.active_ms - a.active_ms),
+    by_item: [...items.values()].sort((a, b) => b.active_ms - a.active_ms),
+    by_day: [...days.entries()].map(([day, active_ms]) => ({ day, active_ms })).sort((a, b) => (a.day < b.day ? -1 : 1)),
+    by_hour: hours,
+  };
+}
+
 // ---- messages from content scripts and the popup ------------------------------------------------
 // Messages from one page arrive in order but were handled concurrently, so a session.start
 // and the first event could race and mint two sessions (or two doc ids). Handle them one at a time.
@@ -106,7 +196,9 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
       await chrome.storage.local.set({ paused: [...p] });
       return { paused: [...p] };
     }
+    if (m.type === "presence.today") return worklogToday(m.item_key, m.editor_doc);
     if (m.host && (await pausedHosts()).has(m.host)) return;  // per-site pause: nothing is recorded
+    if (m.type === "presence") return notePresence(m);
     m.doc = await resolveDoc(m.doc, m.editor, m.host);
     if (m.type === "session.start") { await endSession(m.doc, "restart", Date.now()); await startSession(m.doc, m.editor, m.host, m.data, Date.now()); return; }
     if (m.type === "session.end") { await endSession(m.doc, m.reason || "completed", Date.now()); return; }
@@ -195,6 +287,11 @@ chrome.runtime.onMessageExternal.addListener((m, sender, reply) => {
         return { created: !!(row && row.created) };
       }
       case "clearAll": await db.clearAll(); sessions.clear(); return null;
+      // work log (screen time for homework): local only, read here like essays are
+      case "listWorklog": return worklogRows(m.since || null, m.until || null);
+      case "worklogSummary": return worklogSummary(m.since || null, m.until || null);
+      case "exportWorklog": return worklogRows(null, null);
+      case "deleteWorklog": await db.clear("worklog"); return null;
       default: throw new Error(`unknown message type ${m && m.type}`);
     }
   })().then((result) => reply({ ok: true, result })).catch((e) => reply({ ok: false, error: e && e.message ? e.message : String(e) }));
@@ -245,3 +342,6 @@ export async function checkpointAll(onlyDoc) {
   }
   return out;
 }
+
+// test hook: test/presence-harness.mjs calls these inside the worker (dynamic import() is not allowed there)
+globalThis.__trailTest = { worklogSummary, worklogRows, clearWorklog: () => db.clear("worklog") };

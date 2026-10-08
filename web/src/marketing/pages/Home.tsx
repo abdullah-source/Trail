@@ -18,6 +18,14 @@ const SAMPLE_PASTES: ProvenancePaste[] = [
   { ts: '2026-10-14T21:40:00Z', chars: 212, source_kind: 'self', source_host: null, from_self: true, surviving_ratio: 1 },
 ];
 
+/* Example numbers for the homework-time section. Shapes match lib/homework output. */
+const CLASS_TIME = [
+  { label: 'BIO 101', min: 164, items: 3 },
+  { label: 'ENGL 101', min: 121, items: 2 },
+  { label: 'HIST 210', min: 97, items: 2 },
+  { label: 'MATH 140', min: 58, items: 2 },
+];
+
 const SESSIONS = [
   { day: 'Tue', time: '22:41', min: 48, w: 62 },
   { day: 'Wed', time: '23:10', min: 72, w: 100 },
@@ -126,6 +134,51 @@ export default function Home() {
           </StaggerItem>
         </Stagger>
         <p className="font-mono text-[11px] text-ink-soft mt-4">Example numbers. Yours come from your own record after a few sessions.</p>
+      </Section>
+
+      {/* ------------------------------------------------- time */}
+      <Section code="00:40" label="Time">
+        <div className="grid gap-10 md:grid-cols-2 md:gap-12 items-start">
+          <FadeUp inView>
+            <Heading eyebrow="Screen time for homework" title="How long school actually took this week." lede="Active minutes on your school sites and editors, by class and by assignment, with when you did them. Counted on your computer, shown to you, and to nobody else." />
+            <Prose className="mt-6">
+              <p>Tracked only on the school sites and editors Trail already records, only while that tab is in front and you are doing something, and only on your computer. Course and assignment names never leave the device. There is no teacher view, no limit and no sharing.</p>
+            </Prose>
+          </FadeUp>
+          <FadeUp inView delay={0.1}>
+            <Card>
+              <div className="flex items-baseline justify-between mb-4">
+                <Eyebrow tick={false}>By class</Eyebrow>
+                <span className="font-mono text-xs text-ink-soft">this week, 7h 20m</span>
+              </div>
+              <p className="text-xs text-ink-soft mb-3">Each bar is one class: active minutes and how many items you touched. Example numbers.</p>
+              <ol className="grid gap-3">
+                {CLASS_TIME.map((c) => (
+                  <li key={c.label} className="grid grid-cols-[4.5rem_1fr_auto] items-center gap-3 font-mono text-xs text-ink-soft tabular">
+                    <span className="text-ink">{c.label}</span>
+                    <span className="h-3 bg-rule rounded-sm overflow-hidden">
+                      <span className="block h-full bg-typed" style={{ width: `${Math.round((c.min / CLASS_TIME[0].min) * 100)}%` }} />
+                    </span>
+                    <span className="text-right whitespace-nowrap">
+                      {c.min >= 60 ? `${Math.floor(c.min / 60)}h ${c.min % 60}m` : `${c.min} min`} · {c.items} items
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <ul className="grid gap-2 mt-5 pt-4 border-t border-rule text-sm">
+                <li className="flex gap-2.5">
+                  <span aria-hidden className="mt-[0.6em] inline-block w-3 h-px bg-margin shrink-0" />
+                  Most of your Tuesday work happened after 11pm.
+                </li>
+                <li className="flex gap-2.5">
+                  <span aria-hidden className="mt-[0.6em] inline-block w-3 h-px bg-margin shrink-0" />
+                  Your longest unbroken stretch was 94 minutes on Thursday.
+                </li>
+              </ul>
+              <p className="text-xs text-ink-soft mt-3">Plain observations from the numbers, each with the rule that produced it. No scolding.</p>
+            </Card>
+          </FadeUp>
+        </div>
       </Section>
 
       {/* ----------------------------------------------- declaration */}

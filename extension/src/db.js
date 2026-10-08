@@ -1,7 +1,7 @@
-// IndexedDB: everything stays on the device. Stores: events, sessions, docs, snapshots, checkpoints.
+// IndexedDB: everything stays on the device. Stores: events, sessions, docs, snapshots, checkpoints, worklog.
 // docs are keyed by a random id the extension mints; the editor's own id lives only in docs.editorId.
 const NAME = "trail";
-const VERSION = 2;
+const VERSION = 3;
 let dbp = null;
 
 export function open() {
@@ -20,6 +20,13 @@ export function open() {
         db.createObjectStore("checkpoints", { keyPath: ["doc", "seq"] }).createIndex("doc", "doc");
       }
       if (e.oldVersion < 2) req.transaction.objectStore("docs").createIndex("editorId", "editorId");
+      if (e.oldVersion < 3) {
+        // worklog: one row per continuous stint of active time on a class/assignment page (screen time for homework)
+        const wl = db.createObjectStore("worklog", { keyPath: "id" });
+        wl.createIndex("day", "day");
+        wl.createIndex("course_key", "course_key");
+        wl.createIndex("item_key", "item_key");
+      }
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -52,5 +59,6 @@ export async function byIndex(store, index, key) {
 }
 export async function clearAll() {
   const db = await open();
-  for (const s of ["events", "sessions", "docs", "snapshots", "checkpoints"]) await tx(db, s, "readwrite", (st) => st.clear());
+  for (const s of ["events", "sessions", "docs", "snapshots", "checkpoints", "worklog"]) await tx(db, s, "readwrite", (st) => st.clear());
 }
+export async function clear(store) { return tx(await open(), store, "readwrite", (st) => st.clear()); }

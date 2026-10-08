@@ -9,6 +9,7 @@ const RECORDED: [string, string][] = [
   ['Sessions', 'When you started and stopped, and which editor you were in.'],
   ['Sites open while writing', 'Host names and minutes, for the sources list. Never the page content, never the URL.'],
   ['Text snapshots', 'Every three minutes, a copy of the document as the editor shows it, kept only on your device so the record can be checked against the real text.'],
+  ['Time on school sites', 'On the same sites and editors, the minutes a tab was in front and you were active, with the course and assignment name on the page. It feeds the Time page (screen time for homework), computed on your computer, for you only. Never sent to our server, never shown to a teacher.'],
 ];
 
 const NOT_RECORDED: [string, string][] = [

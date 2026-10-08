@@ -52,8 +52,9 @@ export default function Settings() {
 
       <section className="grid gap-3">
         <Marginal>Your data</Marginal>
-        <p className="text-sm text-ink-soft">Everything Trail records lives in the extension on this computer. Export it any time; it is yours whether or not you pay.</p>
+        <p className="text-sm text-ink-soft">Everything Trail records lives in the extension on this computer: your essays' events and the homework time log (active minutes on school sites, with course and assignment names). Export it any time; it is yours whether or not you pay.</p>
         <ExportAll />
+        <ExportWorklog />
       </section>
 
       <DeleteCard />
@@ -258,6 +259,57 @@ function ExportAll() {
   );
 }
 
+function ExportWorklog() {
+  const [busy, setBusy] = useState<'export' | 'delete' | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button
+        variant="secondary"
+        disabled={busy !== null}
+        onClick={async () => {
+          setBusy('export');
+          setMsg(null);
+          try {
+            download(await data.exportWorklog(), `trail-homework-time-${new Date().toISOString().slice(0, 10)}.json`);
+            setMsg('Exported. Course and assignment names are in the file; it has never been anywhere but this computer.');
+          } catch (e) {
+            setMsg((e as Error).message);
+          } finally {
+            setBusy(null);
+          }
+        }}
+      >
+        {busy === 'export' ? 'Exporting…' : 'Export homework time (.json)'}
+      </Button>
+      <Button
+        variant="quiet"
+        disabled={busy !== null}
+        onClick={async () => {
+          if (!window.confirm('Delete the homework time log on this computer? Your essays and their records are not touched.')) return;
+          setBusy('delete');
+          setMsg(null);
+          try {
+            await data.deleteWorklog();
+            setMsg('Homework time log deleted.');
+          } catch (e) {
+            setMsg((e as Error).message);
+          } finally {
+            setBusy(null);
+          }
+        }}
+      >
+        {busy === 'delete' ? 'Deleting…' : 'Delete the time log'}
+      </Button>
+      {msg && (
+        <span role="status" className="text-sm text-ink-soft">
+          {msg}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function DeleteCard() {
   const { me } = useMe();
   const nav = useNavigate();
@@ -271,11 +323,11 @@ function DeleteCard() {
       <Marginal>Delete everything</Marginal>
       <Rule />
       <p className="text-sm text-ink-soft max-w-prose">
-        Deleting your account removes every row Trail holds about you: your email, plan, signed checkpoint hashes, and invites. Any subscription is cancelled. Your essays and their records stay on this computer unless you also tick the box below.
+        Deleting your account removes every row Trail holds about you: your email, plan, signed checkpoint hashes, and invites. Any subscription is cancelled. Your essays, their records and the homework time log stay on this computer unless you also tick the box below.
       </p>
       <label className="text-sm flex items-center gap-2">
         <input type="checkbox" checked={alsoLocal} onChange={(e) => setAlsoLocal(e.target.checked)} />
-        Also wipe the extension's local records on this computer
+        Also wipe the extension's local records on this computer (essays, their events and checkpoints, and the homework time log)
       </label>
       <div className="grid sm:grid-cols-[1fr_auto] gap-3 max-w-lg">
         <input className={inputCls} placeholder={`Type ${me.email} to confirm`} value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="Type your email to confirm deletion" />
