@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { EASE, usePrefersReducedMotion } from './motion';
+import { Button, IconButton, Window } from './desktop';
+import { usePrefersReducedMotion } from './motion';
 
 /*
- * ReplayHero: an essay being written, as a time-lapse.
+ * ReplayHero: an essay being written, as a time-lapse, in a player window.
  * The script below is compiled once into "micro" events (one per keystroke,
  * one per paste, strike/cut for a rewrite, one per session gap). Playback is a
  * requestAnimationFrame clock; the document at step k is rebuilt from scratch
  * (a few hundred splices), which makes scrubbing, looping and pausing trivial.
  * One DOM node per run of same-origin text, never per character.
+ *
+ * The window: striped title bar (essay title, timecode at the right), the essay
+ * sheet, the transport bar (step back, play/pause, step forward, bevelled scrubber),
+ * and a provenance strip that fills in as the record grows. Only the record moves.
  */
 
 export type ReplayOp =
@@ -180,6 +184,35 @@ const clock = (vt: number) => {
 };
 const words = (d: Doc) => d.chars.map((c) => c.c).join('').split(/\s+/).filter(Boolean).length;
 
+type ProvLabel = 'typed' | 'pasted' | 'pasted-edited' | 'mixed';
+const PROV_NAME: Record<ProvLabel, string> = { typed: 'typed', pasted: 'pasted', 'pasted-edited': 'pasted, then edited', mixed: 'mixed' };
+
+/** The document so far, one cell per line of about `width` mono characters, labelled by where its text came from. */
+function stripCells(doc: Doc, width = 64): ProvLabel[] {
+  const cells: ProvLabel[] = [];
+  let run: Ch[] = [];
+  const push = () => {
+    if (!run.length) return;
+    const live = run.filter((c) => !c.s);
+    const pasted = live.filter((c) => c.o === 'pasted');
+    const typed = live.filter((c) => c.o === 'typed');
+    if (!pasted.length) cells.push('typed');
+    else if (!typed.length) cells.push(pasted.some((c) => c.pid && doc.edited.has(c.pid)) ? 'pasted-edited' : 'pasted');
+    else cells.push('mixed');
+    run = [];
+  };
+  for (const c of doc.chars) {
+    if (c.c === '\n') {
+      push();
+      continue;
+    }
+    run.push(c);
+    if (run.length >= width) push();
+  }
+  push();
+  return cells;
+}
+
 /** The page itself: paragraphs of runs. */
 function Page({ doc, src, caret, caretRef }: { doc: Doc; src: Map<number, string>; caret: boolean; caretRef?: React.RefObject<HTMLSpanElement> }) {
   const paras: ReactNode[] = [];
@@ -195,21 +228,17 @@ function Page({ doc, src, caret, caretRef }: { doc: Doc; src: Map<number, string
       const first = !seen.has(h.pid);
       seen.add(h.pid);
       runs.push(
-        <motion.span key={`p${h.pid}-${key}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.45, ease: EASE }}>
-          {first && (
-            <motion.span
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.35, ease: EASE, delay: 0.1 }}
-              className="inline-block align-baseline font-mono text-[10px] leading-none tracking-wide text-paste border border-paste/50 rounded-sm px-1 py-[2px] mr-1 select-none"
-            >
-              {src.get(h.pid)}
-            </motion.span>
-          )}
+        <span key={`p${h.pid}-${key}`}>
+          {first && <span className="inline-block align-baseline font-mono text-[10px] leading-none tracking-wide text-paste border border-paste px-1 py-[2px] mr-1 select-none">{src.get(h.pid)}</span>}
           <span className={h.s ? 'strike' : doc.edited.has(h.pid) ? 'prov-paste-edited' : 'prov-paste'}>{text}</span>
-        </motion.span>,
+        </span>,
       );
-    } else runs.push(<span key={key} className={h.s ? 'strike' : undefined}>{text}</span>);
+    } else
+      runs.push(
+        <span key={key} className={h.s ? 'strike' : undefined}>
+          {text}
+        </span>,
+      );
     run = [];
   };
   const endPara = () => {
@@ -234,6 +263,30 @@ function Page({ doc, src, caret, caretRef }: { doc: Doc; src: Map<number, string
   endPara();
   return <>{paras}</>;
 }
+
+/** The paper strip under the transport: counts and the provenance cells so far. */
+function Strip({ doc, w, typed, pasted }: { doc: Doc; w: number; typed: number; pasted: number }) {
+  const cells = useMemo(() => stripCells(doc), [doc]);
+  const counts = cells.reduce((acc, c) => ((acc[c] = (acc[c] || 0) + 1), acc), {} as Partial<Record<ProvLabel, number>>);
+  const summary = (Object.keys(counts) as ProvLabel[]).map((k) => `${counts[k]} ${PROV_NAME[k]}`).join(', ');
+  return (
+    <div className="px-4 py-2 border-t border-frame bg-sheet grid gap-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-ink-soft tabular">
+        <span className="marginal">Where each line came from</span>
+        <span className="ml-auto">{w} words</span>
+        <span className="text-typed">{typed} typed</span>
+        <span className="text-paste">{pasted} pasted</span>
+      </div>
+      <div className="prov-strip" role="img" aria-label={cells.length ? `Where each line came from so far: ${summary}` : 'Nothing written yet'}>
+        {cells.map((c, i) => (
+          <span key={i} className={`is-${c}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const SHEET = 'essay px-4 sm:px-6 pt-4 pb-6 h-[320px] sm:h-[380px] [&>p]:mb-[1em]';
 
 export type ReplayHeroProps = { script?: ReplayOp[]; title?: string; editor?: string; speed?: number; className?: string };
 
@@ -284,7 +337,8 @@ export function ReplayHero({ script = SCRIPT, title = 'Cities and silence', edit
 
   // keep the caret on the page
   useEffect(() => {
-    const el = sheet.current, c = caretRef.current;
+    const el = sheet.current,
+      c = caretRef.current;
     if (!el || !c) return;
     const want = c.offsetTop - el.clientHeight * 0.62;
     if (c.offsetTop > el.scrollTop + el.clientHeight - 40 || c.offsetTop < el.scrollTop) el.scrollTop = Math.max(0, want);
@@ -297,81 +351,46 @@ export function ReplayHero({ script = SCRIPT, title = 'Cities and silence', edit
     setK(n);
   };
 
+  // the moments worth stepping to: the start, every paste, every session gap, the end
+  const marks = useMemo(() => {
+    const m = [0];
+    micro.forEach((x, i) => {
+      if (x.k === 'paste' || x.k === 'gap') m.push(i);
+    });
+    m.push(total);
+    return m;
+  }, [micro, total]);
+  const back = () => seek([...marks].reverse().find((m) => m < kRef.current - 1) ?? 0);
+  const forward = () => seek(marks.find((m) => m > kRef.current) ?? total);
+
   const vt = k > 0 ? micro[k - 1].vt : 0;
   const w = words(doc);
   const typed = doc.chars.filter((c) => c.o === 'typed' && !c.s).length;
   const pasted = doc.chars.filter((c) => c.o === 'pasted' && !c.s).length;
   const pct = Math.round((k / total) * 100);
 
-  const header = (
-    <div className="flex items-center gap-3 px-4 sm:px-5 h-9 border-b border-rule text-[11px] font-mono text-ink-soft">
-      <span className="inline-block w-2 h-2 rounded-full bg-margin" aria-hidden />
-      <span className="truncate">{title}</span>
-      <span className="ml-auto hidden sm:inline">{editor}</span>
-    </div>
-  );
-
-  /* ---------- reduced motion: three drafts, step control, crossfade ---------- */
+  /* ---------- reduced motion: three drafts, step control ---------- */
   if (reduced) {
-    return <Stills micro={micro} src={src} header={header} className={className} />;
+    return <Stills micro={micro} src={src} title={title} editor={editor} className={className} />;
   }
 
   return (
-    <figure
-      className={`bg-sheet border border-rule rounded-lg shadow-sheet overflow-hidden ${className}`}
-      onPointerEnter={(e) => e.pointerType === 'mouse' && setHeld(true)}
-      onPointerLeave={(e) => e.pointerType === 'mouse' && setHeld(false)}
-      aria-label="Time-lapse of an essay being written, with typed text in ink and pasted text highlighted"
-    >
-      {header}
-      <div ref={sheet} className="essay text-[17px] sm:text-[18px] px-5 sm:px-8 pt-5 pb-8 h-[320px] sm:h-[380px] overflow-hidden [&>p]:mb-[1em]" aria-live="off">
-        <Page doc={doc} src={src} caret caretRef={caretRef} />
-      </div>
-      <div className="border-t border-rule px-4 sm:px-5 pt-2 pb-3 grid gap-1">
-        <div className="flex items-center gap-x-4 gap-y-1 flex-wrap font-mono text-[11px] text-ink-soft tabular">
-          <span>{clock(vt)}</span>
-          <AnimatePresence>
-            {doc.gap && (
-              <motion.span key="gap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-margin">
-                {doc.gap} min later
-              </motion.span>
-            )}
-          </AnimatePresence>
-          <span className="ml-auto">{w} words</span>
-          <span className="text-typed">{typed} typed</span>
-          <span className="text-paste">{pasted} pasted</span>
+    <div className={`min-w-0 ${className}`} onPointerEnter={(e) => e.pointerType === 'mouse' && setHeld(true)} onPointerLeave={(e) => e.pointerType === 'mouse' && setHeld(false)}>
+      <Window as="figure" title={title} icon="document" right={clock(vt)} bodyClassName="p-0">
+        <div ref={sheet} className={`${SHEET} overflow-hidden`} aria-live="off">
+          <Page doc={doc} src={src} caret caretRef={caretRef} />
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setUserPaused((p) => !p)}
-            aria-pressed={userPaused}
-            aria-label={userPaused ? 'Play replay' : 'Pause replay'}
-            className="shrink-0 w-8 h-8 rounded-md border border-rule-strong text-ink hover:bg-well flex items-center justify-center"
-          >
-            {userPaused ? (
-              <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden><path d="M1 1l8 5-8 5z" fill="currentColor" /></svg>
-            ) : (
-              <svg width="10" height="12" viewBox="0 0 10 12" aria-hidden><path d="M1 1h3v10H1zM6 1h3v10H6z" fill="currentColor" /></svg>
-            )}
-          </button>
-          <div className="relative flex-1">
-            <div className="absolute left-0 right-0 top-[13px] h-[2px] bg-rule-strong" aria-hidden>
-              <div className="h-full bg-accent" style={{ width: `${pct}%` }} />
-            </div>
+        <div className="transport on-chrome">
+          <IconButton icon="back" label="Back to the previous moment" onClick={back} />
+          <IconButton icon={userPaused ? 'play' : 'pause'} label={userPaused ? 'Play replay' : 'Pause replay'} onClick={() => setUserPaused((p) => !p)} />
+          <IconButton icon="forward" label="Forward to the next moment" onClick={forward} />
+          <div className="relative flex-1 min-w-[6rem]">
             {micro.map((m, i) =>
-              m.k === 'paste' || m.k === 'gap' ? (
-                <span
-                  key={i}
-                  aria-hidden
-                  className={`absolute top-[10px] w-[3px] h-[8px] rounded-sm ${m.k === 'paste' ? 'bg-paste' : 'bg-margin'}`}
-                  style={{ left: `calc(${(i / total) * 100}% - 1px)` }}
-                />
-              ) : null,
+              m.k === 'paste' || m.k === 'gap' ? <span key={i} aria-hidden className={`absolute top-0 w-[2px] h-[6px] ${m.k === 'paste' ? 'bg-paste' : 'bg-margin'}`} style={{ left: `calc(${(i / total) * 100}% - 1px)` }} /> : null,
             )}
             <input
               type="range"
-              className="range bare relative"
+              className="range relative"
               min={0}
               max={total}
               value={k}
@@ -382,46 +401,41 @@ export function ReplayHero({ script = SCRIPT, title = 'Cities and silence', edit
               aria-valuetext={`${pct}% through, ${w} words`}
             />
           </div>
+          <span className="tabular whitespace-nowrap">{doc.gap ? `${doc.gap} min later` : editor}</span>
         </div>
-      </div>
-    </figure>
+        <Strip doc={doc} w={w} typed={typed} pasted={pasted} />
+      </Window>
+    </div>
   );
 }
 
-function Stills({ micro, src, header, className }: { micro: Micro[]; src: Map<number, string>; header: ReactNode; className: string }) {
+function Stills({ micro, src, title, editor, className }: { micro: Micro[]; src: Map<number, string>; title: string; editor: string; className: string }) {
   const total = micro.length;
   const drafts = useMemo(() => [0.3, 0.64, 1].map((f) => build(micro, Math.round(f * total))), [micro, total]);
   const [i, setI] = useState(2);
   const d = drafts[i];
   const vt = micro[Math.round([0.3, 0.64, 1][i] * total) - 1].vt;
+  const typed = d.chars.filter((c) => c.o === 'typed' && !c.s).length;
+  const pasted = d.chars.filter((c) => c.o === 'pasted' && !c.s).length;
   return (
-    <figure className={`bg-sheet border border-rule rounded-lg shadow-sheet overflow-hidden ${className}`} aria-label="Three drafts of an essay, typed text in ink and pasted text highlighted">
-      {header}
-      <div className="essay text-[17px] sm:text-[18px] px-5 sm:px-8 pt-5 pb-8 h-[320px] sm:h-[380px] overflow-auto [&>p]:mb-[1em]">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <Page doc={d} src={src} caret={false} />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-      <div className="border-t border-rule px-4 sm:px-5 py-2 flex items-center gap-2 flex-wrap font-mono text-[11px] text-ink-soft tabular">
-        <span role="group" aria-label="Choose a draft" className="flex gap-1">
-          {['Draft 1', 'Draft 2', 'Final'].map((l, j) => (
-            <button
-              key={l}
-              type="button"
-              aria-pressed={i === j}
-              onClick={() => setI(j)}
-              className={`px-2 h-7 rounded-md border ${i === j ? 'border-ink bg-ink text-paper' : 'border-rule-strong hover:bg-well'}`}
-            >
-              {l}
-            </button>
-          ))}
-        </span>
-        <span className="ml-auto">{clock(vt)}</span>
-        <span>{words(d)} words</span>
-      </div>
-    </figure>
+    <div className={`min-w-0 ${className}`}>
+      <Window as="figure" title={title} icon="document" right={clock(vt)} bodyClassName="p-0">
+        <div className={`${SHEET} overflow-auto`}>
+          <Page doc={d} src={src} caret={false} />
+        </div>
+        <div className="transport on-chrome flex-wrap">
+          <span role="group" aria-label="Choose a draft" className="flex gap-1">
+            {['Draft 1', 'Draft 2', 'Final'].map((l, j) => (
+              <Button key={l} size="sm" aria-pressed={i === j} onClick={() => setI(j)}>
+                {l}
+              </Button>
+            ))}
+          </span>
+          <span className="ml-auto tabular whitespace-nowrap">{editor}</span>
+        </div>
+        <Strip doc={d} w={words(d)} typed={typed} pasted={pasted} />
+      </Window>
+    </div>
   );
 }
 

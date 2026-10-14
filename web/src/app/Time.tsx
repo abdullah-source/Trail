@@ -2,7 +2,11 @@
 // computer from the extension's local work-log and the essays' writing sessions (src/lib/homework.ts).
 // No teacher view, no limits, no sharing. "Your pace" (src/lib/pace.ts) reads the same record to say
 // how this student works and what a new piece of work would take at their own rhythm.
-import { useMemo, useState } from 'react';
+//
+// On the desktop: the Time desk accessory (one window: range radios, the headline, stat tiles, class
+// progress bars, the assignment table, the 7 x 24 heat grid, habits as panels, the recap) and a second
+// window for "Your pace" with the planner (DESIGN-desktop.md §4).
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { data } from '../lib/data';
 import { sessionsSummary } from '../lib/analysis';
@@ -34,7 +38,7 @@ import {
 } from '../lib/homework';
 import { MIN_ESSAYS, MIN_WORDS, dayText, forecast, minutesText, numText, paceText, parseDue, profile, scheduleLike, windowText, type PaceEssay, type PaceProfile, type PaceWindow } from '../lib/pace';
 import { useAsync, usePageTitle } from '../components/useAsync';
-import { Button, Chip, EmptyState, ErrorNote, Field, Info, Loading, Marginal, SectionHead, Sheet, StatTile, cx, inputCls } from '../components/ui';
+import { Button, Caption, Chip, EmptyState, ErrorNote, Info, Loading, Marginal, Panel, ProgressBar, Radio, ScrollArea, StatGrid, StatTile, TextField, Window, cx } from '../components/ui';
 import { fmtDate, fmtTime, relative } from '../components/format';
 import { copyText } from './shared';
 
@@ -60,7 +64,9 @@ async function loadAll(): Promise<Loaded> {
   return { installed: true, rows, essays, pace };
 }
 
-const KIND_CHIP: Record<string, string> = { writing: 'typed', assignment: 'web', quiz: 'web', discussion: 'web', module: 'web', page: 'web', course: 'web' };
+const KIND_CHIP: Record<string, string> = { writing: 'typed', assignment: 'neutral', quiz: 'neutral', discussion: 'neutral', module: 'neutral', page: 'neutral', course: 'neutral' };
+const TH = 'marginal font-normal text-left px-2 py-1.5 whitespace-nowrap';
+const TD = 'px-2 py-1.5 whitespace-nowrap align-baseline';
 
 export default function Time() {
   usePageTitle('Time');
@@ -107,135 +113,132 @@ export default function Time() {
   const deltaText = prev.total_ms === 0 && summary.total_ms === 0 ? 'nothing either time' : Math.abs(delta) < 60_000 ? `same as ${bounds.prevLabel}` : `${delta > 0 ? '+' : '−'}${durationText(Math.abs(delta))} vs ${bounds.prevLabel}`;
   const visibleItems = course ? summary.by_item.filter((i) => i.course_key === course) : summary.by_item;
   const worked = daysWorked(summary);
+  const rangeLabel = RANGES.find((r) => r.id === range)!.label;
 
   return (
-    <div className="grid gap-10">
-      <SectionHead kicker="Screen time for homework" title="Your time on school sites, for you only." lede="Active minutes on the school sites and editors Trail already records, read from the extension on this computer. Nothing on this page leaves this device, and no teacher can see it." />
+    <div className="grid gap-6">
+      <Window as="section" titleAs="h1" title="Time" icon="clock" right={rangeLabel} open bodyClassName="grid gap-4">
+        <Caption>Active minutes on the school sites and editors Trail already records, read from the extension on this computer. Nothing on this page leaves this device, and no teacher can see it.</Caption>
 
-      <RangePicker range={range} onChange={(r) => setParams(r === 'week' ? {} : { range: r }, { replace: true })} />
+        <RangePicker range={range} onChange={(r) => setParams(r === 'week' ? {} : { range: r }, { replace: true })} />
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
-        <StatTile label={RANGES.find((r) => r.id === range)!.label} value={durationText(summary.total_ms)} detail={deltaText} info={`Active time ${bounds.label}: minutes a school tab was in front and you were doing something, plus writing sessions in your essays. Idle minutes with the tab open are not counted. Compared with the same length of time before it.`} />
-        <StatTile label="Days worked" value={`${worked} / ${summary.by_day.length}`} detail={streak ? `${streak}-day streak` : 'no streak yet'} info="A day counts when it has at least 15 minutes of active time. The streak is the run of such days ending today (or yesterday, if today is still quiet)." />
-        <StatTile label="Typical stint" value={durationText(average)} detail={`${summary.stints} stint${summary.stints === 1 ? '' : 's'}`} info="The mean active time of one sitting on one item. A sitting ends when you leave the tab or the editor goes quiet." />
-        <StatTile label="After 11pm" value={percentText(lateShare)} detail="of your active time" tone={lateShare !== null && lateShare > 0.33 ? 'paste' : undefined} info="Share of active minutes that fell between 11pm and 5am, your local time." />
-      </section>
+        <StatGrid>
+          <StatTile label={rangeLabel} value={durationText(summary.total_ms)} detail={deltaText} info={`Active time ${bounds.label}: minutes a school tab was in front and you were doing something, plus writing sessions in your essays. Idle minutes with the tab open are not counted. Compared with the same length of time before it.`} />
+          <StatTile label="Days worked" value={`${worked} / ${summary.by_day.length}`} detail={streak ? `${streak}-day streak` : 'no streak yet'} info="A day counts when it has at least 15 minutes of active time. The streak is the run of such days ending today (or yesterday, if today is still quiet)." />
+          <StatTile label="Typical stint" value={durationText(average)} detail={`${summary.stints} stint${summary.stints === 1 ? '' : 's'}`} info="The mean active time of one sitting on one item. A sitting ends when you leave the tab or the editor goes quiet." />
+          <StatTile label="After 11pm" value={percentText(lateShare)} detail="of your active time" tone={lateShare !== null && lateShare > 0.33 ? 'paste' : undefined} info="Share of active minutes that fell between 11pm and 5am, your local time." />
+        </StatGrid>
 
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>By class</Marginal>
-          <span className="text-xs text-ink-soft">Active time per class {bounds.label}, with how many items you touched. Click a class to filter the list below.</span>
-        </div>
-        <ClassBars summary={summary} selected={course} onSelect={setCourse} />
-      </section>
-
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>By assignment</Marginal>
-          <span className="text-xs text-ink-soft">{course ? `Items in ${summary.by_course.find((c) => c.course_key === course)?.course_label ?? 'this class'}. ` : 'Every item you worked on, most time first. '}Stints are separate sittings; an essay with a recorded document links to its replay.</span>
-        </div>
-        <ItemTable items={visibleItems} now={view.now} />
-      </section>
-
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>When you work</Marginal>
-          <span className="text-xs text-ink-soft">Active minutes by weekday and hour of the day, your local time, summed over {bounds.label}. Darker is more; hover a cell for the number.</span>
-        </div>
-        <div className="grid gap-5 max-w-2xl">
-          <HeatGrid heat={summary.heat} />
-          <dl className="grid sm:grid-cols-3 gap-4 text-sm">
-            <div>
-              <dt className="marginal inline-flex items-center gap-1.5">
-                Busiest hour <Info text="The hour of the day with the most active minutes in this window." />
-              </dt>
-              <dd className="mt-1 tabular">{bestHour(summary.by_hour) === null ? '—' : hourText(bestHour(summary.by_hour)!)}</dd>
-            </div>
-            <div>
-              <dt className="marginal inline-flex items-center gap-1.5">
-                Late night <Info text="Share of active minutes between 11pm and 5am." />
-              </dt>
-              <dd className="mt-1 tabular">{percentText(lateShare)}</dd>
-            </div>
-            <div>
-              <dt className="marginal inline-flex items-center gap-1.5">
-                Longest stretch <Info text="The longest run of sittings with no gap over 10 minutes, measured from first start to last end, across every class." />
-              </dt>
-              <dd className="mt-1 tabular">{stretch ? `${durationText(stretch.ms)} on ${WEEKDAYS[(new Date(stretch.start).getDay() + 6) % 7]}` : '—'}</dd>
-            </div>
-          </dl>
-        </div>
-      </section>
-
-      {cards.length > 0 && (
-        <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-          <div className="grid gap-1 content-start">
-            <Marginal>Habits</Marginal>
-            <span className="text-xs text-ink-soft">Plain observations from the numbers above. Each one says which rule produced it. No targets, no limits.</span>
-          </div>
-          <ul className="grid sm:grid-cols-3 gap-4 max-w-3xl">
-            {cards.map((c) => (
-              <li key={c.rule} className="bg-sheet border border-rule rounded-lg shadow-sheet p-4 grid gap-2 content-start">
-                <p className="text-base leading-snug">{c.text}</p>
-                <p className="text-xs text-ink-soft">{c.how}</p>
-              </li>
-            ))}
-          </ul>
+        <section className="grid gap-2">
+          <Marginal as="h2">By class</Marginal>
+          <Caption>Active time per class {bounds.label}, with how many items you touched. Press a class to filter the list below.</Caption>
+          <ClassBars summary={summary} selected={course} onSelect={setCourse} />
         </section>
-      )}
 
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>Recap</Marginal>
-          <span className="text-xs text-ink-soft">The same numbers as one paragraph, written by a fixed template. Copy it into a journal or a message to yourself.</span>
-        </div>
-        <CopyParagraph text={text} label="Copy recap" />
-      </section>
+        <section className="grid gap-2">
+          <Marginal as="h2">By assignment</Marginal>
+          <Caption>{course ? `Items in ${summary.by_course.find((c) => c.course_key === course)?.course_label ?? 'this class'}. ` : 'Every item you worked on, most time first. '}Stints are separate sittings; an essay with a recorded document links to its replay.</Caption>
+          <ItemTable items={visibleItems} now={view.now} />
+        </section>
 
-      <PaceSection profile={pace} now={view.now} />
+        <section className="grid gap-2">
+          <Marginal as="h2">When you work</Marginal>
+          <Caption>Active minutes by weekday and hour of the day, your local time, summed over {bounds.label}. Darker is more; hover a cell for the number.</Caption>
+          <div className="grid lg:grid-cols-[auto_1fr] gap-x-8 gap-y-4 items-start">
+            <HeatGrid heat={summary.heat} />
+            <dl className="grid sm:grid-cols-3 lg:grid-cols-1 gap-4 text-sm">
+              <div>
+                <dt className="marginal inline-flex items-center gap-1.5">
+                  Busiest hour <Info text="The hour of the day with the most active minutes in this window." />
+                </dt>
+                <dd className="mt-0.5 tabular">{bestHour(summary.by_hour) === null ? '—' : hourText(bestHour(summary.by_hour)!)}</dd>
+              </div>
+              <div>
+                <dt className="marginal inline-flex items-center gap-1.5">
+                  Late night <Info text="Share of active minutes between 11pm and 5am." />
+                </dt>
+                <dd className="mt-0.5 tabular">{percentText(lateShare)}</dd>
+              </div>
+              <div>
+                <dt className="marginal inline-flex items-center gap-1.5">
+                  Longest stretch <Info text="The longest run of sittings with no gap over 10 minutes, measured from first start to last end, across every class." />
+                </dt>
+                <dd className="mt-0.5 tabular">{stretch ? `${durationText(stretch.ms)} on ${WEEKDAYS[(new Date(stretch.start).getDay() + 6) % 7]}` : '—'}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
 
-      <p className="text-xs text-ink-soft max-w-prose">
-        {stints.length} sitting{stints.length === 1 ? '' : 's'} {bounds.label}. Where a recorded essay and its school-site stint overlap, the longer of the two is counted once, never both. Export or delete this log in <Link to="/app/settings" className="link">Settings</Link>.
-      </p>
+        {cards.length > 0 && (
+          <section className="grid gap-2">
+            <Marginal as="h2">Habits</Marginal>
+            <Caption>Plain observations from the numbers above. Each one says which rule produced it. No targets, no limits.</Caption>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {cards.map((c) => (
+                <Panel key={c.rule} legend={c.rule} className="grid gap-2 content-start">
+                  <p className="text-sm">{c.text}</p>
+                  <Caption>{c.how}</Caption>
+                </Panel>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <Panel legend="Recap">
+          <Caption className="mb-2">The same numbers as one paragraph, written by a fixed template. Copy it into a journal or a message to yourself.</Caption>
+          <CopyParagraph text={text} label="Copy recap" />
+        </Panel>
+
+        <Caption>
+          Counted on this computer. No teacher view, no limit, no sharing. {stints.length} sitting{stints.length === 1 ? '' : 's'} {bounds.label}; where a recorded essay and its school-site stint overlap, the longer of the two is counted once, never both. Export or delete this log in{' '}
+          <Link to="/app/settings" className="link">
+            Settings
+          </Link>
+          .
+        </Caption>
+      </Window>
+
+      <PaceWindow profile={pace} now={view.now} />
     </div>
   );
 }
 
+
 function Empty({ installed }: { installed: boolean }) {
   return (
-    <div className="grid gap-8">
-      <SectionHead kicker="Screen time for homework" title="Your time on school sites, for you only." lede="Once the extension has seen you work on a school site, this page shows how long, on what, and when. It is computed on this computer and never shared." />
-      <EmptyState
-        title={installed ? 'Nothing recorded yet' : 'The extension is not talking to this page'}
-        glyph="◷"
-        body={
-          <div className="grid gap-2">
-            <p>What gets tracked: only the school sites and editors Trail already records (your LMS, Google Docs, Notion, Word Online), only while that tab is in front and you are doing something, and only on this computer. Course and assignment names stay in the extension's local database; they never reach Trail's server, and no teacher can see them.</p>
-            <p>
-              {installed ? (
-                <>Open an assignment, quiz or document on one of those sites and come back; the first stint appears within a minute.</>
-              ) : (
-                <>
-                  <Link to="/install" className="link">Install the extension</Link> in Chrome on this computer, then come back here.
-                </>
-              )}
-            </p>
-          </div>
-        }
-      />
-    </div>
+    <EmptyState
+      title={installed ? 'Nothing recorded yet' : 'The extension is not talking to this page'}
+      icon="clock"
+      body={
+        <>
+          <p>Once the extension has seen you work on a school site, this page shows how long, on what, and when. It is computed on this computer and never shared.</p>
+          <p>What gets tracked: only the school sites and editors Trail already records (your LMS, Google Docs, Notion, Word Online), only while that tab is in front and you are doing something, and only on this computer. Course and assignment names stay in the extension's local database; they never reach Trail's server, and no teacher can see them.</p>
+          <p>
+            {installed ? (
+              <>Open an assignment, quiz or document on one of those sites and come back; the first stint appears within a minute.</>
+            ) : (
+              <>
+                <Link to="/install" className="link">
+                  Install the extension
+                </Link>{' '}
+                in Chrome on this computer, then come back here.
+              </>
+            )}
+          </p>
+        </>
+      }
+    />
   );
 }
 
 function RangePicker({ range, onChange }: { range: Range; onChange: (r: Range) => void }) {
   return (
-    <div role="radiogroup" aria-label="Time range" className="inline-flex rounded-md border border-rule-strong overflow-hidden text-sm w-fit">
+    <fieldset className="flex flex-wrap gap-x-4 gap-y-2 border-0 p-0 m-0">
+      <legend className="sr-only">Time range</legend>
       {RANGES.map((r) => (
-        <button key={r.id} type="button" role="radio" aria-checked={range === r.id} onClick={() => onChange(r.id)} className={cx('px-3 h-9 transition-colors duration-150 border-r border-rule-strong last:border-r-0', range === r.id ? 'bg-ink text-paper' : 'text-ink-soft hover:text-ink hover:bg-sheet')}>
-          {r.label}
-        </button>
+        <Radio key={r.id} name="time-range" label={r.label} checked={range === r.id} onChange={() => onChange(r.id)} />
       ))}
-    </div>
+    </fieldset>
   );
 }
 
@@ -243,22 +246,18 @@ function ClassBars({ summary, selected, onSelect }: { summary: HomeworkSummary; 
   const max = Math.max(1, ...summary.by_course.map((c) => c.active_ms));
   if (!summary.by_course.length) return <p className="text-sm text-ink-soft">No active time in this window.</p>;
   return (
-    <ul className="grid gap-2 max-w-2xl text-sm tabular" aria-label="Active time by class">
+    <ul className="grid gap-2 font-mono text-xs tabular list-none m-0 p-0" aria-label="Active time by class">
       {summary.by_course.map((c) => {
         const on = selected === c.course_key;
         return (
-          <li key={c.course_key}>
-            <button type="button" aria-pressed={on} onClick={() => onSelect(on ? null : c.course_key)} className={cx('w-full grid grid-cols-[minmax(7rem,14rem)_1fr_auto] items-center gap-3 text-left rounded px-1 -mx-1 py-1 transition-colors duration-150 hover:bg-sheet', on && 'bg-sheet')}>
-              <span className={cx('truncate', on ? 'text-ink font-semibold' : 'text-ink')} title={c.course_label}>
-                {c.course_label}
-              </span>
-              <span className="h-3 bg-rule rounded-sm overflow-hidden">
-                <span className={cx('block h-full', selected && !on ? 'bg-rule-strong' : 'bg-typed')} style={{ width: `${(c.active_ms / max) * 100}%` }} />
-              </span>
-              <span className="text-ink-soft whitespace-nowrap">
-                <span className="text-ink">{durationText(c.active_ms)}</span> · {c.items} item{c.items === 1 ? '' : 's'}
-              </span>
-            </button>
+          <li key={c.course_key} className="grid grid-cols-[minmax(5rem,12rem)_1fr_auto] items-center gap-3">
+            <Button size="sm" aria-pressed={on} onClick={() => onSelect(on ? null : c.course_key)} className="justify-start min-w-0" title={c.course_label}>
+              <span className="truncate">{c.course_label}</span>
+            </Button>
+            <ProgressBar value={c.active_ms / max} tone={selected && !on ? 'ink' : 'typed'} label={`${c.course_label}: ${durationText(c.active_ms)}`} />
+            <span className="whitespace-nowrap text-ink-soft">
+              <span className="text-ink">{durationText(c.active_ms)}</span> · {c.items} item{c.items === 1 ? '' : 's'}
+            </span>
           </li>
         );
       })}
@@ -269,22 +268,22 @@ function ClassBars({ summary, selected, onSelect }: { summary: HomeworkSummary; 
 function ItemTable({ items, now }: { items: HomeworkSummary['by_item']; now: number }) {
   if (!items.length) return <p className="text-sm text-ink-soft">No items in this window.</p>;
   return (
-    <div className="overflow-x-auto max-w-3xl">
-      <table className="w-full text-sm tabular border-collapse">
+    <ScrollArea label="Active time by assignment" maxHeight={320} className="bg-sheet">
+      <table className="w-full font-mono text-xs tabular border-collapse">
         <thead>
-          <tr className="text-left marginal">
-            <th className="py-2 pr-4 font-normal">Item</th>
-            <th className="py-2 pr-4 font-normal">Class</th>
-            <th className="py-2 pr-4 font-normal">Kind</th>
-            <th className="py-2 pr-4 font-normal text-right">Active</th>
-            <th className="py-2 pr-4 font-normal text-right">Stints</th>
-            <th className="py-2 font-normal whitespace-nowrap">Last worked</th>
+          <tr>
+            <th className={TH}>Item</th>
+            <th className={TH}>Class</th>
+            <th className={TH}>Kind</th>
+            <th className={cx(TH, 'text-right')}>Active</th>
+            <th className={cx(TH, 'text-right')}>Stints</th>
+            <th className={TH}>Last worked</th>
           </tr>
         </thead>
         <tbody>
           {items.map((i) => (
-            <tr key={i.item_key} className="border-t border-rule align-baseline">
-              <td className="py-2 pr-4 max-w-[18rem]">
+            <tr key={i.item_key} className="border-t border-rule">
+              <td className={cx(TD, 'max-w-[18rem] overflow-hidden text-ellipsis')} title={i.item_label}>
                 {i.doc ? (
                   <Link to={`/app/essays/${encodeURIComponent(i.doc)}`} className="link" title="Open the essay replay">
                     {i.item_label}
@@ -293,58 +292,54 @@ function ItemTable({ items, now }: { items: HomeworkSummary['by_item']; now: num
                   <span className="text-ink">{i.item_label}</span>
                 )}
               </td>
-              <td className="py-2 pr-4 text-ink-soft whitespace-nowrap">{i.course_label}</td>
-              <td className="py-2 pr-4">
-                <Chip kind={KIND_CHIP[i.kind] || 'web'}>{i.kind}</Chip>
+              <td className={cx(TD, 'text-ink-soft')}>{i.course_label}</td>
+              <td className={TD}>
+                <Chip kind={KIND_CHIP[i.kind] || 'neutral'}>{i.kind}</Chip>
               </td>
-              <td className="py-2 pr-4 text-right whitespace-nowrap">{durationText(i.active_ms)}</td>
-              <td className="py-2 pr-4 text-right text-ink-soft">{i.stints}</td>
-              <td className="py-2 text-ink-soft whitespace-nowrap">{relative(new Date(i.last).toISOString(), now)}</td>
+              <td className={cx(TD, 'text-right')}>{durationText(i.active_ms)}</td>
+              <td className={cx(TD, 'text-right text-ink-soft')}>{i.stints}</td>
+              <td className={cx(TD, 'text-ink-soft')}>{relative(new Date(i.last).toISOString(), now)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollArea>
   );
 }
 
+/** 7 x 24 pixel grid: 16 px square cells on the 8 px grid (they shrink together on a phone), four levels of typed green. */
 function HeatGrid({ heat }: { heat: number[][] }) {
   const max = Math.max(1, ...heat.flat());
+  const level = (v: number) => (v === 0 ? 0 : Math.max(1, Math.ceil((v / max) * 3)));
+  const fills = ['var(--well)', 'var(--typed-wash)', 'color-mix(in srgb, var(--typed) 50%, var(--sheet))', 'var(--typed)'];
+  const cols: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(24, minmax(0, 16px))', gap: 2 };
   const hours = [0, 6, 12, 18];
   return (
-    <figure className="grid gap-1">
-      <div className="grid grid-cols-[2.5rem_1fr] gap-x-2 items-center">
+    <figure className="grid gap-1 min-w-0">
+      <div className="grid gap-x-2 gap-y-0.5 items-center" style={{ gridTemplateColumns: '2.5rem minmax(0, 1fr)' }}>
         <span />
-        <div className="grid grid-cols-24 font-mono text-[10px] text-ink-soft">
+        <div style={cols} className="font-mono text-ink-soft" aria-hidden>
           {Array.from({ length: 24 }, (_, h) => (
-            <span key={h} className={cx(!hours.includes(h) && 'invisible')}>
+            <span key={h} className={cx('whitespace-nowrap', !hours.includes(h) && 'invisible')} style={{ fontSize: 11, lineHeight: '16px' }}>
               {hourText(h)}
             </span>
           ))}
         </div>
         {heat.map((row, wd) => (
           <div key={wd} className="contents">
-            <span className="font-mono text-[11px] text-ink-soft">{WEEKDAYS_SHORT[wd]}</span>
-            <div className="grid grid-cols-24 gap-px" role="row">
+            <span className="font-mono text-ink-soft" style={{ fontSize: 11 }}>
+              {WEEKDAYS_SHORT[wd]}
+            </span>
+            <div style={cols} role="row">
               {row.map((v, h) => {
-                const level = v / max;
                 const min = Math.round(v / 60_000);
-                return (
-                  <span
-                    key={h}
-                    role="cell"
-                    title={`${WEEKDAYS[wd]} ${hourText(h)}: ${min ? `${min} min` : 'nothing'}`}
-                    aria-label={`${WEEKDAYS[wd]} ${hourText(h)}: ${min} minutes`}
-                    className={cx('aspect-square rounded-[2px]', v ? 'bg-typed' : 'bg-rule/60')}
-                    style={v ? { opacity: 0.25 + level * 0.75 } : undefined}
-                  />
-                );
+                return <i key={h} role="cell" title={`${WEEKDAYS[wd]} ${hourText(h)}: ${min ? `${min} min` : 'nothing'}`} aria-label={`${WEEKDAYS[wd]} ${hourText(h)}: ${min} minutes`} className="block border border-rule" style={{ aspectRatio: '1', background: fills[level(v)] }} />;
               })}
             </div>
           </div>
         ))}
       </div>
-      <figcaption className="text-xs text-ink-soft mt-1">Each cell is one weekday-hour; the darkest cell holds {durationText(max)} of active time.</figcaption>
+      <figcaption className="font-mono text-xs text-ink-soft mt-1">Each cell is one weekday-hour; the darkest cell holds {durationText(max)} of active time.</figcaption>
     </figure>
   );
 }
@@ -352,13 +347,12 @@ function HeatGrid({ heat }: { heat: number[][] }) {
 function CopyParagraph({ text, label }: { text: string; label: string }) {
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
   return (
-    <div className="grid gap-3 max-w-2xl">
-      <Sheet as="article" className="p-5 essay text-[16px]">
+    <div className="grid gap-3">
+      <article className="bevel-in bg-sheet p-3 essay">
         <p>{text}</p>
-      </Sheet>
-      <div className="flex items-center gap-3">
+      </article>
+      <div className="flex flex-wrap items-center gap-3">
         <Button
-          variant="secondary"
           onClick={async () => {
             setState((await copyText(text)) ? 'copied' : 'failed');
             setTimeout(() => setState('idle'), 2500);
@@ -366,11 +360,7 @@ function CopyParagraph({ text, label }: { text: string; label: string }) {
         >
           {label}
         </Button>
-        {state !== 'idle' && (
-          <span role="status" className="text-sm text-ink-soft">
-            {state === 'copied' ? 'Copied.' : 'Could not copy; select the text instead.'}
-          </span>
-        )}
+        {state !== 'idle' && <Caption role="status">{state === 'copied' ? 'Copied.' : 'Could not copy; select the text instead.'}</Caption>}
       </div>
     </div>
   );
@@ -380,7 +370,7 @@ function CopyParagraph({ text, label }: { text: string; label: string }) {
 
 const DEFAULT_WORDS = 1500;
 
-function PaceSection({ profile: p, now }: { profile: PaceProfile; now: number }) {
+function PaceWindow({ profile: p, now }: { profile: PaceProfile; now: number }) {
   const [words, setWords] = useState(String(DEFAULT_WORDS));
   const [due, setDue] = useState('');
   const target = Math.round(Number(words));
@@ -399,120 +389,111 @@ function PaceSection({ profile: p, now }: { profile: PaceProfile; now: number })
   const q = p.wordsPerActiveMinute;
   const win = p.bestWindows[0];
   const win2 = p.bestWindows[1];
+  const startLate = plan?.f.startBy ? parseIso(plan.f.startBy) < new Date(now).setHours(0, 0, 0, 0) : false;
 
   return (
-    <>
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>Your pace</Marginal>
-          <span className="text-xs text-ink-soft">How you write, read from every recorded essay: your speed while active, how long you sit, how many sittings a piece takes, and when you write best. A profile, not a target.</span>
-        </div>
-        {p.enough && q && p.stint ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 max-w-3xl">
-            <StatTile label="Words a minute" value={oneDecimal(q.median)} detail={`${oneDecimal(q.p25)} to ${oneDecimal(q.p75)} on slower and faster essays`} info={`Final words divided by active minutes, essay by essay; this is your middle essay. Essays with at least ${MIN_WORDS} words and five active minutes count (${p.counted} so far). The range is your slower and faster quarters.`} />
-            <StatTile label="Typical stint" value={minutesText(p.stint.medianMinutes)} detail={`half between ${minutesText(p.stint.p25)} and ${minutesText(p.stint.p75)}`} info="The median active time of one sitting, across every stint on this page (school sites and writing sessions merged). The middle half of your stints fall in the range below." />
-            <StatTile label="Sittings per 1,000 words" value={p.sessionsPer1000Words === null ? '—' : oneDecimal(p.sessionsPer1000Words)} detail={p.calendarDaysPer1000Words ? `over about ${oneDecimal(p.calendarDaysPer1000Words.median)} days` : undefined} info="How many separate writing sessions your essays took per 1,000 final words, and how many calendar days passed from the first session to the last; the middle essay each time." />
-            <StatTile label="Best window" value={win ? windowShort(win) : '—'} detail={win ? `${oneDecimal(win.wordsPerMinute)} words a minute${win2 ? `; then ${windowText(win2)}` : ''}` : 'not enough writing in any one stretch yet'} info="The one-to-three-hour stretch of the day where you type the most words per active minute, with at least 30 minutes of writing in it (words are typed characters divided by five). The second-best stretch follows." />
+    <Window as="section" title="Your pace" icon="clock" right={p.enough ? `${p.counted} essay${p.counted === 1 ? '' : 's'}` : `${p.counted} of ${MIN_ESSAYS}`} open bodyClassName="grid gap-4">
+      <Caption>How you write, read from every recorded essay: your speed while active, how long you sit, how many sittings a piece takes, and when you write best. A profile, not a target.</Caption>
+      {p.enough && q && p.stint ? (
+        <StatGrid>
+          <StatTile label="Words a minute" value={oneDecimal(q.median)} detail={`${oneDecimal(q.p25)} to ${oneDecimal(q.p75)} on slower and faster essays`} info={`Final words divided by active minutes, essay by essay; this is your middle essay. Essays with at least ${MIN_WORDS} words and five active minutes count (${p.counted} so far). The range is your slower and faster quarters.`} />
+          <StatTile label="Typical stint" value={minutesText(p.stint.medianMinutes)} detail={`half between ${minutesText(p.stint.p25)} and ${minutesText(p.stint.p75)}`} info="The median active time of one sitting, across every stint on this page (school sites and writing sessions merged). The middle half of your stints fall in the range below." />
+          <StatTile label="Sittings per 1,000 words" value={p.sessionsPer1000Words === null ? '—' : oneDecimal(p.sessionsPer1000Words)} detail={p.calendarDaysPer1000Words ? `over about ${oneDecimal(p.calendarDaysPer1000Words.median)} days` : undefined} info="How many separate writing sessions your essays took per 1,000 final words, and how many calendar days passed from the first session to the last; the middle essay each time." />
+          <StatTile label="Best window" value={win ? windowShort(win) : '—'} detail={win ? `${oneDecimal(win.wordsPerMinute)} words a minute${win2 ? `; then ${windowText(win2)}` : ''}` : 'not enough writing in any one stretch yet'} info="The one-to-three-hour stretch of the day where you type the most words per active minute, with at least 30 minutes of writing in it (words are typed characters divided by five). The second-best stretch follows." />
+        </StatGrid>
+      ) : (
+        <Panel legend="Not enough essays yet" className="grid gap-3">
+          <p className="text-sm">Record {MIN_ESSAYS === 4 ? 'four' : MIN_ESSAYS} essays and Trail can forecast your pace. Nothing is sent anywhere.</p>
+          <div className="flex items-center gap-2 font-mono text-xs">
+            <ProgressBar segments={20} value={p.counted / MIN_ESSAYS} label="Essays recorded toward a pace profile" tone="typed" />
+            <span className="tabular">
+              {p.counted} of {MIN_ESSAYS}
+            </span>
           </div>
-        ) : (
-          <div className="border border-dashed border-rule-strong rounded-lg px-6 py-8 grid gap-2 max-w-xl">
-            <p className="text-lg">Record {MIN_ESSAYS === 4 ? 'four' : MIN_ESSAYS} essays and Trail can forecast your pace. Nothing is sent anywhere.</p>
-            <p className="text-sm text-ink-soft">
-              {p.counted} of {MIN_ESSAYS} essays with at least {MIN_WORDS} words and five active minutes so far. The forecast is built from your own record on this computer: your speed while writing, how long you sit, and when; no one else's numbers, and no AI writing anything for you.
-            </p>
-          </div>
-        )}
-      </section>
+          <Caption>
+            Essays with at least {MIN_WORDS} words and five active minutes count. The forecast is built from your own record on this computer: your speed while writing, how long you sit, and when; no one else's numbers, and no AI writing anything for you.
+          </Caption>
+        </Panel>
+      )}
 
       {p.enough && (
-        <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-          <div className="grid gap-1 content-start">
-            <Marginal>Plan a piece of work</Marginal>
-            <span className="text-xs text-ink-soft">Type a word count and, if you like, a due date. The forecast assumes you work the way your record says you do; the sessions below are placed in your own best windows.</span>
-          </div>
-          <div className="grid gap-6 max-w-3xl">
-            <form className="grid sm:grid-cols-[10rem_12rem] gap-4" onSubmit={(e) => e.preventDefault()}>
-              <Field label="Target words" id="pace-words" hint={valid ? undefined : 'Between 50 and 50,000.'}>
-                <input id="pace-words" className={inputCls} type="number" inputMode="numeric" min={50} max={50000} step={50} value={words} onChange={(e) => setWords(e.target.value)} aria-invalid={!valid} />
-              </Field>
-              <Field label="Due date (optional)" id="pace-due">
-                <input id="pace-due" className={inputCls} type="date" value={due} onChange={(e) => setDue(e.target.value)} />
-              </Field>
-            </form>
+        <section className="grid gap-3">
+          <Marginal as="h2">Plan a piece of work</Marginal>
+          <Caption>Type a word count and, if you like, a due date. The forecast assumes you work the way your record says you do; the sessions below are placed in your own best windows.</Caption>
+          <form className="grid sm:grid-cols-[10rem_12rem] gap-4" onSubmit={(e) => e.preventDefault()}>
+            <TextField id="pace-words" label="Target words" type="number" inputMode="numeric" min={50} max={50000} step={50} value={words} onChange={(e) => setWords(e.target.value)} aria-invalid={!valid} hint={valid ? undefined : 'Between 50 and 50,000.'} />
+            <TextField id="pace-due" label="Due date (optional)" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+          </form>
 
-            {plan && (
-              <>
-                <dl className="grid sm:grid-cols-3 gap-x-6 gap-y-4 text-sm">
-                  <div>
-                    <dt className="marginal inline-flex items-center gap-1.5">
-                      Active writing <Info text="Your word count divided by your words per active minute: the middle figure at your median pace, the range at your faster and slower quarters." />
-                    </dt>
-                    <dd className="mt-1 display text-2xl leading-none tabular">{minutesText(plan.f.activeMinutes.mid)}</dd>
-                    <dd className="mt-1 text-ink-soft">
-                      {minutesText(plan.f.activeMinutes.low)} to {minutesText(plan.f.activeMinutes.high)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="marginal inline-flex items-center gap-1.5">
-                      Stints <Info text="Those minutes divided by your median stint, rounded up." />
-                    </dt>
-                    <dd className="mt-1 display text-2xl leading-none tabular">{plan.f.stints.mid}</dd>
-                    <dd className="mt-1 text-ink-soft">
-                      {plan.f.stints.low === plan.f.stints.high ? `of about ${plan.sessions[0]?.minutes ?? Math.round(p.stint!.medianMinutes)} min` : `${plan.f.stints.low} to ${plan.f.stints.high}, about ${plan.sessions[0]?.minutes ?? Math.round(p.stint!.medianMinutes)} min each`}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="marginal inline-flex items-center gap-1.5">
-                      {plan.f.startBy ? 'Start by' : 'Calendar days'} <Info text={plan.f.startBy ? 'The due date minus the calendar days this would take you, minus one day of slack.' : 'How many days your essays usually span for this many words, and how many stints you fit into a day; whichever asks for more.'} />
-                    </dt>
-                    <dd className={cx('mt-1 display text-2xl leading-none tabular', plan.f.startBy && parseIso(plan.f.startBy) < new Date(now).setHours(0, 0, 0, 0) && 'text-paste')}>{plan.f.startBy ? capitalize(dayText(parseIso(plan.f.startBy), now)) : `${plan.f.calendarDays.mid} day${plan.f.calendarDays.mid === 1 ? '' : 's'}`}</dd>
-                    <dd className="mt-1 text-ink-soft">{plan.f.startBy ? `${plan.f.calendarDays.mid} day${plan.f.calendarDays.mid === 1 ? '' : 's'} of work plus one of slack${plan.f.lateNightRisk ? '; late-night risk' : ''}` : 'at your usual spread'}</dd>
-                  </div>
-                </dl>
+          {plan && (
+            <>
+              <StatGrid>
+                <StatTile label="Active writing" value={minutesText(plan.f.activeMinutes.mid)} detail={`${minutesText(plan.f.activeMinutes.low)} to ${minutesText(plan.f.activeMinutes.high)}`} info="Your word count divided by your words per active minute: the middle figure at your median pace, the range at your faster and slower quarters." />
+                <StatTile label="Stints" value={plan.f.stints.mid} detail={plan.f.stints.low === plan.f.stints.high ? `of about ${plan.sessions[0]?.minutes ?? Math.round(p.stint!.medianMinutes)} min` : `${plan.f.stints.low} to ${plan.f.stints.high}, about ${plan.sessions[0]?.minutes ?? Math.round(p.stint!.medianMinutes)} min each`} info="Those minutes divided by your median stint, rounded up." />
+                <StatTile
+                  label={plan.f.startBy ? 'Start by' : 'Calendar days'}
+                  value={plan.f.startBy ? capitalize(dayText(parseIso(plan.f.startBy), now)) : `${plan.f.calendarDays.mid} day${plan.f.calendarDays.mid === 1 ? '' : 's'}`}
+                  tone={startLate ? 'paste' : undefined}
+                  detail={plan.f.startBy ? `${plan.f.calendarDays.mid} day${plan.f.calendarDays.mid === 1 ? '' : 's'} of work plus one of slack${plan.f.lateNightRisk ? '; late-night risk' : ''}` : 'at your usual spread'}
+                  info={plan.f.startBy ? 'The due date minus the calendar days this would take you, minus one day of slack.' : 'How many days your essays usually span for this many words, and how many stints you fit into a day; whichever asks for more.'}
+                />
+              </StatGrid>
 
-                <div className="grid gap-2">
-                  <h3 className="marginal">Suggested sessions</h3>
-                  <ol className="grid divide-y divide-rule border-t border-b border-rule text-sm tabular max-w-xl" aria-label="Suggested sessions">
-                    {plan.sessions.map((s, i) => (
-                      <li key={s.start} className="grid grid-cols-[1.5rem_1fr_auto] gap-x-3 items-baseline py-2">
-                        <span className="text-ink-soft font-mono text-xs">{i + 1}</span>
-                        <span>
-                          {fmtDate(s.start)}, {fmtTime(s.start)}
-                          {s.late && (
-                            <Chip kind="paste" className="ml-2">
-                              late night
-                            </Chip>
-                          )}
-                        </span>
-                        <span className="text-ink-soft whitespace-nowrap">
-                          {s.minutes} min · about {numText(s.words)} words
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                  <p className="text-xs text-ink-soft">
-                    {plan.sessions.length} session{plan.sessions.length === 1 ? '' : 's'} of your median stint with your usual break between them, in your best window{win2 ? 's' : ''}
-                    {win ? ` (${windowText(win)}${win2 ? `, then ${windowText(win2)}` : ''})` : ' (7pm to 9pm, since your record has no stretch with enough writing yet)'}.{plan.overruns ? ' This runs past the due date: start sooner or sit longer.' : ''} Move them as you like; this is a shape, not a timetable.
-                  </p>
-                </div>
+              <div className="grid gap-2">
+                <Marginal as="h3">Suggested sessions</Marginal>
+                <ScrollArea label="Suggested sessions" maxHeight={280} className="bg-sheet max-w-2xl">
+                  <table className="w-full font-mono text-xs tabular border-collapse">
+                    <thead>
+                      <tr>
+                        <th className={TH}>#</th>
+                        <th className={TH}>When</th>
+                        <th className={cx(TH, 'text-right')}>Length</th>
+                        <th className={cx(TH, 'text-right')}>Words</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {plan.sessions.map((s, i) => (
+                        <tr key={s.start} className="border-t border-rule">
+                          <td className={cx(TD, 'text-ink-faint')}>{i + 1}</td>
+                          <td className={TD}>
+                            {fmtDate(s.start)}, {fmtTime(s.start)}
+                            {s.late && (
+                              <Chip kind="paste" className="ml-2">
+                                late night
+                              </Chip>
+                            )}
+                          </td>
+                          <td className={cx(TD, 'text-right')}>{s.minutes} min</td>
+                          <td className={cx(TD, 'text-right text-ink-soft')}>about {numText(s.words)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </ScrollArea>
+                <Caption>
+                  {plan.sessions.length} session{plan.sessions.length === 1 ? '' : 's'} of your median stint with your usual break between them, in your best window{win2 ? 's' : ''}
+                  {win ? ` (${windowText(win)}${win2 ? `, then ${windowText(win2)}` : ''})` : ' (7pm to 9pm, since your record has no stretch with enough writing yet)'}.{plan.overruns ? ' This runs past the due date: start sooner or sit longer.' : ''} Move them as you like; this is a shape, not a timetable.
+                </Caption>
+              </div>
 
+              <Panel legend="Forecast">
                 <CopyParagraph text={plan.text} label="Copy forecast" />
+              </Panel>
 
-                <details className="text-sm max-w-2xl">
-                  <summary className="cursor-pointer text-ink-soft hover:text-ink">How these numbers were worked out</summary>
-                  <ul className="mt-2 grid gap-1.5 text-ink-soft list-disc pl-5">
-                    {plan.f.notes.map((n) => (
-                      <li key={n}>{n}</li>
-                    ))}
-                  </ul>
-                </details>
-              </>
-            )}
-            <p className="text-xs text-ink-soft max-w-prose">A forecast from your own record, computed on this computer and never sent anywhere. It mimics how your past essays went; it does not write a word of the next one.</p>
-          </div>
+              <details className="text-sm max-w-2xl">
+                <summary className="cursor-pointer font-mono text-xs text-ink-soft">How these numbers were worked out</summary>
+                <ul className="mt-2 grid gap-1.5 text-ink-soft list-disc pl-5">
+                  {plan.f.notes.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+              </details>
+            </>
+          )}
+          <Caption>A forecast from your own record, computed on this computer and never sent anywhere. It mimics how your past essays went; it does not write a word of the next one.</Caption>
         </section>
       )}
-    </>
+    </Window>
   );
 }
 

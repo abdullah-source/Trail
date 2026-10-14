@@ -1,104 +1,63 @@
-import { motion, useReducedMotion, type HTMLMotionProps } from 'framer-motion';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 
 /*
- * Motion primitives. DESIGN.md §6: on marketing pages only the replay moves.
- * Everything else gets one arrival: 12px rise + fade, 480ms, ease-out.
- * Under prefers-reduced-motion these render static (no transform, no fade).
+ * Motion on the desktop (DESIGN-desktop.md §6): only the record moves. The budget is the
+ * window zoom-open (`.win-open` in tokens.css), the caret blink, the replay itself and the
+ * one-time light-up of the provenance strip. FadeUp, Stagger, StaggerItem and Motion keep
+ * their names so nothing has to change its imports, but they render plain divs, and
+ * framer-motion is no longer loaded on marketing pages.
  */
 
 export const EASE = [0.2, 0.7, 0.2, 1] as const;
 
-/** True when the visitor prefers reduced motion. SSR/first paint safe (false). */
+const QUERY = '(prefers-reduced-motion: reduce)';
+const prefers = () => typeof matchMedia !== 'undefined' && matchMedia(QUERY).matches;
+
+/** True when the visitor prefers reduced motion. Tracks the media query. */
 export function usePrefersReducedMotion(): boolean {
-  return useReducedMotion() ?? false;
+  const [reduced, setReduced] = useState<boolean>(prefers);
+  useEffect(() => {
+    if (typeof matchMedia === 'undefined') return;
+    const mq = matchMedia(QUERY);
+    const on = () => setReduced(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return reduced;
 }
 
-type FadeUpProps = HTMLMotionProps<'div'> & {
-  children?: ReactNode;
-  /** seconds */
-  delay?: number;
-  /** pixels to rise from */
-  distance?: number;
-  /** animate when scrolled into view instead of on mount */
-  inView?: boolean;
-};
+type Plain = { children?: ReactNode; className?: string; style?: CSSProperties; id?: string };
 
-/** One element arriving. Use for hero copy, section headers, single cards. */
-export function FadeUp({ children, delay = 0, distance = 12, inView = false, ...rest }: FadeUpProps) {
-  const reduced = usePrefersReducedMotion();
-  if (reduced) return <div className={rest.className as string | undefined}>{children}</div>;
-  const visible = { opacity: 1, y: 0 };
-  if (inView) {
-    // Visible at rest: the element is never parked at opacity 0 waiting for a
-    // scroll observer (crawlers, print, full-page captures all see it). When it
-    // enters the viewport it plays the rise from a keyframe instead.
-    return (
-      <motion.div
-        initial={false}
-        whileInView={{ opacity: [0, 1], y: [distance, 0] }}
-        viewport={{ once: true, margin: '-10% 0px' }}
-        transition={{ duration: 0.48, ease: EASE, delay }}
-        {...rest}
-      >
-        {children}
-      </motion.div>
-    );
-  }
+/** Formerly one element arriving. On the desktop it is a plain div. */
+export function FadeUp({ children, className, style, id }: Plain & { delay?: number; distance?: number; inView?: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: distance }}
-      animate={visible}
-      transition={{ duration: 0.48, ease: EASE, delay }}
-      {...rest}
-    >
+    <div className={className} style={style} id={id}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-type StaggerProps = HTMLMotionProps<'div'> & {
-  children?: ReactNode;
-  /** seconds between children */
-  gap?: number;
-  inView?: boolean;
-};
-
-// Items are visible at rest (initial={false}); "shown" plays the rise as keyframes.
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  shown: { opacity: [0, 1], y: [12, 0], transition: { duration: 0.48, ease: EASE } },
-};
-
-/** A parent whose direct <StaggerItem> children arrive one after another. */
-export function Stagger({ children, gap = 0.07, inView = true, ...rest }: StaggerProps) {
-  const reduced = usePrefersReducedMotion();
-  if (reduced) return <div className={rest.className as string | undefined}>{children}</div>;
+/** Formerly a staggered parent. On the desktop it is a plain div. */
+export function Stagger({ children, className, style, id }: Plain & { gap?: number; inView?: boolean }) {
   return (
-    <motion.div
-      initial={inView ? false : 'hidden'}
-      {...(inView ? { whileInView: 'shown', viewport: { once: true, margin: '-10% 0px' } } : { animate: 'shown' })}
-      variants={{ shown: { transition: { staggerChildren: gap } } }}
-      {...rest}
-    >
+    <div className={className} style={style} id={id}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-export function StaggerItem({ children, ...rest }: HTMLMotionProps<'div'> & { children?: ReactNode }) {
-  const reduced = usePrefersReducedMotion();
-  if (reduced) return <div className={rest.className as string | undefined}>{children}</div>;
+export function StaggerItem({ children, className, style, id }: Plain) {
   return (
-    <motion.div variants={item} {...rest}>
+    <div className={className} style={style} id={id}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
-/** Wraps any framer-motion props: passes them through normally, strips them under reduced motion. */
-export function Motion({ children, reducedClassName, ...rest }: HTMLMotionProps<'div'> & { children?: ReactNode; reducedClassName?: string }) {
-  const reduced = usePrefersReducedMotion();
-  if (reduced) return <div className={reducedClassName ?? (rest.className as string | undefined)}>{children}</div>;
-  return <motion.div {...rest}>{children}</motion.div>;
+export function Motion({ children, className, reducedClassName, style, id }: Plain & { reducedClassName?: string }) {
+  return (
+    <div className={reducedClassName ?? className} style={style} id={id}>
+      {children}
+    </div>
+  );
 }

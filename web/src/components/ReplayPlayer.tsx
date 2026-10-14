@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { useReducedMotion } from 'framer-motion';
+// The replay engine's face: the essay sheet in a sunken scroll well, the activity strip, and two
+// chrome transport rows (step/play/step + scrubber; speed radios + draft milestones). Everything that
+// moves here is the record itself (DESIGN-desktop.md §6): the text, the caret, the scrubber.
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { TrailEvent } from '../lib/types';
 import { ms } from '../lib/analysis';
 import { useReplay, type Schedule } from './useReplay';
-import { Chip, Marginal, cx } from './ui';
+import { Button, Chip, IconButton, Marginal, Radio, cx } from './ui';
 import { fmtMinutes, num } from './format';
 
 export type ReplayPlayerProps = {
@@ -12,14 +14,37 @@ export type ReplayPlayerProps = {
   autoplay?: boolean;
   loop?: boolean;
   speed?: number;
-  hero?: boolean; // compact chrome, fixed height, adaptive speed
+  hero?: boolean; // fixed height, adaptive speed (the marketing hero)
   className?: string;
+  /** Called whenever the replay clock changes, e.g. "00:48 / 02:55" for a window's title bar. */
+  onClock?: (clock: string) => void;
 };
 
 const SPEEDS = [1, 4, 16];
 const MILESTONE_LABELS = ['25%', '50%', '75%', '100%'];
 
-/** Typed vs pasted characters added per slice of virtual time, for the strip above the scrubber. */
+/** prefers-reduced-motion, live, without pulling framer-motion into the app chunk. */
+export function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  useEffect(() => {
+    const mq = matchMedia('(prefers-reduced-motion: reduce)');
+    const on = () => setReduced(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return reduced;
+}
+
+/** mm:ss, or h:mm:ss past the hour, from milliseconds of replay time. */
+export function clockText(msValue: number): string {
+  const s = Math.max(0, Math.round(msValue / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const two = (n: number) => String(n).padStart(2, '0');
+  return h ? `${h}:${two(m)}:${two(s % 60)}` : `${two(m)}:${two(s % 60)}`;
+}
+
+/** Typed vs pasted characters added per slice of replay time, for the strip above the transport. */
 function useTimelineBuckets(s: Schedule, buckets = 72) {
   return useMemo(() => {
     const out = Array.from({ length: buckets }, () => ({ typed: 0, pasted: 0 }));
@@ -35,20 +60,13 @@ function useTimelineBuckets(s: Schedule, buckets = 72) {
   }, [s, buckets]);
 }
 
-export function ReplayPlayer({ events, title, autoplay, loop, speed, hero, className }: ReplayPlayerProps) {
-  const reduced = useReducedMotion() ?? false;
-  const still = reduced;
-  const adaptive = useMemo(() => {
-    if (!hero) return speed ?? 4;
-    // aim for a ~40 second loop regardless of the essay's length
-    const first = events[0],
-      last = events[events.length - 1];
-    if (!first || !last) return 8;
-    return 8; // overridden after schedule is known (see below)
-  }, [hero, speed, events]);
-  const r = useReplay(events, { autoplay: autoplay && !still, loop, speed: adaptive, still });
+export function ReplayPlayer({ events, title, autoplay, loop, speed, hero, className, onClock }: ReplayPlayerProps) {
+  const still = useReducedMotion();
+  const id = useId();
+  const r = useReplay(events, { autoplay: autoplay && !still, loop, speed: hero ? 8 : speed ?? 4, still });
   const { frame, schedule, playing, toggle, seek, setSpeed } = r;
 
+  // the hero aims for a ~40 second loop whatever the essay's length
   useEffect(() => {
     if (hero && schedule.duration) setSpeed(Math.max(2, Math.min(24, Math.round(schedule.duration / 40_000))));
   }, [hero, schedule, setSpeed]);
@@ -63,17 +81,34 @@ export function ReplayPlayer({ events, title, autoplay, loop, speed, hero, class
     if (!el || !playing) return;
     const caret = el.querySelector<HTMLElement>('[data-caret]');
     if (!caret) return;
-    const top = caret.offsetTop;
-    const want = top - el.clientHeight * 0.66;
+    const want = caret.offsetTop - el.clientHeight * 0.66;
     if (Math.abs(el.scrollTop - want) > 24) el.scrollTop = Math.max(0, want);
   }, [frame.position, playing]);
 
+  // the title-bar clock: replay time at this position over the whole replay, updated once per second at most
+  const clock = `${clockText(schedule.times[frame.position] ?? 0)} / ${clockText(schedule.duration)}`;
+  const onClockRef = useRef(onClock);
+  onClockRef.current = onClock;
+  useEffect(() => {
+    onClockRef.current?.(clock);
+  }, [clock]);
+
   const total = schedule.events.length;
-  const mIdx = r.milestoneIndex;
   const pctThrough = total ? Math.round((frame.position / total) * 100) : 0;
   const scrubText = `${num(frame.words)} words, ${pctThrough}% through`;
+  const stepBack = () => {
+    const prev = [...schedule.milestones].reverse().find((m) => m < frame.position);
+    if (playing) r.stop();
+    seek(prev ?? 0);
+  };
+  const stepForward = () => {
+    const next = schedule.milestones.find((m) => m > frame.position);
+    if (playing) r.stop();
+    seek(next ?? total);
+  };
 
   const onKey = (e: React.KeyboardEvent) => {
+    if ((e.target as HTMLElement).closest('button, input, label')) return;
     if (e.key === ' ' || e.key === 'k') {
       e.preventDefault();
       toggle();
@@ -81,28 +116,20 @@ export function ReplayPlayer({ events, title, autoplay, loop, speed, hero, class
   };
 
   return (
-    <div className={cx('grid gap-3', className)} onKeyDown={still ? undefined : onKey}>
-      {/* the sheet */}
-      <div className="relative">
-        <div
-          ref={sheetRef}
-          className={cx(
-            'bg-sheet border border-rule rounded-lg shadow-sheet ruled overflow-y-auto overscroll-contain relative',
-            hero ? 'h-[300px] sm:h-[360px] lg:h-[420px]' : 'max-h-[70vh] min-h-[280px]',
-          )}
-          aria-live={still ? undefined : 'off'}
-        >
-          <div className="absolute left-8 sm:left-12 top-0 bottom-0 w-px bg-paste/40 pointer-events-none" aria-hidden />
-          <div className={cx('essay px-11 sm:px-16 py-6 text-[17px] sm:text-[18px] leading-[1.6em] min-h-full', 'lg:pr-40')}>
-            {title && <Marginal className="block mb-4 text-ink-faint normal-case tracking-normal">{title}</Marginal>}
+    <div className={cx('grid', className)} onKeyDown={still ? undefined : onKey}>
+      {/* the sheet and the activity strip share one sunken well */}
+      <div className="relative bevel-in bg-sheet border-x-0 border-t-0">
+        <div ref={sheetRef} tabIndex={0} aria-label="Essay sheet" className={cx('scroll overscroll-contain', hero ? 'h-[300px] sm:h-[360px] lg:h-[420px]' : 'max-h-[70vh] min-h-[280px]')} aria-live={still ? undefined : 'off'}>
+          <div className="essay px-4 py-4 min-h-full">
+            {title && <Marginal className="block mb-4">{title}</Marginal>}
             {frame.lines.length === 0 || (frame.lines.length === 1 && frame.lines[0].runs.length === 0) ? (
-              <p className="text-ink-faint italic">
+              <p className="text-ink-faint">
                 {frame.position === 0 ? 'A blank page.' : ''}
                 {!still && <span className="caret" data-caret aria-hidden />}
               </p>
             ) : (
               frame.lines.map((ln) => (
-                <p key={ln.key} className="relative min-h-[1.6em] whitespace-pre-wrap break-words">
+                <p key={ln.key} className="min-h-[1.6em] whitespace-pre-wrap break-words">
                   {ln.runs.map((run, i) => {
                     const before = ln.caret !== null ? ln.runs.slice(0, i).reduce((a, x) => a + x.text.length, 0) : 0;
                     const within = ln.caret !== null && ln.caret > before && ln.caret <= before + run.text.length;
@@ -125,11 +152,12 @@ export function ReplayPlayer({ events, title, autoplay, loop, speed, hero, class
                   })}
                   {ln.caret === 0 && !still && <span className="caret" data-caret aria-hidden />}
                   {ln.pasteHere && (
-                    <span className="lg:absolute lg:left-full lg:top-[0.3em] lg:ml-4 ml-2 align-middle inline-block">
-                      <Chip kind={ln.pasteHere.kind}>
+                    <>
+                      {' '}
+                      <Chip kind={ln.pasteHere.kind === 'ai' ? 'ai' : 'paste'} className="align-middle">
                         pasted · {ln.pasteHere.host || (ln.pasteHere.kind === 'self' ? 'this doc' : 'unknown')}
                       </Chip>
-                    </span>
+                    </>
                   )}
                 </p>
               ))
@@ -137,34 +165,30 @@ export function ReplayPlayer({ events, title, autoplay, loop, speed, hero, class
           </div>
         </div>
         {frame.gapNote && !still && (
-          <div className="absolute top-3 right-3 bg-paper border border-rule rounded px-2 py-1 font-mono text-[11px] text-ink-soft" role="status">
-            ⋯ {frame.gapNote}
-          </div>
+          <span className="absolute top-2 right-2 label-plate" role="status">
+            … {frame.gapNote}
+          </span>
         )}
-      </div>
-
-      {/* timeline + transport */}
-      <div className="grid gap-2">
-        <div className="flex items-end gap-px h-8" aria-hidden>
+        {/* activity: typed (green) and pasted (amber) characters per slice of replay time */}
+        <div className="flex items-end gap-px h-6 px-2 pt-1 border-t border-rule" aria-hidden>
           {buckets.map((b, i) => {
             const played = total ? i / buckets.length <= frame.position / total : false;
             const h = ((b.typed + b.pasted) / maxBucket) * 100;
             const pasteShare = b.typed + b.pasted ? b.pasted / (b.typed + b.pasted) : 0;
-            return (
-              <span
-                key={i}
-                className={cx('flex-1 rounded-t-[1px] transition-opacity duration-150', pasteShare > 0.5 ? 'bg-paste' : 'bg-typed', played ? 'opacity-90' : 'opacity-25')}
-                style={{ height: `${Math.max(h, b.typed + b.pasted ? 6 : 0)}%` }}
-              />
-            );
+            return <span key={i} className={cx('flex-1', pasteShare > 0.5 ? 'bg-paste' : 'bg-typed')} style={{ height: `${Math.max(h, b.typed + b.pasted ? 8 : 0)}%`, opacity: played ? 1 : 0.3 }} />;
           })}
         </div>
+      </div>
 
-        {still ? (
-          <StillControls index={mIdx} onStep={(i) => seek(schedule.milestones[i])} words={frame.words} />
-        ) : (
-          <div className="grid gap-1">
-            <div className="relative">
+      {still ? (
+        <StillControls index={r.milestoneIndex} onStep={(i) => seek(schedule.milestones[i])} words={frame.words} />
+      ) : (
+        <>
+          <div className="transport">
+            <IconButton icon="back" label="Previous draft" onClick={stepBack} disabled={frame.position === 0} />
+            <IconButton icon={playing ? 'pause' : 'play'} label={playing ? 'Pause replay' : 'Play replay'} aria-pressed={playing} onClick={toggle} />
+            <IconButton icon="forward" label="Next draft" onClick={stepForward} disabled={frame.position >= total} />
+            <div className="relative flex-1 min-w-[80px]">
               <input
                 type="range"
                 className="range"
@@ -179,87 +203,57 @@ export function ReplayPlayer({ events, title, autoplay, loop, speed, hero, class
                   seek(Number(e.target.value));
                 }}
               />
-              <div className="absolute inset-x-0 top-[11px] h-0 pointer-events-none" aria-hidden>
+              <div className="absolute inset-x-0 top-1/2 h-0 pointer-events-none" aria-hidden>
                 {schedule.milestones.map((m, i) => (
-                  <span key={i} className="absolute w-px h-2.5 -translate-y-1/2 bg-ink-faint" style={{ left: `${total ? (m / total) * 100 : 0}%` }} />
+                  <span key={i} className="absolute w-px h-2 -translate-y-1/2 bg-margin" style={{ left: `${total ? (m / total) * 100 : 0}%` }} />
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                onClick={toggle}
-                aria-label={playing ? 'Pause replay' : 'Play replay'}
-                className="w-9 h-9 rounded-full border border-rule-strong hover:border-ink flex items-center justify-center transition-colors duration-150"
-              >
-                {playing ? (
-                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
-                    <rect x="1" y="1" width="4" height="10" fill="currentColor" />
-                    <rect x="7" y="1" width="4" height="10" fill="currentColor" />
-                  </svg>
-                ) : (
-                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
-                    <path d="M2 1 L11 6 L2 11 Z" fill="currentColor" />
-                  </svg>
-                )}
-              </button>
-              <div role="group" aria-label="Speed" className="inline-flex border border-rule rounded-md p-0.5">
-                {SPEEDS.map((s) => (
-                  <button
-                    key={s}
-                    aria-pressed={r.speed === s}
-                    onClick={() => setSpeed(s)}
-                    className={cx('h-7 px-2 rounded font-mono text-xs tabular', r.speed === s ? 'bg-ink text-paper' : 'text-ink-soft hover:text-ink')}
-                  >
-                    {s}×
-                  </button>
-                ))}
-              </div>
-              <div className="hidden sm:flex gap-1" role="group" aria-label="Draft milestones">
-                {schedule.milestones.map((m, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      if (playing) r.stop();
-                      seek(m);
-                    }}
-                    className={cx('h-7 px-2 rounded font-mono text-xs tabular border border-transparent hover:border-rule-strong', frame.position === m && 'border-rule-strong')}
-                  >
-                    {MILESTONE_LABELS[i]}
-                  </button>
-                ))}
-              </div>
-              <span className="ml-auto font-mono text-xs text-ink-soft tabular" aria-live="off">
-                {num(frame.words)} words · {fmtMinutes(frame.elapsedMs / 60000)} in
-              </span>
-            </div>
+            <span className="tabular whitespace-nowrap" aria-live="off">
+              {num(frame.words)} words · {fmtMinutes(frame.elapsedMs / 60000)} in
+            </span>
           </div>
-        )}
-      </div>
+          <div className="transport flex-wrap">
+            <span role="radiogroup" aria-label="Speed" className="inline-flex flex-wrap gap-x-4 gap-y-2">
+              {SPEEDS.map((s) => (
+                <Radio key={s} name={`${id}-speed`} label={`${s}×`} checked={r.speed === s} onChange={() => setSpeed(s)} />
+              ))}
+            </span>
+            <span role="group" aria-label="Draft milestones" className="inline-flex gap-1 ml-auto">
+              {schedule.milestones.map((m, i) => (
+                <Button
+                  key={i}
+                  size="sm"
+                  aria-pressed={frame.position === m}
+                  onClick={() => {
+                    if (playing) r.stop();
+                    seek(m);
+                  }}
+                >
+                  {MILESTONE_LABELS[i]}
+                </Button>
+              ))}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 function StillControls({ index, onStep, words }: { index: number; onStep: (i: number) => void; words: number }) {
   return (
-    <div className="flex items-center gap-3 flex-wrap" role="group" aria-label="Draft milestones">
-      <button
-        className="h-9 px-3 rounded-md border border-rule-strong hover:border-ink text-sm disabled:opacity-40"
-        disabled={index <= 0}
-        onClick={() => onStep(index - 1)}
-      >
-        ← Earlier
-      </button>
-      <span className="font-mono text-xs text-ink-soft">
+    <div className="transport flex-wrap" role="group" aria-label="Draft milestones">
+      <Button size="sm" disabled={index <= 0} onClick={() => onStep(index - 1)} icon="back">
+        Earlier
+      </Button>
+      <span className="tabular">
         Draft at {MILESTONE_LABELS[index]} · {num(words)} words
       </span>
-      <button
-        className="h-9 px-3 rounded-md border border-rule-strong hover:border-ink text-sm disabled:opacity-40"
-        disabled={index >= 3}
-        onClick={() => onStep(index + 1)}
-      >
-        Later →
-      </button>
-      <span className="text-xs text-ink-faint basis-full">Reduced motion is on, so the replay shows four drafts instead of animating.</span>
+      <Button size="sm" disabled={index >= 3} onClick={() => onStep(index + 1)} icon="forward">
+        Later
+      </Button>
+      <span className="text-ink-soft basis-full">Reduced motion is on, so the replay shows four drafts instead of animating.</span>
     </div>
   );
 }

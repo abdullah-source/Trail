@@ -1,8 +1,9 @@
 // The hero headline, written in front of you: "See how you write." is typed with a caret, then
 // a line beneath is typed, one phrase is pasted (highlighter wash + source chip), a typo is
 // backspaced and fixed. About four seconds, then it settles. This is the one text animation
-// on the site besides the replay (DESIGN.md §5). No layout shift: the finished text is laid
-// out invisibly underneath and the animated copy sits on top of it in the same grid cell.
+// on the site besides the replay (DESIGN-desktop.md §6). No layout shift: the finished text
+// is laid out invisibly underneath and the animated copy sits on top of it in the same grid
+// cell. The headline is the pixel display face; the second line is the mono essay face.
 import { useEffect, useMemo, useState } from 'react';
 import { usePrefersReducedMotion } from './motion';
 
@@ -58,6 +59,9 @@ function compile(): { steps: Step[]; total: number } {
   return { steps, total: t };
 }
 
+const H1 = 'text-[clamp(32px,9vw,48px)] [grid-area:1/1]';
+const L2 = 'essay text-base sm:text-lg leading-snug [grid-area:1/1]';
+
 export function TypedHeadline({ className = '' }: { className?: string }) {
   const reduced = usePrefersReducedMotion();
   const { steps, total } = useMemo(compile, []);
@@ -65,7 +69,10 @@ export function TypedHeadline({ className = '' }: { className?: string }) {
   const done = k >= steps.length;
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced) {
+      setK(steps.length);
+      return;
+    }
     let raf = 0;
     const start = performance.now();
     const tick = (now: number) => {
@@ -100,23 +107,23 @@ export function TypedHeadline({ className = '' }: { className?: string }) {
     <div className={`grid gap-4 ${className}`}>
       <div className="grid">
         {/* sizing copy, invisible, so the block never changes height */}
-        <h1 className="text-4xl sm:text-5xl invisible [grid-area:1/1]" aria-hidden>
+        <h1 className={`${H1} invisible`} aria-hidden>
           {HEAD}
         </h1>
-        <h1 className="text-4xl sm:text-5xl [grid-area:1/1]">
+        <h1 className={H1}>
           {head}
           {caretOn && caretLine === 0 && !showCaretOnEmptyL2 && <Caret />}
         </h1>
       </div>
       <div className="grid">
-        <p className="essay text-xl sm:text-2xl leading-snug invisible [grid-area:1/1]" aria-hidden>
+        <p className={`${L2} invisible`} aria-hidden>
           {FINAL_L2}
         </p>
-        <p className="essay text-xl sm:text-2xl leading-snug [grid-area:1/1]" aria-label={FINAL_L2}>
+        <p className={L2} aria-label={FINAL_L2}>
           {line2.pre}
           {line2.paste && (
             <>
-              <span className="inline-block align-baseline font-mono text-[10px] leading-none tracking-wide text-paste border border-paste/50 rounded-sm px-1 py-[2px] mr-1 select-none" aria-hidden>
+              <span className="inline-block align-baseline font-mono text-[10px] leading-none tracking-wide text-paste border border-paste px-1 py-[2px] mr-1 select-none" aria-hidden>
                 {L2_SRC}
               </span>
               <span className="prov-paste">{line2.paste}</span>
@@ -130,8 +137,9 @@ export function TypedHeadline({ className = '' }: { className?: string }) {
   );
 }
 
+/** The caret blinks at 1 s, steps(2), from tokens.css. */
 function Caret() {
-  return <span className="caret" aria-hidden style={{ animation: 'none' }} />;
+  return <span className="caret" aria-hidden />;
 }
 
 export default TypedHeadline;

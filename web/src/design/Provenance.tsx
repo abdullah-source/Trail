@@ -1,10 +1,9 @@
-import type { ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import { Badge, cx } from './components';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Chip, cx, ProgressBar, ScrollArea, Swatch as KitSwatch } from './desktop';
 import { usePrefersReducedMotion } from './motion';
 
 /*
- * Provenance: "where each line came from" strip + paste list.
+ * Provenance: "where each line came from" strip + paste list, on the desktop kit.
  * Structurally compatible with lib/types LineProvenance and PasteItem, but
  * typed here so the component has no dependency on engineering code.
  */
@@ -21,39 +20,58 @@ export type ProvenancePaste = {
 };
 
 const LABELS: { key: ProvenanceLabel; name: string; cls: string }[] = [
-  { key: 'typed', name: 'typed', cls: 'bg-typed' },
-  { key: 'pasted', name: 'pasted', cls: 'bg-paste' },
-  { key: 'pasted-edited', name: 'pasted, then edited', cls: 'bg-paste/55' },
-  { key: 'mixed', name: 'mixed', cls: 'bg-mixed' },
-  { key: 'unobserved', name: 'unobserved', cls: 'bg-unobserved' },
+  { key: 'typed', name: 'typed', cls: 'is-typed' },
+  { key: 'pasted', name: 'pasted', cls: 'is-pasted' },
+  { key: 'pasted-edited', name: 'pasted, then edited', cls: 'is-pasted-edited' },
+  { key: 'mixed', name: 'mixed', cls: 'is-mixed' },
+  { key: 'unobserved', name: 'unobserved', cls: 'is-unobserved' },
 ];
-const bg = Object.fromEntries(LABELS.map((l) => [l.key, l.cls])) as Record<ProvenanceLabel, string>;
+const cell = Object.fromEntries(LABELS.map((l) => [l.key, l.cls])) as Record<ProvenanceLabel, string>;
 
 export function Swatch({ label, className }: { label: ProvenanceLabel; className?: string }) {
-  return <i aria-hidden className={cx('inline-block w-2.5 h-2.5 rounded-[2px] align-[-1px]', bg[label], className)} />;
+  return <KitSwatch kind={label} className={className} />;
 }
 
 /** One cell per line, in reading order. With `animate`, the cells light up left to right once when scrolled into view. */
 export function ProvenanceStrip({ lines, className, animate = false }: { lines: ProvenanceLine[]; className?: string; animate?: boolean }) {
   const reduced = usePrefersReducedMotion();
+  const bar = useRef<HTMLDivElement>(null);
   const counts = {} as Record<ProvenanceLabel, number>;
   for (const l of lines) counts[l.label] = (counts[l.label] || 0) + 1;
   const summary = LABELS.filter((l) => counts[l.key]).map((l) => `${counts[l.key]} ${l.name}`).join(', ');
   const lit = animate && !reduced;
-  // the whole pass takes ~0.9s however many lines there are
-  const step = lines.length ? Math.min(0.06, 0.9 / lines.length) : 0;
-  const Bar: any = lit ? motion.div : 'div';
-  const Cell: any = lit ? motion.span : 'span';
-  const barProps = lit ? { initial: 'dim', whileInView: 'lit', viewport: { once: true, margin: '-10% 0px' }, variants: { lit: { transition: { staggerChildren: step } } } } : {};
-  const cellVariants = { dim: { opacity: 0.18 }, lit: { opacity: 1, transition: { duration: 0.35 } } };
+
+  // The one-time light-up: Web Animations, so it needs no stylesheet and respects reduced motion.
+  useEffect(() => {
+    const el = bar.current;
+    if (!lit || !el || typeof IntersectionObserver === 'undefined') return;
+    const cells = Array.from(el.children) as HTMLElement[];
+    if (!cells.length) return;
+    const step = Math.min(60, 900 / cells.length);
+    // Visible at rest (crawlers, print and full-page captures see the whole strip); the
+    // left-to-right pass plays from the dim keyframe once the strip scrolls into view.
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        cells.forEach((c, i) => {
+          if (typeof c.animate === 'function') c.animate([{ opacity: 0.18 }, { opacity: 1 }], { duration: 350, delay: i * step, fill: 'backwards', easing: 'steps(3, end)' });
+        });
+      },
+      { rootMargin: '-10% 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [lit, lines.length]);
+
   return (
     <div className={cx('grid gap-2', className)}>
-      <Bar className="flex h-4 rounded-sm overflow-hidden border border-rule gap-px bg-rule" role="img" aria-label={`Where each line came from: ${summary || 'no lines'}`} {...barProps}>
+      <div ref={bar} className="prov-strip" role="img" aria-label={`Where each line came from: ${summary || 'no lines'}`}>
         {lines.map((l) => (
-          <Cell key={l.index} className={cx('flex-1 min-w-[2px]', bg[l.label] || 'bg-unobserved')} title={`Line ${l.index + 1}: ${l.label}${l.text ? ` — ${l.text.slice(0, 60)}` : ''}`} {...(lit ? { variants: cellVariants } : {})} />
+          <span key={l.index} className={cell[l.label] || 'is-unobserved'} title={`Line ${l.index + 1}: ${l.label}${l.text ? ` — ${l.text.slice(0, 60)}` : ''}`} />
         ))}
-      </Bar>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-soft tabular">
+      </div>
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-ink-soft tabular">
         {LABELS.filter((l) => l.key !== 'unobserved' || counts.unobserved).map((l) => (
           <li key={l.key}>
             <Swatch label={l.key} className="mr-1.5" />
@@ -69,43 +87,50 @@ const when = (ts: string) => ts.slice(0, 16).replace('T', ' ');
 const pct = (r: number) => `${Math.round(r * 100)}%`;
 const kindOf = (p: ProvenancePaste): 'ai' | 'pasted' | 'neutral' => (p.source_kind === 'ai' ? 'ai' : p.source_kind === 'web' ? 'pasted' : 'neutral');
 
-/** Every paste, oldest first: when, how much, where from, how much survived. */
+const th = 'marginal font-normal text-left py-1.5 px-2.5 border-b border-rule whitespace-nowrap';
+const td = 'py-1.5 px-2.5 border-b border-rule align-top';
+
+/** Every paste, oldest first: when, how much, where from, how much survived. A table in a scrolling well. */
 export function PasteList({ pastes, limit = 40, className, empty = 'No pastes recorded.' }: { pastes: ProvenancePaste[]; limit?: number; className?: string; empty?: ReactNode }) {
   if (!pastes.length) return <p className={cx('text-sm text-ink-soft', className)}>{empty}</p>;
   return (
-    <div className={cx('overflow-x-auto', className)}>
-      <table className="w-full text-sm border-collapse min-w-[28rem]">
-        <thead>
-          <tr className="text-left marginal">
-            <th className="font-normal py-2 pr-3">When</th>
-            <th className="font-normal py-2 pr-3 text-right">Chars</th>
-            <th className="font-normal py-2 pr-3">Source</th>
-            <th className="font-normal py-2 pr-3">From</th>
-            <th className="font-normal py-2 text-right">Still in text</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pastes.slice(0, limit).map((p, i) => (
-            <tr key={i} className="border-t border-rule align-top">
-              <td className="py-2 pr-3 font-mono text-xs text-ink-soft whitespace-nowrap">{when(p.ts)}</td>
-              <td className="py-2 pr-3 text-right tabular">{p.chars.toLocaleString()}</td>
-              <td className="py-2 pr-3">
-                <Badge kind={kindOf(p)}>{p.source_kind}</Badge>
-              </td>
-              <td className="py-2 pr-3 break-all">{p.source_host || (p.from_self ? 'this document' : 'unknown')}</td>
-              <td className="py-2 text-right tabular">
-                <span className="inline-flex items-center gap-2">
-                  <span aria-hidden className="inline-block w-12 h-1.5 rounded-sm bg-rule overflow-hidden">
-                    <span className="block h-full bg-paste" style={{ width: pct(p.surviving_ratio) }} />
-                  </span>
-                  {pct(p.surviving_ratio)}
-                </span>
-              </td>
+    <div className={cx('grid gap-2', className)}>
+      <ScrollArea label="Pastes">
+        <table className="w-full border-collapse font-mono text-[13px] whitespace-nowrap min-w-[30rem]">
+          <thead>
+            <tr>
+              <th className={th}>When</th>
+              <th className={cx(th, 'text-right')}>Chars</th>
+              <th className={th}>Source</th>
+              <th className={th}>From</th>
+              <th className={cx(th, 'text-right')}>Still in text</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {pastes.length > limit && <p className="text-xs text-ink-soft mt-2">Showing {limit} of {pastes.length} pastes.</p>}
+          </thead>
+          <tbody>
+            {pastes.slice(0, limit).map((p, i) => (
+              <tr key={i}>
+                <td className={cx(td, 'text-ink-soft')}>{when(p.ts)}</td>
+                <td className={cx(td, 'text-right tabular')}>{p.chars.toLocaleString()}</td>
+                <td className={td}>
+                  <Chip kind={kindOf(p)}>{p.source_kind}</Chip>
+                </td>
+                <td className={cx(td, 'whitespace-normal [overflow-wrap:anywhere]')}>{p.source_host || (p.from_self ? 'this document' : 'unknown')}</td>
+                <td className={cx(td, 'text-right tabular')}>
+                  <span className="inline-flex items-center gap-2 justify-end">
+                    <ProgressBar value={p.surviving_ratio} tone="paste" segments={6} label={`${pct(p.surviving_ratio)} still in text`} />
+                    {pct(p.surviving_ratio)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollArea>
+      {pastes.length > limit && (
+        <p className="text-xs text-ink-soft">
+          Showing {limit} of {pastes.length} pastes.
+        </p>
+      )}
     </div>
   );
 }

@@ -1,14 +1,25 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Heading, Prose, Section, useTitle } from '../../design/components';
+import { Desk, Heading, Prose, Section, useTitle } from '../../design/components';
 
-const SECTIONS: { code: string; label: string; title: string; body: React.ReactNode }[] = [
+const SECTIONS: { code: string; label: string; title: string; body: ReactNode }[] = [
   {
     code: '00:03',
     label: 'Service',
     title: 'What Trail is',
     body: (
       <>
-        <p>Trail is a browser extension and a web app that keep a record of how you write, on your device, and sign fingerprints of that record on our server. The details of what is stored where are on the <Link to="/privacy" className="link">privacy page</Link> and the <Link to="/how-it-works" className="link">how it works page</Link>; both are part of these terms.</p>
+        <p>
+          Trail is a browser extension and a web app that keep a record of how you write, on your device, and sign fingerprints of that record on our server. The details of what is stored where are on the{' '}
+          <Link to="/privacy" className="link">
+            privacy page
+          </Link>{' '}
+          and the{' '}
+          <Link to="/how-it-works" className="link">
+            how it works page
+          </Link>
+          ; both are part of these terms.
+        </p>
         <p>Trail does not detect AI writing, grade your work, or judge its content. The record shows what happened in the editor and nothing else.</p>
       </>
     ),
@@ -77,7 +88,13 @@ const SECTIONS: { code: string; label: string; title: string; body: React.ReactN
     body: (
       <>
         <p>We may update these terms. If a change matters to you, we email you at least 14 days before it takes effect, and you can close your account before then with a refund of any unused period. We may stop offering Trail; if we do, you get at least 60 days' notice, the verification page stays up for at least a year, and your local record and packs keep working, because verification does not depend on us.</p>
-        <p>These terms are governed by the laws of the State of Delaware, United States, without regard to conflict of law rules. Questions: <a href="mailto:hello@trail.app" className="link">hello@trail.app</a>.</p>
+        <p>
+          These terms are governed by the laws of the State of Delaware, United States, without regard to conflict of law rules. Questions:{' '}
+          <a href="mailto:hello@trail.app" className="link">
+            hello@trail.app
+          </a>
+          .
+        </p>
       </>
     ),
   },
@@ -86,16 +103,16 @@ const SECTIONS: { code: string; label: string; title: string; body: React.ReactN
 export default function Terms() {
   useTitle('Terms');
   return (
-    <>
-      <Section flush code="00:00" label="Terms">
+    <Desk columns={1} width="reading">
+      <Section label="Terms" code="00:00" icon="document" titleAs="div" open>
         <Heading as="h1" eyebrow="Terms of service" title="Short, because there is not much to say." lede="These are the terms for using Trail. Plain English, no surprises. Last updated 21 September 2026." />
       </Section>
       {SECTIONS.map((s) => (
         <Section key={s.code} code={s.code} label={s.label}>
           <Heading title={s.title} />
-          <Prose className="mt-6">{s.body}</Prose>
+          <Prose className="mt-4">{s.body}</Prose>
         </Section>
       ))}
-    </>
+    </Desk>
   );
 }

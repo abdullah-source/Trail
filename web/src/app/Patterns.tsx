@@ -1,10 +1,12 @@
+// Patterns is a control panel: a chrome-bodied window with four stat tiles across the top and a
+// panel per chart (DESIGN-desktop.md §4). Colour (the typed-green bars) sits on a paper well.
 import { Link } from 'react-router-dom';
 import { analyse, patterns } from '../lib/analysis';
 import { sessionMinutesByLocalHour } from '../lib/pace';
 import { data } from '../lib/data';
 import type { Analysis } from '../lib/types';
 import { useAsync, usePageTitle } from '../components/useAsync';
-import { EmptyState, ErrorNote, Loading, Marginal, SectionHead, StatTile } from '../components/ui';
+import { Caption, EmptyState, ErrorNote, Loading, Panel, ProgressBar, ScrollArea, StatGrid, StatTile, Window, cx } from '../components/ui';
 import { fmtMinutes, hourLabel, num, pct } from '../components/format';
 
 async function loadAll(): Promise<{ analyses: Analysis[]; titles: string[] }> {
@@ -25,6 +27,9 @@ async function loadAll(): Promise<{ analyses: Analysis[]; titles: string[] }> {
   return { analyses, titles };
 }
 
+const TH = 'marginal font-normal text-left px-2 py-1.5 whitespace-nowrap';
+const TD = 'px-2 py-1.5 whitespace-nowrap';
+
 export default function Patterns() {
   usePageTitle('Patterns');
   const all = useAsync(loadAll, []);
@@ -35,10 +40,14 @@ export default function Patterns() {
     return (
       <EmptyState
         title="No patterns yet"
+        icon="magnifier"
         body={
-          <>
-            Patterns appear after your first essay. <Link to="/app/welcome" className="link">Write a paragraph to start.</Link>
-          </>
+          <p>
+            Patterns appear after your first essay.{' '}
+            <Link to="/app/welcome" className="link">
+              Write a paragraph to start.
+            </Link>
+          </p>
         }
       />
     );
@@ -50,73 +59,83 @@ export default function Patterns() {
   const localHours = sessionMinutesByLocalHour(analyses.flatMap((a) => a.sessions));
 
   return (
-    <div className="grid gap-10">
-      <SectionHead kicker="Your patterns" title="How you write, across everything." lede={`${p.documents} essay${p.documents === 1 ? '' : 's'}, ${p.sessions} session${p.sessions === 1 ? '' : 's'}, ${num(p.total_words)} words. Computed on this computer from your own record.`} />
+    <Window as="section" titleAs="h1" title="Patterns" icon="magnifier" right={`${p.documents} essay${p.documents === 1 ? '' : 's'}`} chrome open bodyClassName="grid gap-4">
+      <Caption>
+        How you write, across everything: {p.documents} essay{p.documents === 1 ? '' : 's'}, {p.sessions} session{p.sessions === 1 ? '' : 's'}, {num(p.total_words)} words. Computed on this computer from your own record.
+      </Caption>
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
+      <StatGrid>
         <StatTile label="Typical session" value={fmtMinutes(p.median_session_minutes)} detail="median active time" info="The middle value of your sessions' active minutes, across every essay. Active means at least one keystroke every two minutes." />
         <StatTile label="Pace" value={p.words_per_minute ? num(p.words_per_minute) : '—'} detail="words a minute while active" info="Words added divided by active minutes, across every essay." />
         <StatTile label="Typed share" value={pct(p.typed_share)} detail="of your final text is typed" tone="typed" info="Characters typed one at a time that survive in the final text, divided by the final length, summed over every essay." />
         <StatTile label="Revision" value={pct(p.correction_ratio)} detail="of typed characters later deleted" info="Characters you typed and later removed, divided by all characters typed. Higher means more rewriting." />
-      </section>
+      </StatGrid>
 
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>When you write</Marginal>
-          <span className="text-xs text-ink-soft">Active minutes by hour of the day, your local time, summed over every session; a session that crosses the hour is split between both. The tallest bar is marked.</span>
-        </div>
-        <HourChart hours={localHours} />
-      </section>
+      <div className="grid lg:grid-cols-2 gap-4 items-start">
+        <Panel legend="When you write">
+          <Caption className="mb-2">Active minutes by hour of the day, your local time, summed over every session; a session that crosses the hour is split between both. The tallest bar is marked.</Caption>
+          <HourChart hours={localHours} />
+        </Panel>
 
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>Session length</Marginal>
-          <span className="text-xs text-ink-soft">How many sessions fell into each length band, by active minutes.</span>
-        </div>
-        <Histogram values={sessionMinutes} />
-      </section>
+        <Panel legend="Session length">
+          <Caption className="mb-2">How many sessions fell into each length band, by active minutes.</Caption>
+          <Histogram values={sessionMinutes} />
+        </Panel>
 
-      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-        <div className="grid gap-1 content-start">
-          <Marginal>Revision habits</Marginal>
-          <span className="text-xs text-ink-soft">Per essay: how much typed text was later deleted, and how much of the final text was typed.</span>
-        </div>
-        <ul className="grid gap-2 text-sm max-w-2xl">
-          {analyses.map((a, i) => (
-            <li key={a.document.doc || i} className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-baseline border-b border-rule py-1.5 tabular">
-              <span className="truncate">{all.value.titles[i]}</span>
-              <span className="text-ink-soft">{pct(a.cadence.correction_ratio)} revised</span>
-              <span className="text-typed">{pct(a.document.typed_share)} typed</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
+        <Panel legend="Revision habits" className="lg:col-span-2">
+          <Caption className="mb-2">Per essay: how much typed text was later deleted, and how much of the final text was typed.</Caption>
+          <ScrollArea label="Revision per essay" maxHeight={320} className="bg-sheet">
+            <table className="w-full font-mono text-xs tabular border-collapse">
+              <thead>
+                <tr>
+                  <th className={TH}>Essay</th>
+                  <th className={cx(TH, 'text-right')}>Revised</th>
+                  <th className={cx(TH, 'text-right')}>Typed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyses.map((a, i) => (
+                  <tr key={a.document.doc || i} className="border-t border-rule">
+                    <td className={cx(TD, 'max-w-[24rem] overflow-hidden text-ellipsis')} title={all.value.titles[i]}>
+                      {all.value.titles[i]}
+                    </td>
+                    <td className={cx(TD, 'text-right text-ink-soft')}>{pct(a.cadence.correction_ratio)}</td>
+                    <td className={cx(TD, 'text-right text-typed')}>{pct(a.document.typed_share)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ScrollArea>
+        </Panel>
+      </div>
+    </Window>
   );
 }
 
 function HourChart({ hours }: { hours: number[] }) {
   const max = Math.max(1, ...hours);
   const W = 480,
-    H = 120,
+    H = 96,
     pad = 4;
   const bw = (W - pad * 2) / 24;
   const best = hours.indexOf(max);
   return (
-    <figure className="max-w-2xl">
-      <svg viewBox={`0 0 ${W} ${H + 18}`} className="w-full h-auto" role="img" aria-label={`Active minutes by hour. Most writing around ${hourLabel(best)}.`}>
-        {hours.map((v, h) => {
-          const bh = (v / max) * H;
-          return <rect key={h} x={pad + h * bw + 1} y={H - bh} width={bw - 2} height={bh} className={h === best ? 'fill-paste' : 'fill-typed'} opacity={v ? 0.9 : 0.15} />;
-        })}
-        {[0, 6, 12, 18].map((h) => (
-          <text key={h} x={pad + h * bw + 2} y={H + 13} className="fill-ink-soft" fontSize="10" fontFamily="var(--font-mono)">
-            {hourLabel(h)}
-          </text>
-        ))}
-        <line x1={pad} y1={H + 0.5} x2={W - pad} y2={H + 0.5} className="stroke-rule" />
-      </svg>
-      <figcaption className="text-xs text-ink-soft mt-1">
+    <figure className="grid gap-1">
+      <div className="bevel-in bg-sheet p-2">
+        <svg viewBox={`0 0 ${W} ${H + 18}`} className="w-full h-auto block" shapeRendering="crispEdges" role="img" aria-label={`Active minutes by hour. Most writing around ${hourLabel(best)}.`}>
+          {hours.map((v, h) => {
+            const bh = Math.round((v / max) * H);
+            return <rect key={h} x={pad + h * bw + 1} y={H - bh} width={bw - 2} height={bh} fill={h === best ? 'var(--paste)' : 'var(--typed)'} opacity={v ? 1 : 0.15} />;
+          })}
+          {[0, 6, 12, 18].map((h) => (
+            <text key={h} x={pad + h * bw + 2} y={H + 14} fill="var(--ink-soft)" fontSize="11" fontFamily="var(--font-mono)">
+              {hourLabel(h)}
+            </text>
+          ))}
+          <line x1={pad} y1={H + 0.5} x2={W - pad} y2={H + 0.5} stroke="var(--rule)" />
+        </svg>
+      </div>
+      <figcaption className="font-mono text-xs text-ink-soft">
         Most of your writing happens around <span className="text-ink">{hourLabel(best)}</span>.
       </figcaption>
     </figure>
@@ -129,14 +148,12 @@ function Histogram({ values }: { values: number[] }) {
   const counts = labels.map((_, i) => values.filter((v) => v >= edges[i] && v < edges[i + 1]).length);
   const max = Math.max(1, ...counts);
   return (
-    <ul className="grid gap-1.5 max-w-2xl text-sm tabular" aria-label="Session length distribution">
+    <ul className="grid gap-2 font-mono text-xs tabular list-none m-0 p-0" aria-label="Session length distribution">
       {labels.map((l, i) => (
         <li key={l} className="grid grid-cols-[4rem_1fr_2rem] items-center gap-3">
-          <span className="font-mono text-xs text-ink-soft">{l}</span>
-          <span className="h-3 bg-rule rounded-sm overflow-hidden">
-            <span className="block h-full bg-typed" style={{ width: `${(counts[i] / max) * 100}%` }} />
-          </span>
-          <span className="text-ink-soft text-right">{counts[i]}</span>
+          <span className="text-ink-soft">{l}</span>
+          <ProgressBar value={counts[i] / max} tone="typed" label={`${l}: ${counts[i]} session${counts[i] === 1 ? '' : 's'}`} />
+          <span className="text-right">{counts[i]}</span>
         </li>
       ))}
     </ul>

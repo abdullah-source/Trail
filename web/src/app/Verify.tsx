@@ -2,6 +2,11 @@
 // the browser (lib/verify.ts). Nothing is uploaded. For a professor who does not trust us.
 // "Try it with a sample record" fetches a signed demo pack from this server; "Now tamper with
 // it" changes one event in memory and re-runs, so the visitor sees the chain break.
+//
+// On the desktop this is a "Disk First Aid" dialog: the disk icon, the three-step explainer
+// as panels, a sunken drop zone, a segmented progress bar while checks run, a checklist with
+// pixel check and cross marks, and the verdict in the dialog's bottom bar. A broken chain
+// opens a second, amber alert dialog with "Put it back".
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { data } from '../lib/data';
@@ -9,8 +14,8 @@ import type { VerifyCheck, VerifyResult } from '../lib/types';
 import { tamperRecordFiles, unpackRecord, verifyRecordFiles, type TrustAnchor } from '../lib/verify';
 import { demoPackUrl, loadDemoManifest, loadServerDemos } from '../lib/demo';
 import { usePageTitle } from '../components/useAsync';
-import { Button, Marginal, Sheet, cx } from '../components/ui';
 import { fmtDateTime, fmtTime } from '../components/format';
+import { Button, Chip, cx, Dialog, Icon, ProgressBar } from '../design/desktop';
 import { PublicShell } from './shared';
 
 type Tamper = NonNullable<ReturnType<typeof tamperRecordFiles>>;
@@ -102,6 +107,17 @@ export default function Verify() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The installer-style bar steps forward while checks run (there is no progress callback).
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!busy) {
+      setTick(0);
+      return;
+    }
+    const id = setInterval(() => setTick((t) => t + 1), 120);
+    return () => clearInterval(id);
+  }, [busy]);
+
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setDrag(false);
@@ -109,71 +125,89 @@ export default function Verify() {
     if (f) checkFile(f);
   };
 
+  const v = result && fileName ? verdict(result, !!tamper) : null;
+  const busyLabel = busy === 'file' ? `Checking ${fileName}…` : busy === 'sample' ? 'Fetching and checking…' : busy === 'tamper' ? 'Altering…' : 'Restoring…';
+
+  const actions = (
+    <>
+      {v && (
+        <p className="flex-[1_1_18rem] text-sm font-semibold inline-flex flex-wrap items-center gap-2" role="status">
+          <Chip kind={v.tone === 'ok' ? 'typed' : v.tone === 'bad' ? 'paste' : 'mixed'}>{v.tone === 'ok' ? 'Verified' : v.tone === 'bad' ? 'Failed' : 'Partly checked'}</Chip>
+          <span>{v.text}</span>
+        </p>
+      )}
+      <Button onClick={trySample} disabled={busy !== null} ring={!sample || !!tamper}>
+        {busy === 'sample' ? 'Fetching and checking…' : 'Try it with a sample record'}
+      </Button>
+      {sample && !tamper && (
+        <Button ring onClick={tamperSample} disabled={busy !== null}>
+          {busy === 'tamper' ? 'Altering…' : 'Now tamper with it'}
+        </Button>
+      )}
+    </>
+  );
+
   return (
     <PublicShell wide>
-      <div className="grid gap-10 max-w-4xl">
-        <header className="grid gap-3">
-          <Marginal>Verify a record</Marginal>
-          <h1 className="text-3xl sm:text-4xl">Check a Trail record without trusting Trail.</h1>
-          <p className="text-ink-soft max-w-prose">
-            A student hands you a <span className="font-mono">.trail.tar.gz</span>. This page opens it in your browser, recomputes every fingerprint and every link in the chain, and checks the signatures against Trail's public key and public log fetched from this site, never the copy inside the file. Nothing is uploaded.
-          </p>
-        </header>
+      <Dialog title="Verify a record" icon="disk" className="win-open" actions={actions}>
+        <p className="font-semibold">Check a Trail record without trusting Trail.</p>
+        <p className="text-sm text-ink-soft max-w-prose">
+          A student hands you a <span className="font-mono">.trail.tar.gz</span>. This page opens it in your browser, recomputes every fingerprint and every link in the chain, and checks the signatures against Trail's public key and public log fetched from this site, never the copy inside the file. Nothing is uploaded.
+        </p>
 
         <Steps />
 
-        <section className="grid gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={trySample} disabled={busy !== null}>
-              {busy === 'sample' ? 'Fetching and checking…' : 'Try it with a sample record'}
-            </Button>
-            {sample && !tamper && (
-              <Button variant="secondary" onClick={tamperSample} disabled={busy !== null}>
-                {busy === 'tamper' ? 'Altering…' : 'Now tamper with it'}
-              </Button>
-            )}
-            {sample && tamper && (
-              <Button variant="secondary" onClick={restoreSample} disabled={busy !== null}>
-                {busy === 'restore' ? 'Restoring…' : 'Put it back'}
-              </Button>
-            )}
-            <span className="text-xs text-ink-soft">The sample is one of the demo essays, signed by this server like any real pack.</span>
-          </div>
-
-          <label
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDrag(true);
-            }}
-            onDragLeave={() => setDrag(false)}
-            onDrop={onDrop}
-            className={cx('block border-2 border-dashed rounded-lg px-6 py-10 text-center cursor-pointer transition-colors duration-150', drag ? 'border-accent bg-sheet' : 'border-rule-strong hover:border-ink')}
-          >
+        <label
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDrag(true);
+          }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={onDrop}
+          className="bevel-in block cursor-pointer p-1"
+        >
+          <span className={cx('block border border-dashed px-6 py-8 text-center', drag ? 'border-accent' : 'border-frame')}>
             <input type="file" accept=".gz,.tgz,.tar.gz,.jsonl,.json,application/gzip" className="sr-only" onChange={(e) => e.target.files?.[0] && checkFile(e.target.files[0])} />
             <span className="display text-xl block">Or drop a record here, or click to choose one</span>
             <span className="text-sm text-ink-soft block mt-2">.trail.tar.gz (full record) or events.jsonl (raw export)</span>
-          </label>
-        </section>
+          </span>
+        </label>
+        <p className="text-xs text-ink-soft">The sample is one of the demo essays, signed by this server like any real pack.</p>
 
-        {busy === 'file' && (
-          <p role="status" className="text-sm text-ink-soft">
-            Checking {fileName}…
-          </p>
+        {busy && (
+          <div className="flex items-center gap-3 font-mono text-xs" role="status">
+            <ProgressBar value={Math.min(0.9, tick / 20)} label="Checks run" />
+            <span className="whitespace-nowrap [overflow-wrap:anywhere]">{busyLabel}</span>
+          </div>
         )}
         {err && (
-          <p role="alert" className="text-sm text-paste">
-            {err}
+          <p role="alert" className="text-sm inline-flex items-start gap-2">
+            <Icon name="warning" fill={{ w: 'var(--paste)' }} className="mt-0.5" />
+            <span>{err}</span>
           </p>
         )}
 
-        {tamper && (
-          <p className="text-sm max-w-prose border-l-2 border-paste pl-3" role="status">
-            We changed one letter in event <span className="font-mono">#{tamper.index + 1}</span> (<span className="font-mono">“{tamper.before.trim().slice(0, 24)}”</span> became <span className="font-mono">“{tamper.after.trim().slice(0, 24)}”</span>) and recomputed that event's own fingerprint, the way a careful forger would. The event looks fine on its own; the file's fingerprint and the link from the next event both give it away, and the check below names the exact spot.
-          </p>
-        )}
+        {result && fileName && !busy && <Results result={result} fileName={fileName} tone={v?.tone ?? 'partial'} />}
+      </Dialog>
 
-        {result && fileName && <Results result={result} fileName={fileName} tampered={!!tamper} />}
-      </div>
+      {tamper && result && (
+        <Dialog
+          role="alertdialog"
+          icon="warning"
+          iconFill={{ w: 'var(--paste)' }}
+          title={result.summary?.brokenAt ? `Chain broken at event #${result.summary.brokenAt.index + 1}` : `Event #${tamper.index + 1} altered`}
+          className="win-open"
+          actions={
+            <Button ring onClick={restoreSample} disabled={busy !== null}>
+              {busy === 'restore' ? 'Restoring…' : 'Put it back'}
+            </Button>
+          }
+        >
+          <p className="text-sm max-w-prose" role="status">
+            We changed one letter in event <span className="font-mono">#{tamper.index + 1}</span> (<span className="font-mono">“{tamper.before.trim().slice(0, 24)}”</span> became <span className="font-mono">“{tamper.after.trim().slice(0, 24)}”</span>) and recomputed that event's own fingerprint, the way a careful forger would. The event looks fine on its own; the file's fingerprint and the link from the next event both give it away, and the check above names the exact spot.
+          </p>
+        </Dialog>
+      )}
     </PublicShell>
   );
 }
@@ -204,34 +238,30 @@ function Steps() {
   return (
     <ol className="grid md:grid-cols-3 gap-4" aria-label="How verification works">
       {steps.map((s) => (
-        <li key={s.n}>
-          <Sheet className="p-5 grid gap-3 content-start h-full">
-            <div className="h-20 text-ink" aria-hidden>
-              {s.art}
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono text-sm text-margin">{s.n}</span>
-              <h2 className="text-lg leading-tight">{s.title}</h2>
-            </div>
-            <p className="text-sm text-ink-soft">{s.body}</p>
-          </Sheet>
+        <li key={s.n} className="panel on-chrome grid gap-2 content-start h-full">
+          <span className="panel-legend">Step {s.n}</span>
+          <div className="h-20 text-ink" aria-hidden>
+            {s.art}
+          </div>
+          <h3 className="text-lg leading-tight">{s.title}</h3>
+          <p className="text-sm text-ink-soft">{s.body}</p>
         </li>
       ))}
     </ol>
   );
 }
 
-const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'square' as const, strokeLinejoin: 'miter' as const };
 
 function ChainArt() {
   const boxes = [0, 1, 2, 3];
   return (
-    <svg viewBox="0 0 240 80" className="w-full h-full">
+    <svg viewBox="0 0 240 80" className="w-full h-full" shapeRendering="crispEdges">
       {boxes.map((i) => {
         const x = 8 + i * 60;
         return (
           <g key={i}>
-            <rect x={x} y={22} width={44} height={36} rx={4} {...stroke} />
+            <rect x={x} y={22} width={44} height={36} {...stroke} />
             <text x={x + 6} y={38} fontSize="9" fontFamily="var(--font-mono)" fill="currentColor">
               ev {i + 1}
             </text>
@@ -264,7 +294,7 @@ function SignArt() {
       </text>
       <path d="M56 38 h22" {...stroke} stroke="var(--margin)" />
       <path d="M74 34 l4 4 -4 4" {...stroke} stroke="var(--margin)" />
-      <rect x={86} y={26} width={54} height={24} rx={4} {...stroke} />
+      <rect x={86} y={26} width={54} height={24} {...stroke} />
       <text x={92} y={41} fontSize="8" fontFamily="var(--font-mono)" fill="var(--accent)">
         #e3d0 14:02
       </text>
@@ -275,9 +305,9 @@ function SignArt() {
       </text>
       <path d="M144 38 h20" {...stroke} stroke="var(--margin)" />
       <path d="M160 34 l4 4 -4 4" {...stroke} stroke="var(--margin)" />
-      <rect x={172} y={14} width={60} height={50} rx={4} {...stroke} />
+      <rect x={172} y={14} width={60} height={50} {...stroke} />
       {[0, 1, 2, 3].map((i) => (
-        <line key={i} x1={178} y1={24 + i * 10} x2={i === 3 ? 206 : 226} y2={24 + i * 10} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" opacity={i === 3 ? 1 : 0.5} />
+        <line key={i} x1={178} y1={24 + i * 10} x2={i === 3 ? 206 : 226} y2={24 + i * 10} stroke="currentColor" strokeWidth={1.5} opacity={i === 3 ? 1 : 0.5} />
       ))}
       <text x={174} y={76} fontSize="8" fontFamily="var(--font-mono)" fill="var(--ink-soft)">
         public log
@@ -289,10 +319,10 @@ function SignArt() {
 function CheckArt() {
   return (
     <svg viewBox="0 0 240 80" className="w-full h-full">
-      <rect x={8} y={8} width={150} height={64} rx={5} {...stroke} />
+      <rect x={8} y={8} width={150} height={64} {...stroke} />
       <line x1={8} y1={22} x2={158} y2={22} stroke="currentColor" strokeWidth={1.5} />
-      <circle cx={16} cy={15} r={2} fill="currentColor" />
-      <circle cx={23} cy={15} r={2} fill="currentColor" />
+      <rect x={13} y={12} width={6} height={6} fill="currentColor" />
+      <rect x={23} y={12} width={6} height={6} fill="currentColor" />
       {['fingerprints', 'chain links', "Trail's key", 'public log'].map((t, i) => (
         <g key={t}>
           <path d={`M18 ${34 + i * 10} l3 3 5 -6`} {...stroke} stroke="var(--typed)" />
@@ -305,7 +335,7 @@ function CheckArt() {
         this site
       </text>
       <path d="M184 40 v-6 a6 6 0 0 1 12 0 v6" {...stroke} />
-      <rect x={180} y={40} width={20} height={14} rx={2} {...stroke} />
+      <rect x={180} y={40} width={20} height={14} {...stroke} />
       <path d="M170 47 h-8" {...stroke} stroke="var(--margin)" />
       <path d="M166 43 l-4 4 4 4" {...stroke} stroke="var(--margin)" />
       <text x={172} y={70} fontSize="8" fontFamily="var(--font-mono)" fill="var(--ink-soft)">
@@ -336,48 +366,60 @@ function verdict(r: VerifyResult, tampered: boolean): { text: string; tone: 'ok'
   return { text: `This record failed ${n} check${n === 1 ? '' : 's'}.`, tone: 'bad' };
 }
 
-function Results({ result, fileName, tampered }: { result: VerifyResult; fileName: string; tampered: boolean }) {
-  const v = verdict(result, tampered);
+function Results({ result, fileName, tone }: { result: VerifyResult; fileName: string; tone: 'ok' | 'bad' | 'partial' }) {
   const s = result.summary;
+  const n = result.checks.length;
   return (
-    <Sheet className="p-5 grid gap-4" as="section" aria-live="polite">
-      <div className="grid gap-2">
-        <div className="flex items-baseline gap-3 flex-wrap">
-          <span className={cx('display text-2xl', v.tone === 'ok' ? 'text-typed' : v.tone === 'bad' ? 'text-paste' : 'text-mixed')}>{v.tone === 'ok' ? 'Verified' : v.tone === 'bad' ? 'Failed' : 'Partly checked'}</span>
-          <span className="font-mono text-xs text-ink-soft break-all">{fileName}</span>
-        </div>
-        <p className="text-lg">{v.text}</p>
+    <section className="grid gap-3" aria-live="polite" aria-label="Checks">
+      <p className="font-mono text-xs text-ink-soft tabular [overflow-wrap:anywhere]">
+        {fileName}
         {s && (
-          <p className="font-mono text-xs text-ink-soft tabular">
-            {s.events.toLocaleString()} events · {s.sessions} session{s.sessions === 1 ? '' : 's'} · {s.checkpoints} signed checkpoint{s.checkpoints === 1 ? '' : 's'}
-          </p>
-        )}
+          <>
+            {' '}
+            · {s.events.toLocaleString()} events · {s.sessions} session{s.sessions === 1 ? '' : 's'} · {s.checkpoints} signed checkpoint{s.checkpoints === 1 ? '' : 's'}
+          </>
+        )}{' '}
+        · checked in this browser, nothing uploaded
+      </p>
+      <div className="flex items-center gap-3 font-mono text-xs">
+        <ProgressBar value={1} tone={tone === 'ok' ? 'typed' : tone === 'bad' ? 'paste' : 'accent'} label="Checks run" />
+        <span className="tabular whitespace-nowrap">
+          {n} of {n}
+        </span>
       </div>
-      <ol className="grid divide-y divide-rule border-t border-b border-rule text-sm">
+      <ol className="grid gap-1.5 text-sm">
         {result.checks.map((c, i) => (
           <CheckRow key={i} c={c} />
         ))}
       </ol>
-      <p className="text-xs text-ink-soft">
-        Verified means Trail's key signed these checkpoints, they are in the public log, and the record was not altered after any of them. A pack signed by any other key fails, however consistent its hashes are. It describes how the document was produced; it does not judge content, and it cannot see text retyped by hand.
-      </p>
-    </Sheet>
+      <p className="text-xs text-ink-soft">Verified means Trail's key signed these checkpoints, they are in the public log, and the record was not altered after any of them. A pack signed by any other key fails, however consistent its hashes are. It describes how the document was produced; it does not judge content, and it cannot see text retyped by hand.</p>
+    </section>
   );
 }
 
 function CheckRow({ c }: { c: VerifyCheck }) {
-  const mark = c.status === 'PASS' ? '✓' : c.status === 'FAIL' ? '✕' : '–';
-  return (
-    <li className="grid grid-cols-[1.5rem_1fr] gap-x-3 py-2.5">
-      <span className={cx('font-mono text-base leading-5', c.status === 'PASS' ? 'text-typed' : c.status === 'FAIL' ? 'text-paste' : 'text-ink-faint')} aria-label={c.status}>
-        {mark}
+  const mark =
+    c.status === 'PASS' ? (
+      <Icon name="check" label="Passed" fill={{ '#': 'var(--typed)' }} />
+    ) : c.status === 'FAIL' ? (
+      <Icon name="cross" label="Failed" fill={{ '#': 'var(--paste)' }} />
+    ) : (
+      <span role="img" aria-label="Skipped" className="inline-block w-4 text-center font-mono text-ink-faint leading-4">
+        —
       </span>
-      <span className="grid gap-0.5">
-        <span className={cx(c.status === 'SKIP' && 'text-ink-soft')}>
-          {c.plain || c.name}
-          {c.status === 'SKIP' && <span className="font-mono text-[11px] text-ink-faint ml-2">skipped</span>}
-        </span>
-        {c.detail && <span className="font-mono text-[11px] text-ink-soft break-words">{c.detail}</span>}
+    );
+  const sub = [c.plain ? c.name : null, c.status === 'SKIP' ? 'skipped' : null].filter(Boolean).join(' · ');
+  return (
+    <li className="grid grid-cols-[16px_1fr] gap-2.5 items-start leading-snug">
+      <span className="mt-0.5">{mark}</span>
+      <span className="grid gap-0.5 min-w-0">
+        <span className={cx(c.status === 'SKIP' && 'text-ink-soft')}>{c.plain || c.name}</span>
+        {(sub || c.detail) && (
+          <span className="font-mono text-xs text-ink-soft [overflow-wrap:anywhere]">
+            {sub}
+            {c.detail && <span className="block">{c.detail}</span>}
+          </span>
+        )}
       </span>
     </li>
   );

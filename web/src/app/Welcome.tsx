@@ -1,11 +1,13 @@
 // First run (DECISIONS §6): install → sign in → connect → write one paragraph → first replay.
 // The page polls the extension for the first document with events and opens its replay.
+// On the desktop it is the installer dialog: a step list with a segmented progress bar that fills
+// as the student goes, and the one default button for the current step (DESIGN-desktop.md §4).
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { data } from '../lib/data';
 import { useMe } from '../components/AppShell';
 import { usePageTitle } from '../components/useAsync';
-import { Button, ButtonLink, Marginal, Sheet, cx } from '../components/ui';
+import { Button, ButtonLink, Caption, Chip, Dialog, Icon, ProgressBar, cx } from '../components/ui';
 import { CHROME_STORE_URL } from './shared';
 
 type Step = 'install' | 'connect' | 'write' | 'done';
@@ -14,6 +16,9 @@ export default function Welcome() {
   usePageTitle('Welcome');
   const { me } = useMe();
   const nav = useNavigate();
+  // ?stay=1 keeps the installer on screen even when a replay already exists (design review, screenshots)
+  const [params] = useSearchParams();
+  const stay = params.get('stay') === '1';
   const [installed, setInstalled] = useState<boolean | null>(null);
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -57,7 +62,7 @@ export default function Welcome() {
 
   // 3. wait for the first recorded paragraph, then open its replay
   useEffect(() => {
-    if (!connected) return;
+    if (!connected || stay) return;
     let alive = true;
     const poll = async () => {
       try {
@@ -74,7 +79,7 @@ export default function Welcome() {
       alive = false;
       clearInterval(t);
     };
-  }, [connected, nav]);
+  }, [connected, stay, nav]);
 
   const step: Step = installed === false ? 'install' : !connected ? 'connect' : 'write';
   const steps: { key: Step; title: string; body: string }[] = [
@@ -85,69 +90,69 @@ export default function Welcome() {
   const order: Step[] = ['install', 'connect', 'write'];
   const idx = order.indexOf(step);
 
-  return (
-    <div className="grid gap-8 max-w-2xl">
-      <div className="grid gap-2">
-        <Marginal>Welcome</Marginal>
-        <h1 className="text-3xl sm:text-4xl">Hi {me.email.split('@')[0]}. Three steps, under five minutes.</h1>
-        <p className="text-ink-soft">{me.billing.freeAccess ? 'Free during early access. No clock, no card.' : 'Your trial clock does not start until you see your first replay.'}</p>
-      </div>
+  const actions =
+    step === 'install' ? (
+      <>
+        <ButtonLink to="/demo" variant="quiet">
+          Watch the demo first
+        </ButtonLink>
+        <ButtonLink to={CHROME_STORE_URL} external ring variant="primary">
+          Install
+        </ButtonLink>
+      </>
+    ) : step === 'connect' ? (
+      <Button ring variant="primary" onClick={connect} disabled={connecting}>
+        {connecting ? 'Connecting…' : 'Connect'}
+      </Button>
+    ) : (
+      <>
+        <ButtonLink to="https://www.notion.so/new" external>
+          Open Notion
+        </ButtonLink>
+        <ButtonLink to="https://docs.new" external ring variant="primary">
+          Open a new Google Doc
+        </ButtonLink>
+      </>
+    );
 
-      <ol className="grid gap-4">
+  return (
+    <Dialog title="Trail Installer" icon="disk" className="max-w-2xl win-open" actions={actions}>
+      <p className="text-sm">
+        Hi {me.email.split('@')[0]}. Three steps, under five minutes. {me.billing.freeAccess ? 'Free during early access. No clock, no card.' : 'Your trial clock does not start until you see your first replay.'}
+      </p>
+      <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+        <ProgressBar segments={20} value={idx / order.length} label="Setup progress" />
+        <span className="tabular">step {idx + 1} of {order.length}</span>
+      </div>
+      <ol className="grid gap-3 list-none m-0 p-0">
         {steps.map((s, i) => {
           const done = i < idx;
           const active = i === idx;
           return (
-            <li key={s.key}>
-              <Sheet className={cx('p-5 grid gap-2 transition-colors duration-150', active && 'border-ink', done && 'opacity-70')}>
-                <div className="flex items-center gap-3">
-                  <span className={cx('font-mono text-xs w-6 h-6 rounded-full border grid place-items-center', done ? 'bg-typed border-typed text-paper' : active ? 'border-ink' : 'border-rule-strong text-ink-soft')} aria-hidden>
-                    {done ? '✓' : i + 1}
-                  </span>
-                  <h2 className="text-xl">{s.title}</h2>
-                  {done && <span className="sr-only">done</span>}
-                </div>
-                <p className="text-sm text-ink-soft pl-9">{s.body}</p>
-                {active && s.key === 'install' && (
-                  <div className="pl-9 pt-1 flex flex-wrap gap-3 items-center">
-                    <ButtonLink to={CHROME_STORE_URL} external>
-                      Get Trail for Chrome
-                    </ButtonLink>
-                    <span className="text-xs text-ink-soft">{installed === null ? 'Checking…' : 'Waiting for the extension… this page notices on its own.'}</span>
-                  </div>
-                )}
-                {active && s.key === 'connect' && (
-                  <div className="pl-9 pt-1 flex flex-wrap gap-3 items-center">
-                    <Button onClick={connect} disabled={connecting}>
-                      {connecting ? 'Connecting…' : 'Connect'}
-                    </Button>
-                    {error && (
-                      <span role="alert" className="text-sm text-paste">
-                        {error}
-                      </span>
-                    )}
-                  </div>
+            <li key={s.key} className="grid grid-cols-[16px_1fr] gap-3 items-start" aria-current={active ? 'step' : undefined}>
+              {done ? <Icon name="check" fill={{ '#': 'var(--typed)' }} label="done" /> : active ? <Icon name="forward" label="current step" /> : <span className="font-mono text-ink-faint text-center w-4 leading-4" aria-hidden>—</span>}
+              <div className="grid gap-1">
+                <span className={cx('text-sm', active && 'font-semibold', done && 'text-ink-soft')}>
+                  {i + 1}. {s.title}
+                </span>
+                <Caption>{s.body}</Caption>
+                {active && s.key === 'install' && <Caption role="status">{installed === null ? 'Checking…' : 'Waiting for the extension… this page notices on its own.'}</Caption>}
+                {active && s.key === 'connect' && error && (
+                  <p role="alert" className="text-sm">
+                    {error}
+                  </p>
                 )}
                 {active && s.key === 'write' && (
-                  <div className="pl-9 pt-1 flex flex-wrap gap-4 items-center">
-                    <span className="inline-flex items-center gap-2 text-sm">
-                      <span className="w-2.5 h-2.5 rounded-full bg-typed animate-pulse motion-reduce:animate-none" aria-hidden />
-                      Connected. Recording as soon as you type.
-                    </span>
-                    <a className="link text-sm" href="https://docs.new" target="_blank" rel="noreferrer">
-                      Open a new Google Doc
-                    </a>
-                    <a className="link text-sm" href="https://www.notion.so/new" target="_blank" rel="noreferrer">
-                      Open Notion
-                    </a>
-                  </div>
+                  <span className="inline-flex flex-wrap items-center gap-2 text-sm">
+                    <Chip kind="typed">connected</Chip> Recording as soon as you type.
+                  </span>
                 )}
-              </Sheet>
+              </div>
             </li>
           );
         })}
       </ol>
-      <p className="text-xs text-ink-faint">On a phone? Trail records on a laptop; this page shows what the laptop's extension has.</p>
-    </div>
+      <Caption>On a phone? Trail records on a laptop; this page shows what the laptop's extension has.</Caption>
+    </Dialog>
   );
 }

@@ -4,7 +4,7 @@ import { useMemo, type ReactNode } from 'react';
 import { analyse, declaration, drafts, lines } from '../lib/analysis';
 import type { TrailEvent } from '../lib/types';
 
-import { CHROME_STORE_URL as DESIGN_STORE_URL } from '../design/components';
+import { CHROME_STORE_URL as DESIGN_STORE_URL, Desk } from '../design/components';
 
 export const CHROME_STORE_URL = ((import.meta as any).env?.VITE_CHROME_STORE_URL as string | undefined) || DESIGN_STORE_URL;
 
@@ -18,9 +18,13 @@ export function useEssayAnalysis(events: TrailEvent[] | null, meta: { student?: 
   }, [events, meta.student, meta.course]);
 }
 
-/** Content container for pages mounted inside the design's <MarketingLayout/> (login, verify, 404). */
+/** A single-column desk for pages mounted inside the design's <MarketingLayout/> (login, verify, 404). */
 export function PublicShell({ children, wide }: { children: ReactNode; wide?: boolean }) {
-  return <div className={`w-full mx-auto px-4 sm:px-6 py-12 ${wide ? 'max-w-6xl' : 'max-w-3xl'}`}>{children}</div>;
+  return (
+    <Desk columns={1} width={wide ? 'reading' : 'narrow'}>
+      {children}
+    </Desk>
+  );
 }
 
 export async function copyText(text: string): Promise<boolean> {

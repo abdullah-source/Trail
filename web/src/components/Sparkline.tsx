@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import type { TimelineBucket } from '../lib/types';
+import { cx } from './ui';
 
-/** Cumulative growth of a document over its timeline buckets, as a tiny inline SVG. */
+/** Cumulative growth of a document over its timeline buckets, as a tiny inline SVG in currentColor. */
 export function Sparkline({ timeline, width = 96, height = 24, className }: { timeline: TimelineBucket[]; width?: number; height?: number; className?: string }) {
   const d = useMemo(() => {
     if (!timeline.length) return null;
@@ -19,18 +20,23 @@ export function Sparkline({ timeline, width = 96, height = 24, className }: { ti
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={className} aria-hidden>
       <path d={d.area} fill="currentColor" opacity="0.12" />
-      <path d={d.path} fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={d.path} fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" strokeLinecap="square" />
     </svg>
   );
 }
 
-/** Two-tone bar: typed share vs pasted share of the final text. */
-export function ShareBar({ typed, className }: { typed: number | null; className?: string }) {
+/** Two-tone bar: typed share (green) against pasted share (amber) of the final text, 8 px tall in a frame. */
+export function ShareBar({ typed, width = 64, className, label }: { typed: number | null; width?: number | string; className?: string; label?: string }) {
   const t = typed === null ? 0 : Math.max(0, Math.min(1, typed));
+  // a definite width, so the two percentage fills have something to resolve against
   return (
-    <div className={`flex h-1.5 rounded-full overflow-hidden bg-rule ${className || ''}`} aria-hidden>
-      <span className="bg-typed" style={{ width: `${t * 100}%` }} />
-      <span className="bg-paste" style={{ width: `${(1 - t) * 100}%` }} />
-    </div>
+    <span className={cx('inline-flex h-2 overflow-hidden border border-frame bg-well align-middle', className)} style={{ width }} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
+      {typed !== null && (
+        <>
+          <span className="bg-typed" style={{ width: `${t * 100}%` }} />
+          <span className="bg-paste" style={{ width: `${(1 - t) * 100}%` }} />
+        </>
+      )}
+    </span>
   );
 }

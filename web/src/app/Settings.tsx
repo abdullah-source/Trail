@@ -1,9 +1,12 @@
+// Settings is a control panel: a chrome-bodied window with the key icon and a panel per group
+// (Account, Plan, Extension, Your data, Delete everything). Anything irreversible asks in a dialog
+// with the warning icon and the ring on Cancel (DESIGN-desktop.md §4).
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { data, download, safeName } from '../lib/data';
 import { useMe } from '../components/AppShell';
 import { useAsync, usePageTitle } from '../components/useAsync';
-import { Button, ButtonLink, Marginal, Rule, SectionHead, Sheet, cx, inputCls } from '../components/ui';
+import { Button, ButtonLink, Caption, Checkbox, Chip, Dialog, Panel, Radio, TextField, Window } from '../components/ui';
 import { daysUntil, fmtDateLong } from '../components/format';
 import { CHROME_STORE_URL } from './shared';
 
@@ -16,27 +19,16 @@ export default function Settings() {
   const [params] = useSearchParams();
   const checkout = params.get('checkout');
   return (
-    <div className="grid gap-12 max-w-2xl">
-      <SectionHead kicker="Settings" title="Account, plan, extension, data." />
-      {checkout === 'success' && (
-        <p role="status" className="border border-typed/40 bg-typed/5 rounded-lg px-4 py-3 text-sm">
-          Thank you. Your plan is active as soon as Stripe confirms the payment, usually within a few seconds; reload if it does not show yet.
-        </p>
-      )}
-      {checkout === 'cancelled' && (
-        <p role="status" className="border border-rule rounded-lg px-4 py-3 text-sm text-ink-soft">
-          Checkout cancelled. Nothing was charged.
-        </p>
-      )}
+    <Window as="section" titleAs="h1" title="Settings" icon="key" chrome open className="max-w-3xl" bodyClassName="grid gap-4">
+      {checkout === 'success' && <Caption role="status">Thank you. Your plan is active as soon as Stripe confirms the payment, usually within a few seconds; reload if it does not show yet.</Caption>}
+      {checkout === 'cancelled' && <Caption role="status">Checkout cancelled. Nothing was charged.</Caption>}
 
-      <section className="grid gap-3">
-        <Marginal>Account</Marginal>
+      <Panel legend="Account" className="grid gap-3">
         <p className="text-sm">
           Signed in as <span className="font-mono">{me.email}</span> since {fmtDateLong(me.createdAt)}.
         </p>
         <div>
           <Button
-            variant="secondary"
             onClick={async () => {
               await data.logout();
               location.assign('/login');
@@ -45,25 +37,25 @@ export default function Settings() {
             Sign out
           </Button>
         </div>
-      </section>
+      </Panel>
 
-      <PlanCard reload={reload} />
-      <ExtensionCard />
+      <PlanPanel reload={reload} />
+      <ExtensionPanel />
 
-      <section className="grid gap-3">
-        <Marginal>Your data</Marginal>
+      <Panel legend="Your data" className="grid gap-3">
         <p className="text-sm text-ink-soft">Everything Trail records lives in the extension on this computer: your essays' events and the homework time log (active minutes on school sites, with course and assignment names). Export it any time; it is yours whether or not you pay.</p>
         <ExportAll />
         <ExportWorklog />
-      </section>
+      </Panel>
 
-      <DeleteCard />
-    </div>
+      <DeletePanel />
+    </Window>
   );
 }
 
-function PlanCard({ reload }: { reload: () => void }) {
+function PlanPanel({ reload }: { reload: () => void }) {
   const { me } = useMe();
+  const [pick, setPick] = useState<'semester' | 'monthly'>('semester');
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const run = async (what: string, fn: () => Promise<void>) => {
@@ -91,50 +83,37 @@ function PlanCard({ reload }: { reload: () => void }) {
   };
 
   return (
-    <section className="grid gap-4">
-      <Marginal>Plan</Marginal>
-      <Sheet className="p-5 grid gap-2">
-        <div className="display text-2xl">{me.billing.freeAccess ? FREE_ACCESS_LABEL : PLAN_LABEL[me.plan] || me.plan}</div>
-        <p className="text-sm text-ink-soft">
-          {me.billing.freeAccess && 'Every feature, no card, no clock. While Trail is in early access nothing is charged. If that ever changes you will hear it from us first, with notice, and recording, signing and export never lock.'}
-          {me.plan === 'trial' && (me.trialEndsAt ? `${trialDays} day${trialDays === 1 ? '' : 's'} left, ends ${fmtDateLong(me.trialEndsAt)}. No card on file.` : 'Your 14 days start the first time you play a replay, not today.')}
-          {me.plan === 'expired' && 'Replay, patterns, declaration and packs are paused. Recording, signing and raw export continue.'}
-          {paid && me.currentPeriodEnd && (me.cancelAtPeriodEnd ? `Cancelled. Access continues until ${fmtDateLong(me.currentPeriodEnd)}; nothing more will be charged.` : `Renews ${fmtDateLong(me.currentPeriodEnd)}. We email you 7 days before.`)}
-          {!me.billing.freeAccess && me.plan === 'free' && me.freeUntil && `Earned with invites. Free until ${fmtDateLong(me.freeUntil)}.`}
-        </p>
-      </Sheet>
+    <Panel legend="Plan" className="grid gap-3">
+      <div className="display text-xl">{me.billing.freeAccess ? FREE_ACCESS_LABEL : PLAN_LABEL[me.plan] || me.plan}</div>
+      <p className="text-sm text-ink-soft">
+        {me.billing.freeAccess && 'Every feature, no card, no clock. While Trail is in early access nothing is charged. If that ever changes you will hear it from us first, with notice, and recording, signing and export never lock.'}
+        {me.plan === 'trial' && (me.trialEndsAt ? `${trialDays} day${trialDays === 1 ? '' : 's'} left, ends ${fmtDateLong(me.trialEndsAt)}. No card on file.` : 'Your 14 days start the first time you play a replay, not today.')}
+        {me.plan === 'expired' && 'Replay, patterns, declaration and packs are paused. Recording, signing and raw export continue.'}
+        {paid && me.currentPeriodEnd && (me.cancelAtPeriodEnd ? `Cancelled. Access continues until ${fmtDateLong(me.currentPeriodEnd)}; nothing more will be charged.` : `Renews ${fmtDateLong(me.currentPeriodEnd)}. We email you 7 days before.`)}
+        {!me.billing.freeAccess && me.plan === 'free' && me.freeUntil && `Earned with invites. Free until ${fmtDateLong(me.freeUntil)}.`}
+      </p>
 
       {!paid && !me.billing.freeAccess && (
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div className="border border-ink rounded-lg p-4 grid gap-2 bg-sheet">
-            <span className="marginal">Semester · recommended</span>
-            <div className="display text-2xl tabular">
-              $12 <span className="text-sm text-ink-soft font-sans">/ 4 months</span>
-            </div>
-            <Button onClick={() => go('semester')} disabled={busy !== null || !me.billing.configured}>
-              {busy === 'semester' ? 'Opening checkout…' : `Pay $12 · renews ${renew(4)}`}
-            </Button>
+        <div className="grid gap-3">
+          <div className="grid gap-2">
+            <Radio name="plan" label="Semester, $12 for 4 months" description={`Recommended. Renews ${renew(4)}.`} checked={pick === 'semester'} onChange={() => setPick('semester')} />
+            <Radio name="plan" label="Monthly, $3.99" description={`Renews ${renew(1)}.`} checked={pick === 'monthly'} onChange={() => setPick('monthly')} />
           </div>
-          <div className="border border-rule rounded-lg p-4 grid gap-2">
-            <span className="marginal">Monthly</span>
-            <div className="display text-2xl tabular">
-              $3.99 <span className="text-sm text-ink-soft font-sans">/ month</span>
-            </div>
-            <Button variant="secondary" onClick={() => go('monthly')} disabled={busy !== null || !me.billing.configured}>
-              {busy === 'monthly' ? 'Opening checkout…' : `Pay $3.99 · renews ${renew(1)}`}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="primary" onClick={() => go(pick)} disabled={busy !== null || !me.billing.configured}>
+              {busy === pick ? 'Opening checkout…' : pick === 'semester' ? 'Pay $12' : 'Pay $3.99'}
             </Button>
+            <Caption>
+              Cancel any time in one click, no retention screens. Any charge is refunded in full within 14 days, from this page. Prices in USD; Stripe shows your local currency.
+              {!me.billing.configured && ' Payments are not switched on for this server yet.'}
+            </Caption>
           </div>
-          <p className="sm:col-span-2 text-xs text-ink-soft">
-            Cancel any time in one click, no retention screens. Any charge is refunded in full within 14 days, from this page. Prices in USD; Stripe shows your local currency.
-            {!me.billing.configured && ' Payments are not switched on for this server yet.'}
-          </p>
         </div>
       )}
 
       {me.billing.hasCustomer && (
         <div className="flex flex-wrap gap-3">
           <Button
-            variant="secondary"
             disabled={busy !== null}
             onClick={() =>
               run('portal', async () => {
@@ -162,26 +141,24 @@ function PlanCard({ reload }: { reload: () => void }) {
           )}
         </div>
       )}
-      {msg && (
-        <p role="status" className="text-sm text-ink-soft">
-          {msg}
-        </p>
-      )}
-    </section>
+      {msg && <Caption role="status">{msg}</Caption>}
+    </Panel>
   );
 }
 
-function ExtensionCard() {
+function ExtensionPanel() {
   const st = useAsync(() => data.extensionStatus(), []);
   const [connecting, setConnecting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const installed = st.status === 'ready' && st.value.installed;
   const connected = st.status === 'ready' && st.value.connected;
   return (
-    <section className="grid gap-3">
-      <Marginal>Extension</Marginal>
-      <div className="flex items-center gap-3 text-sm">
-        <span className={cx('inline-block w-2.5 h-2.5 rounded-full', connected ? 'bg-typed' : installed ? 'bg-mixed' : 'bg-rule-strong')} aria-hidden />
+    <Panel legend="Extension" className="grid gap-3">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        {st.status === 'loading' && <Chip kind="neutral">checking…</Chip>}
+        {st.status === 'ready' && !installed && <Chip kind="neutral">not installed</Chip>}
+        {st.status === 'ready' && installed && !connected && <Chip kind="mixed">installed</Chip>}
+        {st.status === 'ready' && connected && <Chip kind="typed">connected</Chip>}
         <span>
           {st.status === 'loading' && 'Checking…'}
           {st.status === 'ready' && !installed && 'Not installed in this browser.'}
@@ -189,20 +166,15 @@ function ExtensionCard() {
           {st.status === 'ready' && connected && `Installed (v${st.value.version}) and connected. Checkpoints are signed every 10 minutes.`}
         </span>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {!installed && st.status === 'ready' && (
-          <ButtonLink to={CHROME_STORE_URL} external variant="secondary">
+          <ButtonLink to={CHROME_STORE_URL} external>
             Get Trail for Chrome
           </ButtonLink>
         )}
-        {!installed && st.status === 'ready' && (
-          <p className="text-xs text-ink-soft self-center">
-            Already loaded it unpacked? Click the Trail icon in Chrome's toolbar, then "Open my writing record", so the app learns its id.
-          </p>
-        )}
+        {!installed && st.status === 'ready' && <Caption>Already loaded it unpacked? Click the Trail icon in Chrome's toolbar, then "Open my writing record", so the app learns its id.</Caption>}
         {installed && !connected && (
           <Button
-            variant="secondary"
             disabled={connecting}
             onClick={async () => {
               setConnecting(true);
@@ -215,13 +187,9 @@ function ExtensionCard() {
             {connecting ? 'Connecting…' : 'Connect'}
           </Button>
         )}
-        {note && (
-          <span role="status" className="text-sm text-ink-soft self-center">
-            {note}
-          </span>
-        )}
+        {note && <Caption role="status">{note}</Caption>}
       </div>
-    </section>
+    </Panel>
   );
 }
 
@@ -229,9 +197,8 @@ function ExportAll() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <Button
-        variant="secondary"
         disabled={busy}
         onClick={async () => {
           setBusy(true);
@@ -250,11 +217,7 @@ function ExportAll() {
       >
         {busy ? 'Exporting…' : 'Export every essay (.jsonl)'}
       </Button>
-      {msg && (
-        <span role="status" className="text-sm text-ink-soft">
-          {msg}
-        </span>
-      )}
+      {msg && <Caption role="status">{msg}</Caption>}
     </div>
   );
 }
@@ -262,10 +225,10 @@ function ExportAll() {
 function ExportWorklog() {
   const [busy, setBusy] = useState<'export' | 'delete' | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState(false);
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Button
-        variant="secondary"
         disabled={busy !== null}
         onClick={async () => {
           setBusy('export');
@@ -282,80 +245,111 @@ function ExportWorklog() {
       >
         {busy === 'export' ? 'Exporting…' : 'Export homework time (.json)'}
       </Button>
-      <Button
-        variant="quiet"
-        disabled={busy !== null}
-        onClick={async () => {
-          if (!window.confirm('Delete the homework time log on this computer? Your essays and their records are not touched.')) return;
-          setBusy('delete');
-          setMsg(null);
-          try {
-            await data.deleteWorklog();
-            setMsg('Homework time log deleted.');
-          } catch (e) {
-            setMsg((e as Error).message);
-          } finally {
-            setBusy(null);
-          }
-        }}
-      >
-        {busy === 'delete' ? 'Deleting…' : 'Delete the time log'}
+      <Button variant="quiet" disabled={busy !== null} onClick={() => setConfirm(true)}>
+        Delete the time log…
       </Button>
-      {msg && (
-        <span role="status" className="text-sm text-ink-soft">
-          {msg}
-        </span>
+      {msg && <Caption role="status">{msg}</Caption>}
+      {confirm && (
+        <Dialog
+          modal
+          role="alertdialog"
+          title="Delete the homework time log?"
+          icon="warning"
+          iconFill={{ w: 'var(--paste)' }}
+          onClose={() => setConfirm(false)}
+          width={480}
+          actions={
+            <>
+              <Button
+                disabled={busy !== null}
+                onClick={async () => {
+                  setBusy('delete');
+                  setMsg(null);
+                  try {
+                    await data.deleteWorklog();
+                    setMsg('Homework time log deleted.');
+                    setConfirm(false);
+                  } catch (e) {
+                    setMsg((e as Error).message);
+                  } finally {
+                    setBusy(null);
+                  }
+                }}
+              >
+                {busy === 'delete' ? 'Deleting…' : 'Delete the log'}
+              </Button>
+              <Button ring onClick={() => setConfirm(false)}>
+                Cancel
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm">The time log on this computer is removed. Your essays and their records are not touched. This cannot be undone.</p>
+        </Dialog>
       )}
     </div>
   );
 }
 
-function DeleteCard() {
+function DeletePanel() {
   const { me } = useMe();
   const nav = useNavigate();
+  const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
   const [alsoLocal, setAlsoLocal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const armed = confirm.trim().toLowerCase() === me.email.toLowerCase();
   return (
-    <section className="grid gap-3">
-      <Marginal>Delete everything</Marginal>
-      <Rule />
-      <p className="text-sm text-ink-soft max-w-prose">
-        Deleting your account removes every row Trail holds about you: your email, plan, signed checkpoint hashes, and invites. Any subscription is cancelled. Your essays, their records and the homework time log stay on this computer unless you also tick the box below.
-      </p>
-      <label className="text-sm flex items-center gap-2">
-        <input type="checkbox" checked={alsoLocal} onChange={(e) => setAlsoLocal(e.target.checked)} />
-        Also wipe the extension's local records on this computer (essays, their events and checkpoints, and the homework time log)
-      </label>
-      <div className="grid sm:grid-cols-[1fr_auto] gap-3 max-w-lg">
-        <input className={inputCls} placeholder={`Type ${me.email} to confirm`} value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="Type your email to confirm deletion" />
-        <Button
-          variant="secondary"
-          className="border-paste text-paste hover:border-paste"
-          disabled={!armed || busy}
-          onClick={async () => {
-            setBusy(true);
-            setErr(null);
-            try {
-              if (alsoLocal) await data.clearLocalData().catch(() => undefined);
-              await data.deleteAccount();
-              nav('/', { replace: true });
-            } catch (e) {
-              setErr((e as Error).message);
-              setBusy(false);
-            }
-          }}
-        >
-          {busy ? 'Deleting…' : 'Delete my account'}
-        </Button>
+    <Panel legend="Delete everything" className="grid gap-3">
+      <p className="text-sm text-ink-soft">Deleting your account removes every row Trail holds about you: your email, plan, signed checkpoint hashes, and invites. Any subscription is cancelled. Your essays, their records and the homework time log stay on this computer unless you also ask for them to go.</p>
+      <div>
+        <Button onClick={() => setOpen(true)}>Delete my account…</Button>
       </div>
-      {err && (
-        <p role="alert" className="text-sm text-paste">
-          {err}
-        </p>
+      {open && (
+        <Dialog
+          modal
+          role="alertdialog"
+          title="Delete your account?"
+          icon="warning"
+          iconFill={{ w: 'var(--paste)' }}
+          onClose={() => !busy && setOpen(false)}
+          width={520}
+          actions={
+            <>
+              <Button
+                disabled={!armed || busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setErr(null);
+                  try {
+                    if (alsoLocal) await data.clearLocalData().catch(() => undefined);
+                    await data.deleteAccount();
+                    nav('/', { replace: true });
+                  } catch (e) {
+                    setErr((e as Error).message);
+                    setBusy(false);
+                  }
+                }}
+              >
+                {busy ? 'Deleting…' : 'Delete my account'}
+              </Button>
+              <Button ring onClick={() => setOpen(false)} disabled={busy}>
+                Cancel
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm">Every row Trail holds about you goes, and any subscription is cancelled. This cannot be undone.</p>
+          <Checkbox label="Also wipe the extension's local records on this computer" description="Essays, their events and checkpoints, and the homework time log." checked={alsoLocal} onChange={(e) => setAlsoLocal(e.target.checked)} />
+          <TextField id="delete-confirm" label="Type your email to confirm" placeholder={me.email} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />
+          {err && (
+            <p role="alert" className="text-sm">
+              {err}
+            </p>
+          )}
+        </Dialog>
       )}
-    </section>
+    </Panel>
   );
 }
