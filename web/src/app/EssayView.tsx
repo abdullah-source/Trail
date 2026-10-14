@@ -3,7 +3,7 @@
 // Everything that needs an account or the extension (export menu, AI-use note form) comes in
 // through slots so this component stays pure.
 import type { ReactNode } from 'react';
-import type { Analysis, SessionSummary, TrailEvent } from '../lib/types';
+import type { AiPresence, Analysis, SessionSummary, TrailEvent } from '../lib/types';
 import { ReplayPlayer } from '../components/ReplayPlayer';
 import { PasteList, ProvenanceStrip } from '../design/Provenance';
 import { Info, Marginal, Sheet, StatTile, cx } from '../components/ui';
@@ -117,6 +117,17 @@ export function EssayView({ events, title, editorLabel, autoplay, loop, actions,
         <PasteList pastes={a.pastes.items} empty="No pastes. Every character was typed." />
       </section>
 
+      <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
+        <div className="grid gap-1 content-start">
+          <Marginal className="inline-flex items-center gap-1.5">
+            AI sites during this essay
+            <Info text="Which known AI sites (chatgpt.com, claude.ai, gemini.google.com and others on Trail's public list) had their tab in front while a writing session was open, and what happened right after coming back from one. Host names only; the pages are never read." />
+          </Marginal>
+          <span className="text-xs text-ink-soft">What the tabs and the clock show. Nothing more.</span>
+        </div>
+        <AiSites ap={a.ai_presence} />
+      </section>
+
       {a.sources.length > 0 && (
         <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
           <div className="grid gap-1 content-start">
@@ -181,6 +192,104 @@ function SessionList({ sessions }: { sessions: SessionSummary[] }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+const AI_SITES_NOTE = 'These are facts about tabs and timing on this computer. They do not say what was on the screen, and Trail does not judge them.';
+
+function AiSites({ ap }: { ap: AiPresence }) {
+  if (!ap.ai_hosts.length && !ap.switches) {
+    return (
+      <div className="grid gap-2 max-w-2xl text-sm">
+        <p>No AI site was in front during this essay.</p>
+        <p className="text-ink-soft">{AI_SITES_NOTE}</p>
+      </div>
+    );
+  }
+  const sessionsWord = ap.sessions_total === 1 ? 'the only session' : `${ap.sessions_with_ai} of ${ap.sessions_total} sessions`;
+  const withAi = ap.by_session.filter((s) => s.ai_hosts.length || s.switches);
+  return (
+    <div className="grid gap-4 max-w-2xl text-sm">
+      <p>
+        {ap.ai_hosts.map((h, i) => (
+          <span key={h.host}>
+            {i > 0 && (i === ap.ai_hosts.length - 1 ? ' and ' : ', ')}
+            <span className="font-mono text-xs">{h.host}</span>
+          </span>
+        ))}{' '}
+        {ap.ai_hosts.length === 1 ? 'was' : 'were'} in front for {fmtMinutes(ap.ai_minutes)} in total, during {sessionsWord}.
+      </p>
+      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 tabular">
+        <div>
+          <dt className="marginal inline-flex items-center gap-1">
+            In front <Info text="Minutes an AI site's tab was the front tab of a focused browser window while a writing session was open. Time with the browser in the background is not counted." />
+          </dt>
+          <dd className="text-ink mt-0.5">
+            {fmtMinutes(ap.ai_minutes)}
+            {ap.ai_hosts.length > 1 && <span className="text-ink-soft"> · {ap.ai_hosts.map((h) => `${h.host} ${fmtMinutes(h.minutes)}`).join(', ')}</span>}
+          </dd>
+        </div>
+        <div>
+          <dt className="marginal inline-flex items-center gap-1">
+            Returns to the document <Info text="Times the editor tab came back in front directly after an AI site's tab." />
+          </dt>
+          <dd className="text-ink mt-0.5">{num(ap.switches)}</dd>
+        </div>
+        <div>
+          <dt className="marginal inline-flex items-center gap-1">
+            Typed within a minute of returning <Info text="Characters in typing batches that began within 60 seconds of such a return, and how many separate runs of keystrokes (no pause over two seconds) began in that minute." />
+          </dt>
+          <dd className="text-ink mt-0.5">
+            {num(ap.typed_after_switch_chars)} chars
+            <span className="text-ink-soft">
+              {' '}
+              in {num(ap.bursts_after_switch)} run{ap.bursts_after_switch === 1 ? '' : 's'}
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt className="marginal inline-flex items-center gap-1">
+            Corrections after returning <Info text="Characters deleted divided by characters typed, inside those first 60 seconds after a return, next to the same ratio over the whole essay. Shown as a dash when nothing was typed in those windows." />
+          </dt>
+          <dd className="text-ink mt-0.5">
+            {pct(ap.correction_ratio_after_switch, 1)} <span className="text-ink-soft">vs {pct(ap.correction_ratio_overall, 1)} overall</span>
+          </dd>
+        </div>
+        <div>
+          <dt className="marginal inline-flex items-center gap-1">
+            Pastes from AI sites <Info text="Pastes whose text matched something copied on an AI site. Each one is listed under Pastes above." />
+          </dt>
+          <dd className="text-ink mt-0.5">{num(ap.ai_copy_paste_matches)}</dd>
+        </div>
+        <div>
+          <dt className="marginal inline-flex items-center gap-1">
+            Sessions <Info text="Writing sessions in which an AI site's tab was in front at least once, out of all sessions in this record." />
+          </dt>
+          <dd className="text-ink mt-0.5">
+            {num(ap.sessions_with_ai)} <span className="text-ink-soft">of {num(ap.sessions_total)}</span>
+          </dd>
+        </div>
+      </dl>
+      {ap.sessions_total > 1 && withAi.length > 0 && (
+        <ol className="grid divide-y divide-rule border-t border-b border-rule tabular">
+          {withAi.map((s) => {
+            const n = ap.by_session.indexOf(s) + 1;
+            return (
+              <li key={s.session} className="grid grid-cols-[2rem_1fr] sm:grid-cols-[2rem_1fr_auto] gap-x-4 py-2 items-baseline">
+                <span className="font-mono text-xs text-ink-faint">{String(n).padStart(2, '0')}</span>
+                <span>
+                  {fmtDateTime(s.start)} <span className="text-ink-soft">· {s.ai_hosts.map((h) => `${h.host} ${fmtMinutes(h.minutes)}`).join(', ')}</span>
+                </span>
+                <span className="text-ink-soft sm:text-right">
+                  {num(s.switches)} return{s.switches === 1 ? '' : 's'}, {num(s.typed_after_switch_chars)} chars within a minute
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+      <p className="text-ink-soft">{AI_SITES_NOTE}</p>
+    </div>
   );
 }
 

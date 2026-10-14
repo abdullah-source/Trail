@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { analyse, patterns } from '../lib/analysis';
+import { sessionMinutesByLocalHour } from '../lib/pace';
 import { data } from '../lib/data';
 import type { Analysis } from '../lib/types';
 import { useAsync, usePageTitle } from '../components/useAsync';
@@ -43,7 +44,10 @@ export default function Patterns() {
     );
   const p = patterns(analyses);
   const sessionMinutes = analyses.flatMap((a) => a.sessions.map((s) => s.active_minutes)).sort((x, y) => x - y);
-  const localHours = localHourHistogram(analyses);
+  // Everything drawn on this page is in the student's local time. patterns() keeps UTC hours only for
+  // parity with the Python reference, so its best_hours / active_minutes_by_hour are not used here; the
+  // chart spreads each session's active minutes over the local hours it spans, the same rule as Time.
+  const localHours = sessionMinutesByLocalHour(analyses.flatMap((a) => a.sessions));
 
   return (
     <div className="grid gap-10">
@@ -59,7 +63,7 @@ export default function Patterns() {
       <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
         <div className="grid gap-1 content-start">
           <Marginal>When you write</Marginal>
-          <span className="text-xs text-ink-soft">Active minutes by hour of the day, your local time, summed over every session. The tallest bar is marked.</span>
+          <span className="text-xs text-ink-soft">Active minutes by hour of the day, your local time, summed over every session; a session that crosses the hour is split between both. The tallest bar is marked.</span>
         </div>
         <HourChart hours={localHours} />
       </section>
@@ -89,17 +93,6 @@ export default function Patterns() {
       </section>
     </div>
   );
-}
-
-/** Active minutes per local hour (patterns() uses UTC hours for parity; the chart shows local time). */
-function localHourHistogram(analyses: Analysis[]): number[] {
-  const hours = new Array<number>(24).fill(0);
-  for (const a of analyses)
-    for (const s of a.sessions) {
-      const d = new Date(s.start.replace(/(\.\d{3})\d+Z$/, '$1Z'));
-      hours[d.getHours()] += s.active_minutes;
-    }
-  return hours;
 }
 
 function HourChart({ hours }: { hours: number[] }) {

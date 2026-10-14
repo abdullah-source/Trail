@@ -3,6 +3,9 @@
 // Parity with the Python reference is enforced by analysis.test.ts over 20 fixtures.
 
 import type {
+  AiPresence,
+  AiPresenceFacts,
+  AiPresenceSession,
   Analysis,
   Cadence,
   Draft,
@@ -22,11 +25,13 @@ import { getOpcodes } from './difflib';
 import { sha256Hex } from './sha256';
 import { mean, median, pstdev, pyFormatFixed, pyPercent1, pyRound, pyRoundInt, pySplitWords, pyThousands, quantiles } from './pyfloat';
 
-export const ANALYSIS_VERSION = '1.0';
+export const ANALYSIS_VERSION = '1.1';
 export const AI_HOSTS_VERSION = 1;
 export const PAUSE_MS = 2000;
 export const IDLE_MS = 120_000;
 export const BUCKET_MS = 10 * 60_000;
+/** typing this soon after returning from an AI tab is counted as "after a switch" */
+export const SWITCH_WINDOW_MS = 60_000;
 
 // Mirror of trail/events.py AI_HOSTS.
 export const AI_HOSTS = new Set([
@@ -506,6 +511,110 @@ export function sessionsSummary(events: TrailEvent[]): SessionSummary[] {
   return out;
 }
 
+// ---- AI sites in front -------------------------------------------------------------------------------
+// Mirror of trail/analysis.py ai_presence. The extension records `source.visit {host, dwell_ms, ai?}` when
+// a tab leaves the front of a focused window while a session is open, and `focus {state: "focus",
+// from_host, from_ai}` when the editor tab comes back in front. Older records carry no `ai` flag, so the
+// host list decides for them. Facts about tabs and timing only; nothing here is a judgement.
+
+function isAiVisit(e: TrailEvent): boolean {
+  return e.kind === 'source.visit' && (!!e.data.ai || classifySource(String(e.data.host || '')) === 'ai');
+}
+
+function isAiSwitch(e: TrailEvent): boolean {
+  return e.kind === 'focus' && !!e.data.from_ai;
+}
+
+function isAiPaste(e: TrailEvent): boolean {
+  if (e.kind !== 'paste') return false;
+  const kind = e.data.source_kind || classifySource(e.data.source_host, !!e.data.from_self);
+  return String(kind) === 'ai';
+}
+
+/** Start (ms) of each run of keystroke batches with no pause of PAUSE_MS or more between them. */
+function burstStarts(events: TrailEvent[]): number[] {
+  const starts: number[] = [];
+  let prevEnd: number | null = null;
+  for (const e of events) {
+    if (e.kind !== 'insert' && e.kind !== 'delete') continue;
+    const dts: number[] = ((e.data.dts as any[]) || []).map((x) => Math.trunc(Number(x)));
+    const start = ms(e.ts);
+    let rest = 0;
+    for (let i = 1; i < dts.length; i++) rest += dts[i];
+    const end = start + rest;
+    if (prevEnd === null || start - prevEnd >= PAUSE_MS) starts.push(start);
+    prevEnd = Math.max(end, prevEnd === null ? end : prevEnd);
+  }
+  return starts;
+}
+
+/** The ai_presence facts over one list of events (already sorted by ts, seq). */
+function aiPresenceFor(evs: TrailEvent[]): AiPresenceFacts {
+  const hostsMs = new Map<string, number>();
+  const switches: number[] = [];
+  for (const e of evs) {
+    if (isAiVisit(e)) {
+      const h = String(e.data.host);
+      hostsMs.set(h, (hostsMs.get(h) || 0) + Math.trunc(Number(e.data.dwell_ms || 0)));
+    } else if (isAiSwitch(e)) {
+      switches.push(ms(e.ts));
+    }
+  }
+  const afterSwitch = (t: number) => switches.some((s) => s <= t && t <= s + SWITCH_WINDOW_MS);
+  let typed = 0, deleted = 0, typedW = 0, deletedW = 0;
+  for (const e of evs) {
+    if (e.kind === 'insert') {
+      const n = cpLen(String(e.data.text));
+      typed += n;
+      if (afterSwitch(ms(e.ts))) typedW += n;
+    } else if (e.kind === 'delete') {
+      const n = Math.trunc(Number(e.data.len));
+      deleted += n;
+      if (afterSwitch(ms(e.ts))) deletedW += n;
+    }
+  }
+  let totalMs = 0;
+  for (const v of hostsMs.values()) totalMs += v;
+  const hosts = [...hostsMs.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  return {
+    ai_minutes: pyRound(totalMs / 60_000, 1),
+    ai_hosts: hosts.map(([host, d]) => ({ host, minutes: pyRound(d / 60_000, 1) })),
+    switches: switches.length,
+    typed_after_switch_chars: typedW,
+    bursts_after_switch: burstStarts(evs).filter((s) => afterSwitch(s)).length,
+    correction_ratio_after_switch: typedW ? pyRound(deletedW / typedW, 4) : null,
+    correction_ratio_overall: typed ? pyRound(deleted / typed, 4) : null,
+    ai_copy_paste_matches: evs.filter((e) => isAiPaste(e)).length,
+  };
+}
+
+/** AI sites that were in front while the document was open, per document and per session. */
+export function aiPresence(events: TrailEvent[]): AiPresence {
+  const evs = sortEvents(events);
+  const out = aiPresenceFor(evs);
+  const by = new Map<string, TrailEvent[]>();
+  for (const e of evs) {
+    let arr = by.get(e.session);
+    if (!arr) {
+      arr = [];
+      by.set(e.session, arr);
+    }
+    arr.push(e);
+  }
+  const per: AiPresenceSession[] = [];
+  for (const [sid, sevs] of by) {
+    sevs.sort((a, b) => a.seq - b.seq);
+    per.push({ session: sid, start: sevs[0].ts, ...aiPresenceFor(sortEvents(sevs)) });
+  }
+  per.sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+  return {
+    ...out,
+    sessions_with_ai: per.filter((s) => s.ai_hosts.length || s.switches).length,
+    sessions_total: per.length,
+    by_session: per,
+  };
+}
+
 // ---- analyse ---------------------------------------------------------------------------------------
 
 export function analyse(events: TrailEvent[]): Analysis {
@@ -541,6 +650,7 @@ export function analyse(events: TrailEvent[]): Analysis {
     timeline: timeline(evs),
     sources: sources(evs),
     sessions: sessionsSummary(evs),
+    ai_presence: aiPresence(evs),
     ai_notes: evs.filter((e) => e.kind === 'ai.note').map((e) => ({ ts: e.ts, ...e.data })),
     first_event: evs.length ? evs[0].ts : null,
     last_event: evs.length ? evs[evs.length - 1].ts : null,
@@ -623,6 +733,40 @@ export function drafts(events: TrailEvent[], fractions: number[] = [0.25, 0.5, 0
 
 // ---- declaration ----------------------------------------------------------------------------------------
 
+function minutesWords(m: number): string {
+  const n = pyFormatFixed(m, 0);
+  if (n === '0') return 'under a minute';
+  return n === '1' ? '1 minute' : `${n} minutes`;
+}
+
+/** One factual sentence about AI sites that were in front, or null when none was. Mirror of pack.py ai_sites_sentence. */
+export function aiSitesSentence(a: Analysis): string | null {
+  const ap = a.ai_presence;
+  if (!ap || !ap.ai_hosts || !ap.ai_hosts.length) return null;
+  const hosts = ap.ai_hosts;
+  const total = minutesWords(ap.ai_minutes);
+  let who: string;
+  let it: string;
+  if (hosts.length === 1) {
+    who = `${hosts[0].host} was in front for ${total}`;
+    it = 'it';
+  } else {
+    const names = hosts.slice(0, -1).map((h) => h.host).join(', ') + ` and ${hosts[hosts.length - 1].host}`;
+    const detail = hosts.map((h) => `${h.host} ${minutesWords(h.minutes)}`).join(', ');
+    who = `${names} were in front for ${total} in total (${detail})`;
+    it = 'them';
+  }
+  const during = ap.sessions_total === 1 ? 'during my only session' : `during ${ap.sessions_with_ai} of ${ap.sessions_total} sessions`;
+  let s = `${who} ${during}`;
+  if (ap.switches) {
+    const times = ap.switches === 1 ? 'once' : ap.switches === 2 ? 'twice' : `${ap.switches} times`;
+    const typed = ap.typed_after_switch_chars;
+    const typedS = typed ? `typed ${pyThousands(typed)} characters` : 'typed nothing';
+    s += `; I returned from ${it} to the document ${times} and ${typedS} within a minute of returning`;
+  }
+  return s + '.';
+}
+
 export function declaration(a: Analysis, meta: { student?: string; course?: string } = {}): string {
   const p = a.pastes;
   const aiItems = p.items.filter((i) => i.source_kind === 'ai');
@@ -654,6 +798,8 @@ export function declaration(a: Analysis, meta: { student?: string; course?: stri
     lines.push('');
     lines.push('Everything else in the document was typed by me.');
   }
+  const site = aiSitesSentence(a);
+  if (site) lines.push('', site);
   lines.push('', `This declaration was generated from my writing record (analysis v${a.version}, AI host list v${AI_HOSTS_VERSION}); the record can be verified with the included script.`, '');
   return lines.join('\n');
 }

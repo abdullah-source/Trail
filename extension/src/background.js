@@ -5,13 +5,23 @@ import { APP_ORIGIN, ALLOWED_ORIGINS } from "./config.js";
 // ---- per-doc chain state (service worker may restart; heads are persisted) ----
 const sessions = new Map();   // docId -> {id, seq, head}
 let lastCopy = null;          // {host, hash, len, ts, tab}
-const AI_HOSTS = ["chatgpt.com", "chat.openai.com", "claude.ai", "gemini.google.com", "bard.google.com", "copilot.microsoft.com", "perplexity.ai", "www.perplexity.ai", "poe.com", "character.ai", "grok.com", "x.ai", "mistral.ai", "chat.mistral.ai", "deepseek.com", "chat.deepseek.com", "you.com", "writesonic.com", "jasper.ai", "app.jasper.ai", "quillbot.com", "grammarly.com", "app.grammarly.com", "undetectable.ai", "phrasly.ai", "humanizeai.pro"];
+// Known AI sites. A plain entry matches the host and its subdomains; an entry with a path
+// ("huggingface.co/chat") matches only that part of the site, so only a URL can match it and
+// the record keeps the `ai` flag because the host alone would not tell.
+const AI_HOSTS = ["chatgpt.com", "chat.openai.com", "claude.ai", "gemini.google.com", "bard.google.com", "notebooklm.google.com", "copilot.microsoft.com", "perplexity.ai", "www.perplexity.ai", "poe.com", "character.ai", "you.com", "grok.com", "x.ai", "meta.ai", "mistral.ai", "chat.mistral.ai", "deepseek.com", "chat.deepseek.com", "huggingface.co/chat", "writesonic.com", "jasper.ai", "app.jasper.ai", "quillbot.com", "grammarly.com", "app.grammarly.com", "undetectable.ai", "phrasly.ai", "humanizeai.pro"];
 
+const aiHost = (h) => AI_HOSTS.some((a) => !a.includes("/") && (h === a || h.endsWith("." + a)));
 function classify(host, fromSelf) {
   if (fromSelf) return "self";
   if (!host) return "unknown";
-  const h = host.toLowerCase();
-  return AI_HOSTS.some((a) => h === a || h.endsWith("." + a)) ? "ai" : "web";
+  return aiHost(host.toLowerCase()) ? "ai" : "web";
+}
+function isAiUrl(url) {
+  let u; try { u = new URL(url); } catch { return false; }
+  const host = u.host.toLowerCase();
+  if (aiHost(host)) return true;
+  const hp = host + u.pathname.toLowerCase();
+  return AI_HOSTS.some((a) => a.includes("/") && (hp === a || hp.startsWith(a + "/")));
 }
 
 const words = (text) => text.split(/\s+/).filter(Boolean).length;
@@ -200,6 +210,7 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     if (m.host && (await pausedHosts()).has(m.host)) return;  // per-site pause: nothing is recorded
     if (m.type === "presence") return notePresence(m);
     m.doc = await resolveDoc(m.doc, m.editor, m.host);
+    if (sender.tab && m.doc) tabDocs.set(sender.tab.id, m.doc);
     if (m.type === "session.start") { await endSession(m.doc, "restart", Date.now()); await startSession(m.doc, m.editor, m.host, m.data, Date.now()); return; }
     if (m.type === "session.end") { await endSession(m.doc, m.reason || "completed", Date.now()); return; }
     if (!sessions.has(m.doc)) { const s = await loadSession(m.doc); if (!s) await startSession(m.doc, m.editor, m.host, { editor: m.editor, host: m.host, title_hash: null, goal_words: null, goal_minutes: null }, m.ts || Date.now()); }
@@ -303,16 +314,104 @@ chrome.runtime.onInstalled.addListener((d) => {
   if (d.reason === "install") chrome.tabs.create({ url: `${APP_ORIGIN}/app/welcome` });
 });
 
-// ---- source visits: which sites were open while a document session is active ----
-let activeTab = null, activeSince = 0;
-async function noteVisit() {
-  if (!activeTab || !activeTab.url) return;
-  const dwell = Date.now() - activeSince;
-  if (dwell < 5000) return;
-  let host; try { host = new URL(activeTab.url).host; } catch { return; }
-  for (const [docId] of sessions) await append(docId, "source.visit", { host, dwell_ms: dwell }, Date.now());
+// ---- source visits and returns: which tab is in front while a document session is open ----------
+// The tab in front of the focused Chrome window is tracked across tab switches, window switches and
+// in-tab navigation. When it leaves the front, its dwell is recorded for every open session as
+// `source.visit {host, dwell_ms, ai?}`: host only, never the URL or title; `ai: true` when the page was
+// a known AI site. Dwell counts only while a Chrome window has the focus. When a tab holding a recorded
+// document comes back in front from another tab, `focus {state: "focus", from_host, from_ai}` is
+// recorded for that document, so the analysis can show what was typed right after a return. These are
+// facts about tabs and timing; nothing here decides what they mean.
+const MIN_DWELL_MS = 5000;
+let front = null;              // {tabId, windowId, host, ai, docId|null}: the tab in front of a focused window
+let frontSince = 0;
+let lastFront = null;          // the tab that was in front before `front` (kept while no window has focus)
+let focusedWindow = null;      // window id with the OS focus; null until Chrome tells us
+const tabDocs = new Map();     // tabId -> random doc id of the document recorded in that tab
+
+// Tab changes are serialised with the recorder's messages: `append` must never run twice at once.
+function serial(job) { const p = queue.then(job, job); queue = p.catch(() => {}); return p; }
+const hostOf = (url) => { try { return new URL(url).host || null; } catch { return null; } };
+
+async function docOfTab(tabId) {
+  if (tabDocs.has(tabId)) return tabDocs.get(tabId);
+  // Ask the recorder in that tab which document it holds; pages without a recorder do not answer.
+  let st = null;
+  try {
+    st = await Promise.race([chrome.tabs.sendMessage(tabId, { type: "status" }), new Promise((r) => setTimeout(() => r(null), 1500))]);
+  } catch { return null; }
+  const doc = st && st.doc ? await lookupDoc(st.doc) : null;
+  if (doc) tabDocs.set(tabId, doc);
+  return doc;
 }
-chrome.tabs.onActivated.addListener(async ({ tabId }) => { await noteVisit(); try { activeTab = await chrome.tabs.get(tabId); } catch { activeTab = null; } activeSince = Date.now(); });
+
+async function closeFront(now) {
+  if (!front) return;
+  const dwell = now - frontSince;
+  if (front.host && dwell >= MIN_DWELL_MS) {
+    const data = { host: front.host, dwell_ms: dwell };
+    if (front.ai) data.ai = true;
+    for (const [docId] of sessions) await append(docId, "source.visit", data, now);
+  }
+  lastFront = front;
+  front = null;
+}
+
+async function setFront(tab, now) {
+  const url = (tab && tab.url) || "";
+  const host = hostOf(url);
+  const ai = isAiUrl(url);
+  if (front && tab && front.tabId === tab.id && front.host === host && front.ai === ai) return;  // same page, same tab
+  await closeFront(now);
+  if (!tab) return;
+  front = { tabId: tab.id, windowId: tab.windowId, host, ai, docId: null };
+  frontSince = now;
+  const from = lastFront;
+  const doc = await docOfTab(tab.id);
+  if (!doc || !front || front.tabId !== tab.id) return;
+  front.docId = doc;
+  // A recorded document came back in front from another tab: note where from (host only).
+  if (from && from.tabId !== tab.id && (sessions.has(doc) || (await loadSession(doc)))) {
+    await append(doc, "focus", { state: "focus", from_host: from.host, from_ai: !!from.ai }, now);
+  }
+}
+
+chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
+  const now = Date.now();
+  serial(async () => {
+    if (focusedWindow !== null && focusedWindow !== windowId) return;   // a tab changed in a window that is not in front
+    let tab = null; try { tab = await chrome.tabs.get(tabId); } catch {}
+    await setFront(tab, now);
+  });
+});
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  const now = Date.now();
+  serial(async () => {
+    if (windowId === chrome.windows.WINDOW_ID_NONE) { focusedWindow = windowId; await closeFront(now); return; }
+    focusedWindow = windowId;
+    let tab = null; try { [tab] = await chrome.tabs.query({ active: true, windowId }); } catch {}
+    await setFront(tab || null, now);
+  });
+});
+chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+  if (!info.url) return;
+  const now = Date.now();
+  serial(async () => {
+    tabDocs.delete(tabId);                                        // the tab may now hold another document, or none
+    if (front && front.tabId === tabId) await setFront(tab, now);  // the front tab moved to another page
+  });
+});
+chrome.tabs.onRemoved.addListener((tabId) => { tabDocs.delete(tabId); });
+// The worker may have just (re)started: pick up the tab that is in front right now.
+serial(async () => {
+  try {
+    const w = await chrome.windows.getLastFocused();
+    if (!w || !w.focused) return;
+    focusedWindow = w.id;
+    const [tab] = await chrome.tabs.query({ active: true, windowId: w.id });
+    if (tab) await setFront(tab, Date.now());
+  } catch {}
+});
 
 // ---- checkpoints: every 10 minutes, send chain heads (never text) to the signing service ----
 chrome.alarms.create("checkpoint", { periodInMinutes: 10 });
@@ -344,4 +443,4 @@ export async function checkpointAll(onlyDoc) {
 }
 
 // test hook: test/presence-harness.mjs calls these inside the worker (dynamic import() is not allowed there)
-globalThis.__trailTest = { worklogSummary, worklogRows, clearWorklog: () => db.clear("worklog") };
+globalThis.__trailTest = { worklogSummary, worklogRows, clearWorklog: () => db.clear("worklog"), isAiUrl, classify, front: () => front };

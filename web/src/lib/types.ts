@@ -111,6 +111,39 @@ export type SessionSummary = {
 
 export type AiNote = { ts: string; tool?: string; note?: string; [k: string]: any };
 
+/** One AI site and how long its tab was in front (minutes, 1 decimal). */
+export type AiHostMinutes = { host: string; minutes: number };
+
+/** Facts about AI sites in front while the document was open. Observations about tabs and timing on the
+ *  writer's computer only: nothing here says what was on the screen, and nothing here is a judgement.
+ *  Mirrors trail/analysis.py ai_presence. */
+export type AiPresenceFacts = {
+  /** dwell on AI hosts while a session was open, in minutes */
+  ai_minutes: number;
+  /** per host, most time first */
+  ai_hosts: AiHostMinutes[];
+  /** times the editor tab came back in front directly after an AI site's tab */
+  switches: number;
+  /** characters typed in batches that began within 60 s of such a return */
+  typed_after_switch_chars: number;
+  /** runs of keystrokes with no two-second pause that began within 60 s of such a return */
+  bursts_after_switch: number;
+  /** deleted / typed within those 60 s windows; null when nothing was typed there */
+  correction_ratio_after_switch: number | null;
+  /** deleted / typed over the whole span; null when nothing was typed */
+  correction_ratio_overall: number | null;
+  /** pastes whose copied text matched a copy made on an AI site */
+  ai_copy_paste_matches: number;
+};
+
+export type AiPresenceSession = AiPresenceFacts & { session: string; start: string };
+
+export type AiPresence = AiPresenceFacts & {
+  sessions_with_ai: number;
+  sessions_total: number;
+  by_session: AiPresenceSession[];
+};
+
 export type Analysis = {
   version: string;
   document: AnalysisDocument;
@@ -121,6 +154,7 @@ export type Analysis = {
   timeline: TimelineBucket[];
   sources: SourceDwell[];
   sessions: SessionSummary[];
+  ai_presence: AiPresence;
   ai_notes: AiNote[];
   first_event: string | null;
   last_event: string | null;

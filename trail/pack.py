@@ -40,6 +40,40 @@ def drafts(events: list[Event], points: Iterable[float] = (0.25, 0.5, 0.75, 1.0)
 
 # -- declaration -----------------------------------------------------------------
 
+def _minutes_words(m: float) -> str:
+    n = f"{m:.0f}"
+    if n == "0":
+        return "under a minute"
+    return "1 minute" if n == "1" else f"{n} minutes"
+
+
+def ai_sites_sentence(a: dict[str, Any]) -> str | None:
+    """One factual sentence about AI sites that were in front, or None when none was.
+    Mirrored in web/src/lib/analysis.ts (aiSitesSentence)."""
+    ap = a.get("ai_presence")
+    if not ap or not ap["ai_hosts"]:
+        return None
+    hosts = ap["ai_hosts"]
+    total = _minutes_words(ap["ai_minutes"])
+    if len(hosts) == 1:
+        who = f"{hosts[0]['host']} was in front for {total}"
+        it = "it"
+    else:
+        names = ", ".join(h["host"] for h in hosts[:-1]) + f" and {hosts[-1]['host']}"
+        detail = ", ".join(f"{h['host']} {_minutes_words(h['minutes'])}" for h in hosts)
+        who = f"{names} were in front for {total} in total ({detail})"
+        it = "them"
+    n, tot = ap["sessions_with_ai"], ap["sessions_total"]
+    during = "during my only session" if tot == 1 else f"during {n} of {tot} sessions"
+    s = f"{who} {during}"
+    if ap["switches"]:
+        times = {1: "once", 2: "twice"}.get(ap["switches"]) or f"{ap['switches']} times"
+        typed = ap["typed_after_switch_chars"]
+        typed_s = f"typed {typed:,} characters" if typed else "typed nothing"
+        s += f"; I returned from {it} to the document {times} and {typed_s} within a minute of returning"
+    return s + "."
+
+
 def declaration(a: dict[str, Any], *, student: str | None = None, course: str | None = None) -> str:
     p = a["pastes"]
     ai_items = [i for i in p["items"] if i["source_kind"] == "ai"]
@@ -65,6 +99,9 @@ def declaration(a: dict[str, Any], *, student: str | None = None, course: str | 
             lines.append(f"- {n.get('tool')}: {n.get('note')}")
         lines.append("")
         lines.append("Everything else in the document was typed by me.")
+    site = ai_sites_sentence(a)
+    if site:
+        lines += ["", site]
     lines += ["", f"This declaration was generated from my writing record (analysis v{a['version']}, AI host list v{AI_HOSTS_VERSION}); the record can be verified with the included script.", ""]
     return "\n".join(lines)
 

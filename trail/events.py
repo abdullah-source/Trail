@@ -17,8 +17,8 @@ Kinds and `data`:
     resync         {text}            full document text observed after a gap; regions that
                                      differ from the reconstructed document get origin "unobserved"
     snapshot       {text_hash, chars, words, lines}
-    source.visit   {host, dwell_ms}
-    focus          {state: "focus"|"blur"}
+    source.visit   {host, dwell_ms, ai?: true}        host only; ai when it is a known AI site
+    focus          {state: "focus"|"blur"|"hidden"|"visible", from_host?, from_ai?}  from_* when the tab came back in front from another tab
     ai.note        {tool, note}      the student's own declaration of an AI use
 
 Text of inserts and pastes lives in the chain because the chain lives on the

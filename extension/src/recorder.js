@@ -256,7 +256,11 @@
   setInterval(attach, 3000);
   setInterval(() => { flush(); snapshot(false); }, 20_000);
   window.addEventListener("beforeunload", () => { flush(); snapshot(true); if (sessionOpen) send({ type: "session.end", reason: "unload" }); });
-  document.addEventListener("visibilitychange", () => { if (document.hidden) { flush(); snapshot(true); } });
+  // Leaving and returning to the tab is part of the record (hidden/visible), once a session is open.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { flush(); snapshot(true); }
+    if (sessionOpen) send({ type: "event", kind: "focus", ts: Date.now(), data: { state: document.hidden ? "hidden" : "visible" } });
+  });
   chrome.runtime.onMessage.addListener((m, _s, reply) => {
     if (m.type === "status") reply({ recording: !!root, doc: docId, editor, chars: model.length, session: sessionOpen, since: sessionOpen ? sessionSince : null });
   });

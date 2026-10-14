@@ -1,0 +1,517 @@
+<title>Trail Pitch Deck</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ink:#0E0D0C; --ink-2:#161513; --ink-3:#201E1B; --rule:#2B2823;
+    --paper:#F2EEE4; --paper-soft:#C9C3B6; --muted:#8B867C;
+    --blue:#6B8CFF; --blue-deep:#2A49C9; --typed:#5FCB84; --pasted:#E0A64B; --red:#E06A5A;
+    --display:"Newsreader", Georgia, "Times New Roman", serif;
+    --sans:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono:"IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+    color-scheme: dark;
+  }
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  ::selection{background:var(--blue);color:var(--ink)}
+  a{color:var(--blue)}
+  h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:-0.01em;text-wrap:balance;margin:0}
+  h1{font-size:clamp(2.8rem,8vw,7rem);line-height:.98}
+  h2{font-size:clamp(2rem,4.6vw,3.9rem);line-height:1.04}
+  h3{font-size:clamp(1.25rem,2vw,1.6rem);line-height:1.2}
+  em{font-style:italic;color:var(--blue)}
+  p{margin:0}
+  .mono{font-family:var(--mono)}
+  .num{font-variant-numeric:tabular-nums}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .eyebrow b{color:var(--blue);font-weight:500}
+
+  /* deck */
+  .deck{scroll-snap-type:y proximity}
+  .slide{position:relative;min-height:88svh;display:grid;grid-template-columns:5.5rem 1fr;scroll-snap-align:start;border-top:1px solid var(--rule);padding-block:clamp(2rem,6vh,4.5rem)}
+  .slide:first-child{border-top:0}
+  .rail{padding-left:16px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:.35rem}
+  .rail .tc{font-family:var(--mono);font-size:.78rem;color:var(--paper-soft)}
+  .rail .lab{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);writing-mode:vertical-rl;transform:rotate(180deg);margin-top:.6rem}
+  .body{padding-inline:clamp(1.25rem,5vw,5rem) 16px;max-width:1180px;width:100%;display:grid;align-content:center;gap:1.6rem}
+  .lede{font-size:clamp(1.05rem,1.5vw,1.3rem);color:var(--paper-soft);max-width:34rem}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:1.4rem;align-items:start}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1.2rem}
+  .card{background:var(--ink-2);border:1px solid var(--rule);border-radius:14px;padding:1.3rem 1.4rem;display:grid;gap:.6rem}
+  .card .eyebrow{margin-bottom:.1rem}
+  .card p{color:var(--paper-soft);font-size:.98rem}
+  .stat{display:grid;gap:.25rem}
+  .stat .v{font-family:var(--display);font-size:clamp(2.4rem,5vw,4.2rem);line-height:1;color:var(--paper)}
+  .stat .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .stat .d{color:var(--paper-soft);font-size:.95rem}
+  .typed{color:var(--typed)} .pasted{color:var(--pasted)} .blue{color:var(--blue)}
+  .hl{background:rgba(224,166,75,.22);box-shadow:0 0 0 2px rgba(224,166,75,.22);border-radius:3px;color:var(--paper)}
+  .chip{font-family:var(--mono);font-size:.68rem;padding:.1rem .45rem;border:1px solid var(--pasted);color:var(--pasted);border-radius:4px;vertical-align:middle;margin-left:.3rem}
+  .caret{display:inline-block;width:.08em;height:1em;background:var(--blue);vertical-align:-.1em;margin-left:.06em;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .rule-list{display:grid;gap:.8rem;max-width:40rem}
+  .rule-list li{list-style:none;display:grid;grid-template-columns:1.6rem 1fr;gap:.6rem;color:var(--paper-soft)}
+  .rule-list li::before{content:"";width:1rem;height:1px;background:var(--blue);margin-top:.8em}
+  .cta{display:inline-flex;align-items:center;gap:.6rem;background:var(--paper);color:var(--ink);text-decoration:none;font-weight:600;padding:.85rem 1.3rem;border-radius:10px;font-size:1rem}
+  .cta:hover{background:#fff}
+  .url{font-family:var(--mono);color:var(--paper-soft);font-size:.95rem;user-select:all}
+
+  /* hero */
+  #hero{min-height:auto;overflow:hidden}
+  #hero canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.9}
+  #hero .body{position:relative;gap:2rem;padding-block:clamp(2rem,10vh,8rem)}
+  .wordmark{display:flex;align-items:center;gap:.6rem;font-family:var(--display);font-size:1.5rem}
+  .wordmark svg{width:30px;height:30px}
+  .typeline{font-family:var(--display);font-size:clamp(1.3rem,2.6vw,2rem);line-height:1.35;max-width:42rem;min-height:2.7em;color:var(--paper-soft)}
+  .legend{display:flex;flex-wrap:wrap;gap:1rem 1.6rem;font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+  .legend i{display:inline-block;width:.6rem;height:.6rem;border-radius:2px;margin-right:.4rem;vertical-align:-.02em}
+
+  /* reveal: fully visible at rest; when scrolled into view it plays a short rise from a keyframe */
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .rv.in{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  @media (prefers-reduced-motion:reduce){.rv.in{animation:none}.caret{animation:none}}
+
+  /* compare table */
+  .cmp{width:100%;border-collapse:collapse;font-size:.95rem;overflow:hidden}
+  .cmp th,.cmp td{text-align:left;padding:.75rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  .cmp th{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .cmp td:first-child{color:var(--paper-soft);width:34%}
+  .cmp .no{color:var(--muted)} .cmp .yes{color:var(--typed)}
+  .cmp tr{transition:background .4s}
+  .cmp tr.lit{background:rgba(107,140,255,.06)}
+  .tablewrap{overflow-x:auto}
+
+  /* chain diagram */
+  .chain{width:100%;height:auto;max-width:900px}
+  .chain .box{fill:var(--ink-3);stroke:var(--rule)}
+  .chain .box.bad{stroke:var(--red)}
+  .chain text{font-family:var(--mono);font-size:11px;fill:var(--paper-soft)}
+  .chain .h{fill:var(--blue)}
+  .chain .link{stroke:var(--blue);stroke-width:2;fill:none;stroke-dasharray:60;stroke-dashoffset:60;animation:draw 1.1s ease forwards}
+  .chain .link.bad{stroke:var(--red)}
+  .chain .sig{fill:var(--typed)}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .btnrow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+  .btn{background:transparent;border:1px solid var(--rule);color:var(--paper);padding:.55rem .9rem;border-radius:8px;font:inherit;font-size:.92rem;cursor:pointer}
+  .btn:hover,.btn:focus-visible{border-color:var(--blue);outline:none}
+  .verdict{font-family:var(--mono);font-size:.85rem;color:var(--paper-soft);min-height:1.4em}
+  .verdict.ok{color:var(--typed)} .verdict.bad{color:var(--red)}
+
+  /* replay widget */
+  .replay{background:var(--ink-2);border:1px solid var(--rule);border-radius:14px;padding:1.2rem 1.4rem;display:grid;gap:.8rem;max-width:34rem}
+  .replay .doc{font-family:var(--display);font-size:1.15rem;line-height:1.5;min-height:7.5em;color:var(--paper)}
+  .bar{height:8px;background:var(--ink-3);border-radius:4px;display:flex;overflow:hidden}
+  .bar i{display:block;height:100%}
+  .replay .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+
+  /* flow */
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:1rem;counter-reset:step}
+  .flow .card{position:relative}
+  .flow .card .eyebrow b{color:var(--typed)}
+  .loop{border-color:var(--blue-deep)}
+  .pulse{position:absolute;top:.9rem;right:.9rem;width:.5rem;height:.5rem;border-radius:50%;background:var(--blue);box-shadow:0 0 0 0 rgba(107,140,255,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 12px rgba(107,140,255,0)}100%{box-shadow:0 0 0 0 rgba(107,140,255,0)}}
+  @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+
+  /* roadmap */
+  .road{display:grid;gap:.6rem;max-width:44rem}
+  .road li{list-style:none;display:grid;grid-template-columns:7rem 1fr;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--rule);color:var(--paper-soft)}
+  .road li span:first-child{font-family:var(--mono);font-size:.78rem;color:var(--muted);padding-top:.2rem}
+  .road li.done span:first-child{color:var(--typed)}
+
+  /* nav */
+  .dots{position:fixed;right:14px;top:50%;transform:translateY(-50%);display:grid;gap:9px;z-index:5}
+  .dots a{width:7px;height:7px;border-radius:50%;background:var(--rule);display:block}
+  .dots a.on{background:var(--blue)}
+  .hint{position:fixed;left:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));font-family:var(--mono);font-size:.68rem;color:var(--muted);z-index:5}
+  @media (max-width:700px){
+    .slide{grid-template-columns:1fr}
+    .rail{flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--rule);padding:0 16px .6rem;gap:.8rem}
+    .rail .lab{writing-mode:horizontal-tb;transform:none;margin:0}
+    .body{padding-inline:16px}
+    .dots,.hint{display:none}
+    .road li{grid-template-columns:1fr}
+  }
+  :focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+</style>
+
+<main class="deck" id="deck">
+
+<!-- 1 HERO -->
+<section class="slide" id="hero">
+  <canvas id="field" aria-hidden="true"></canvas>
+  <div class="rail"><span class="tc">00:00</span><span class="lab">Open</span></div>
+  <div class="body">
+    <div class="wordmark" aria-label="Trail">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#F2EEE4"/><path d="M17 47c2-12 8-32 14-35 5-2 4 9 0 19-3 8-7 15-3 17 3 1 8-3 12-7" fill="none" stroke="#0E0D0C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="45" y="27" width="3.5" height="21" rx="1" fill="#2A49C9"/></svg>
+      Trail
+    </div>
+    <h1 id="h1">See how<br>you write.</h1>
+    <p class="typeline" id="typeline" aria-live="off">Every draft. Every session. Every <span class="hl">pasted sentence<span class="chip">chatgpt.com</span></span>, with its source.</p>
+    <p class="lede">A student's own record of how an essay was written. Kept on their laptop, signed so nobody can rewrite it, and useful every week, not just when something goes wrong.</p>
+    <div class="legend"><span><i style="background:var(--typed)"></i>typed, in your hand</span><span><i style="background:var(--pasted)"></i>pasted, with its source</span><span><i style="background:var(--blue)"></i>signed checkpoint</span></div>
+    <p class="eyebrow">Claremont accelerator · founder Abdullah Ali · live at trail-hmc.up.railway.app</p>
+  </div>
+</section>
+
+<!-- 2 PROBLEM -->
+<section class="slide" id="problem">
+  <div class="rail"><span class="tc">00:12</span><span class="lab">Problem</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>01</b> The problem</p>
+    <h2 class="rv">A professor flags your essay for AI.<br>You wrote it. You have <em>nothing to show.</em></h2>
+    <div class="grid3">
+      <div class="card rv"><span class="eyebrow">What changed</span><p>Colleges now run AI detectors on student work. The detectors are wrong often enough that every campus has a story, and a 2023 Stanford study found they flagged most essays written by non-native English speakers.</p></div>
+      <div class="card rv"><span class="eyebrow">Who pays</span><p>The student. "I wrote it" is not evidence. The burden of proof has quietly moved onto them, with no tool on their side of the table.</p></div>
+      <div class="card rv"><span class="eyebrow">Why now</span><p>Detectors arrived faster than due process, and AI-use declarations are becoming standard in syllabi. Students need a record of their own work, and nobody has built one.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 WHY NOT DOCS HISTORY -->
+<section class="slide" id="docs">
+  <div class="rail"><span class="tc">00:31</span><span class="lab">Status quo</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>02</b> Why Google Docs history is not the answer</p>
+    <h2 class="rv">Version history is <em>Google's</em> record.<br>Trail is the student's.</h2>
+    <div class="tablewrap"><table class="cmp" id="cmp">
+      <thead><tr><th>The question a professor asks</th><th>Docs version history</th><th>Trail</th></tr></thead>
+      <tbody>
+        <tr><td>Was this typed or pasted?</td><td class="no">Cannot tell</td><td class="yes">Every paste, with its source site</td></tr>
+        <tr><td>When was it written, and how fast?</td><td class="no">Snapshots on Google's schedule</td><td class="yes">Keystroke timing, sessions over days</td></tr>
+        <tr><td>Does it work outside Google Docs?</td><td class="no">No</td><td class="yes">Docs, Notion, Word, Canvas, Moodle, Blackboard, Brightspace</td></tr>
+        <tr><td>What if I copied my draft to a new doc?</td><td class="no">History resets</td><td class="yes">The record follows the writing</td></tr>
+        <tr><td>Can I hand it over without sharing the doc?</td><td class="no">No</td><td class="yes">Export a pack; the text stays yours</td></tr>
+        <tr><td>Can anyone prove it was not edited later?</td><td class="no">No</td><td class="yes">Signed every 10 minutes, verifiable by anyone</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- 4 PRODUCT -->
+<section class="slide" id="product">
+  <div class="rail"><span class="tc">00:47</span><span class="lab">Product</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>03</b> The product</p>
+    <h2 class="rv">A Chrome extension that records <em>how</em> you write, on your own laptop.</h2>
+    <div class="grid2">
+      <div class="replay rv" aria-label="Replay demonstration">
+        <div class="meta"><span>Cities and silence · Google Docs</span><span id="rp-words" class="num">0 words</span></div>
+        <div class="doc" id="rp-doc"></div>
+        <div class="bar" id="rp-bar"><i style="background:var(--typed);width:0%"></i><i style="background:var(--pasted);width:0%"></i></div>
+        <div class="meta"><span class="typed" id="rp-typed">typed 0%</span><span class="pasted" id="rp-pasted">pasted 0%</span></div>
+      </div>
+      <ul class="rule-list">
+        <li class="rv">Replay any essay like a video. Scrub to the paragraph you rewrote four times.</li>
+        <li class="rv">Every paste is kept with the site it came from. jstor.org is a quotation; chatgpt.com is a conversation to have honestly.</li>
+        <li class="rv">The AI-use declaration your course requires is drafted from what actually happened, not from memory.</li>
+        <li class="rv">If you are ever accused, export an evidence pack anyone can verify in a browser without trusting us.</li>
+        <li class="rv">Trail does not detect AI. It records process, and it says so on every page.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 5 HOW IT WORKS -->
+<section class="slide" id="tech">
+  <div class="rail"><span class="tc">01:05</span><span class="lab">Tech</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>04</b> How it works, in one picture</p>
+    <h2 class="rv">Every event is fingerprinted and chained. Every ten minutes the chain is <em>signed and published.</em></h2>
+    <svg class="chain" id="chain" viewBox="0 0 900 190" role="img" aria-label="A chain of hashed events, signed every ten minutes, published to a public log">
+      <g id="ev"></g>
+      <g transform="translate(560,20)">
+        <rect class="box" x="0" y="0" width="150" height="56" rx="8"/>
+        <text x="12" y="22">every 10 min</text><text x="12" y="42" class="sig">signed by Trail's key</text>
+      </g>
+      <path class="link" d="M500 48 C 530 48, 530 48, 560 48" style="animation-delay:1.3s"/>
+      <g transform="translate(740,20)">
+        <rect class="box" x="0" y="0" width="150" height="56" rx="8"/>
+        <text x="12" y="22">public log</text><text x="12" y="42" class="h">append-only</text>
+      </g>
+      <path class="link" d="M710 48 C 725 48, 725 48, 740 48" style="animation-delay:1.6s"/>
+      <text x="0" y="150" style="font-size:12px">The server only ever sees 64-character fingerprints. Never the text. Never the title. Never the document's address.</text>
+      <text x="0" y="172" style="font-size:12px">A professor drops the pack on trail-hmc.up.railway.app/verify and the browser recomputes everything against the key and the log fetched from the site.</text>
+    </svg>
+    <div class="btnrow">
+      <button class="btn" id="tamper" type="button">Change one letter in event 3</button>
+      <button class="btn" id="restore" type="button">Put it back</button>
+      <span class="verdict ok" id="verdict">Verified: every link holds, signatures match the live key.</span>
+    </div>
+  </div>
+</section>
+
+<!-- 6 PROOF -->
+<section class="slide" id="proof">
+  <div class="rail"><span class="tc">01:24</span><span class="lab">Proof</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>05</b> It had to prove itself before it got a website</p>
+    <h2 class="rv">320 real essays. 800 simulated ways of writing them. <em>Exact</em> provenance.</h2>
+    <div class="grid3">
+      <div class="stat rv"><span class="k">Lines reconstructed</span><span class="v num" data-count="4400">4,400</span><span class="d">315,760 words, byte-exact, line and character provenance 100%</span></div>
+      <div class="stat rv"><span class="k">Honest writers flagged</span><span class="v num">0 <span style="font-size:.5em;color:var(--muted)">/ 320</span></span><span class="d">Not one human-typed document was called scripted</span></div>
+      <div class="stat rv"><span class="k">Scripted essays caught</span><span class="v num"><span data-count="160">160</span> <span style="font-size:.5em;color:var(--muted)">/ 160</span></span><span class="d">Every auto-typed ChatGPT essay flagged for uniform rhythm</span></div>
+    </div>
+    <p class="lede rv">Human essays and ChatGPT essays from public datasets (Ghostbuster, HC3), pushed through typed, pasted-whole, pasted-in-chunks, auto-typed and quoted processes. The analysis never reads the text. That is the point.</p>
+  </div>
+</section>
+
+<!-- 7 WEEKLY VALUE -->
+<section class="slide" id="weekly">
+  <div class="rail"><span class="tc">01:40</span><span class="lab">Retention</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>06</b> Useful every week, not just in a crisis</p>
+    <h2 class="rv">The evidence pack is one item on a menu. <em>The habit</em> is the product.</h2>
+    <div class="grid3">
+      <div class="card rv"><span class="eyebrow">Replay</span><h3>Watch 2,000 words happen</h3><p>The essay at forty seconds a session. Most tools keep the final version; Trail keeps the whole thing.</p></div>
+      <div class="card rv"><span class="eyebrow">Patterns</span><h3>Your process, in numbers</h3><p>Best hour, median session, typed share, how much you rewrite. Nothing is sent anywhere.</p></div>
+      <div class="card rv"><span class="eyebrow">Time</span><h3>Screen time for homework</h3><p>Active minutes by class and assignment on Canvas and friends, a streak, and plain habit lines. Student-only. No teacher view, no limits.</p></div>
+      <div class="card rv"><span class="eyebrow">Declaration</span><h3>Written from what happened</h3><p>The AI-use statement more courses require, drafted from the record. You edit it, you sign it.</p></div>
+      <div class="card rv"><span class="eyebrow">Pack</span><h3>If anyone ever asks</h3><p>One click. Verifiable by anyone, in a browser, without trusting Trail.</p></div>
+      <div class="card rv"><span class="eyebrow">Privacy</span><h3>Nothing leaves the laptop</h3><p>The server holds email, fingerprints and signatures. Deleting the account deletes all of it.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 CUSTOMERS -->
+<section class="slide" id="customers">
+  <div class="rail"><span class="tc">02:03</span><span class="lab">Acquisition</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>07</b> Customers and how we get them</p>
+    <h2 class="rv">Start with the students who are <em>most afraid</em>, and let the product carry itself.</h2>
+    <div class="flow">
+      <div class="card rv"><span class="eyebrow"><b>Wedge</b></span><h3>International students at three campuses</h3><p>They are flagged most, they talk to each other most, and Claremont is one of the three.</p></div>
+      <div class="card rv loop"><span class="pulse" aria-hidden="true"></span><span class="eyebrow"><b>Loop 1</b></span><h3>Invite three, get a semester</h3><p>An invite counts when the friend finishes a first replay, not when they sign up. Nine invites, three free semesters.</p></div>
+      <div class="card rv loop"><span class="pulse" aria-hidden="true"></span><span class="eyebrow"><b>Loop 2</b></span><h3>The verify page is the ad</h3><p>Every pack a student hands a professor points to trail.app/verify. The person checking it is the next person recommending it.</p></div>
+      <div class="card rv loop"><span class="pulse" aria-hidden="true"></span><span class="eyebrow"><b>Loop 3</b></span><h3>The declaration travels</h3><p>A declaration "generated from my writing record" at the bottom of an essay is read by every grader. Writing centres ask where it came from.</p></div>
+      <div class="card rv"><span class="eyebrow"><b>Channel</b></span><h3>Chrome Web Store, one click</h3><p>Five dollars once, no per-install cost. "Add to Chrome" is the whole funnel; the first replay is the activation.</p></div>
+      <div class="card rv"><span class="eyebrow"><b>Cost</b></span><h3>Acquisition cost near zero</h3><p>No ads. Students sell it to students, and the free early-access period is the entire marketing budget.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 BUSINESS MODEL -->
+<section class="slide" id="model">
+  <div class="rail"><span class="tc">02:25</span><span class="lab">Model</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>08</b> Business model</p>
+    <h2 class="rv">Sold only to students. <em>Never</em> to institutions.</h2>
+    <div class="grid3">
+      <div class="stat rv"><span class="k">Semester plan</span><span class="v">$12</span><span class="d">Every four months. One coffee a month.</span></div>
+      <div class="stat rv"><span class="k">Monthly</span><span class="v">$3.99</span><span class="d">Same features, month to month.</span></div>
+      <div class="stat rv"><span class="k">Server cost per user</span><span class="v">&lt;2¢</span><span class="d">Per month at current scale. The server stores fingerprints, not text. Estimate from our Railway bill.</span></div>
+    </div>
+    <ul class="rule-list">
+      <li class="rv">Free during early access. Fourteen days free with every feature once pricing switches on, no card.</li>
+      <li class="rv">Recording, local storage, export and checkpoint signing never lock, paid or not. Holding the record hostage would make the whole thing pointless.</li>
+      <li class="rv">Refusing institutional contracts is the moat. The moment a university is the customer, Trail becomes surveillance and students stop installing it.</li>
+      <li class="rv">Cancel in one click, full refund within fourteen days, renewal reminders seven days before. The rules we would want as students.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10 MARKET -->
+<section class="slide" id="market">
+  <div class="rail"><span class="tc">02:48</span><span class="lab">Market</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>09</b> Market</p>
+    <h2 class="rv">About nineteen million US college students. One in a hundred is a <em>real company.</em></h2>
+    <div class="grid3">
+      <div class="stat rv"><span class="k">US college students</span><span class="v num">~19M</span><span class="d">Roughly 1.1 million of them international, the wedge.</span></div>
+      <div class="stat rv"><span class="k">At 1% on the semester plan</span><span class="v num">$4.6M</span><span class="d">190,000 students × $24 a year. Illustrative, not a forecast.</span></div>
+      <div class="stat rv"><span class="k">Gross margin</span><span class="v num">~95%</span><span class="d">Fingerprints are cheap to store and sign. Support and payments are the real costs.</span></div>
+    </div>
+    <p class="lede rv">Every essay-writing student in the English-speaking world faces the same detectors. The product is the same in Toronto, Manchester and Sydney; only the LMS adapters change.</p>
+  </div>
+</section>
+
+<!-- 11 TRACTION & ROADMAP -->
+<section class="slide" id="roadmap">
+  <div class="rail"><span class="tc">03:06</span><span class="lab">Roadmap</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>10</b> Where it is, and what is next</p>
+    <h2 class="rv">Live, signed, verifiable. <em>Three weeks</em> from a blank folder.</h2>
+    <ul class="road">
+      <li class="done rv"><span>shipped</span><span>Site, app, extension 0.3.0, Google sign-in, free early access, Postgres on Railway</span></li>
+      <li class="done rv"><span>shipped</span><span>Live demo with six real essays, verify page with a "tamper with it" test, homework time log</span></li>
+      <li class="done rv"><span>shipped</span><span>Validation on 320 real human and ChatGPT essays, report published in the repo</span></li>
+      <li class="rv"><span>next</span><span>Chrome Web Store listing, so "Add to Chrome" is one click. Review is the critical path.</span></li>
+      <li class="rv"><span>next</span><span>Canvas connection with the student's own token: real course names, due dates, time against deadlines</span></li>
+      <li class="rv"><span>next</span><span>Domain, production sign-in, Gradescope page adapter, first campus pilot at Claremont</span></li>
+      <li class="rv"><span>later</span><span>Firefox and Safari, Word desktop, and a student-initiated "share my time summary" for anyone who wants to show a teacher</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 12 CLOSE -->
+<section class="slide" id="close">
+  <div class="rail"><span class="tc">03:30</span><span class="lab">Ask</span></div>
+  <div class="body">
+    <p class="eyebrow"><b>11</b> The ask</p>
+    <h2 class="rv" id="closeline">Proof you wrote it.<br><em>Kept by you,</em> not by Google.</h2>
+    <p class="lede rv">We are asking for a place in the cohort, introductions to writing centres at the Claremont colleges, and students who will record one real essay and tell us what confused them.</p>
+    <div class="btnrow rv">
+      <a class="cta" href="https://trail-hmc.up.railway.app/demo">Watch a real essay replay</a>
+      <span class="url">trail-hmc.up.railway.app</span>
+    </div>
+    <p class="eyebrow">Built for students, not against them.</p>
+  </div>
+</section>
+
+</main>
+
+<nav class="dots" aria-label="Slides" id="dots"></nav>
+<div class="hint" aria-hidden="true">↑ ↓ or space to move · 12 slides</div>
+
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const slides = [...document.querySelectorAll('.slide')];
+
+  // ---- dots + keyboard
+  const dots = document.getElementById('dots');
+  slides.forEach((s, i) => { const a = document.createElement('a'); a.href = '#' + s.id; a.setAttribute('aria-label', 'Slide ' + (i + 1)); dots.appendChild(a); });
+  const dotEls = [...dots.children];
+  let current = 0;
+  const io = new IntersectionObserver((es) => {
+    es.forEach((e) => { if (e.isIntersecting) { current = slides.indexOf(e.target); dotEls.forEach((d, i) => d.classList.toggle('on', i === current)); } });
+  }, { threshold: 0.5 });
+  slides.forEach((s) => io.observe(s));
+  addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); slides[Math.min(current + 1, slides.length - 1)].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); }
+    if (['ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); slides[Math.max(current - 1, 0)].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); }
+  });
+
+  // ---- reveal: elements are visible at rest; only pre-hide those below the fold, then release on view
+  if (!reduced) {
+    const rv = [...document.querySelectorAll('.rv')].filter((el) => el.getBoundingClientRect().top > innerHeight);
+    const ro = new IntersectionObserver((es) => {
+      es.forEach((e) => { if (e.isIntersecting) { const el = e.target; const sib = [...el.parentElement.querySelectorAll('.rv')].indexOf(el); el.style.animationDelay = (Math.max(0, sib) * 0.09) + 's'; el.classList.add('in'); ro.unobserve(el); } });
+    }, { threshold: 0.15 });
+    rv.forEach((el) => ro.observe(el));
+  }
+
+  // ---- hero: typed headline + typed line with a paste
+  const h1 = document.getElementById('h1');
+  const tl = document.getElementById('typeline');
+  const finalH1 = h1.innerHTML, finalTL = tl.innerHTML;
+  if (!reduced) {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    (async () => {
+      h1.innerHTML = '<span class="caret"></span>';
+      tl.innerHTML = '';
+      const t1 = 'See how', t2 = 'you write.';
+      let out = '';
+      for (const ch of t1) { out += ch; h1.innerHTML = out + '<span class="caret"></span>'; await sleep(70 + Math.random() * 60); }
+      out += '<br>';
+      for (const ch of t2) { out += ch; h1.innerHTML = out + '<span class="caret"></span>'; await sleep(70 + Math.random() * 60); }
+      await sleep(250); h1.innerHTML = finalH1;
+      const pre = 'Every draft. Every session. Every ';
+      let o = '';
+      for (const ch of pre) { o += ch; tl.innerHTML = o + '<span class="caret"></span>'; await sleep(28 + Math.random() * 40); }
+      tl.innerHTML = o + '<span class="hl">pasted sentence<span class="chip">chatgpt.com</span></span><span class="caret"></span>';
+      await sleep(500);
+      const post = ', with its sourse';
+      let p = '';
+      for (const ch of post) { p += ch; tl.innerHTML = o + '<span class="hl">pasted sentence<span class="chip">chatgpt.com</span></span>' + p + '<span class="caret"></span>'; await sleep(45 + Math.random() * 40); }
+      await sleep(350);
+      for (let i = 0; i < 2; i++) { p = p.slice(0, -1); tl.innerHTML = o + '<span class="hl">pasted sentence<span class="chip">chatgpt.com</span></span>' + p + '<span class="caret"></span>'; await sleep(110); }
+      for (const ch of 'ce.') { p += ch; tl.innerHTML = o + '<span class="hl">pasted sentence<span class="chip">chatgpt.com</span></span>' + p + '<span class="caret"></span>'; await sleep(90); }
+      await sleep(900); tl.innerHTML = finalTL;
+    })();
+  }
+
+  // ---- hero canvas: a drifting field of keystroke fingerprints that occasionally chain
+  const cv = document.getElementById('field');
+  if (cv && !reduced) {
+    const ctx = cv.getContext('2d');
+    const hero = document.getElementById('hero');
+    let W, H, pts = [];
+    const glyphs = 'a4f1 9c02 77be e3d0 2c0e 5adb 7f7b c01a 21de 649d'.split(' ');
+    const resize = () => { const r = hero.getBoundingClientRect(); W = cv.width = Math.floor(r.width * devicePixelRatio); H = cv.height = Math.floor(r.height * devicePixelRatio); ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); };
+    resize(); addEventListener('resize', resize);
+    const N = 70;
+    for (let i = 0; i < N; i++) pts.push({ x: Math.random(), y: Math.random(), vx: (Math.random() - .5) * .00022, vy: (Math.random() - .5) * .00018, g: glyphs[i % glyphs.length], t: Math.random() * 100 });
+    const draw = () => {
+      const w = W / devicePixelRatio, h = H / devicePixelRatio;
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      for (const p of pts) { p.x += p.vx; p.y += p.vy; p.t += .01; if (p.x < 0 || p.x > 1) p.vx *= -1; if (p.y < 0 || p.y > 1) p.vy *= -1; }
+      // chain links between near neighbours
+      for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+        const a = pts[i], b = pts[j]; const dx = (a.x - b.x) * w, dy = (a.y - b.y) * h; const d = Math.hypot(dx, dy);
+        if (d < 110) { ctx.strokeStyle = 'rgba(107,140,255,' + (0.18 * (1 - d / 110)).toFixed(3) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x * w, a.y * h); ctx.lineTo(b.x * w, b.y * h); ctx.stroke(); }
+      }
+      for (const p of pts) { const a = 0.25 + 0.2 * Math.sin(p.t); ctx.fillStyle = 'rgba(201,195,182,' + a.toFixed(3) + ')'; ctx.fillText(p.g, p.x * w, p.y * h); }
+      requestAnimationFrame(draw);
+    };
+    draw();
+  }
+
+  // ---- replay widget: types, pastes, deletes, loops
+  const doc = document.getElementById('rp-doc'), bar = document.getElementById('rp-bar').children, rpW = document.getElementById('rp-words'), rpT = document.getElementById('rp-typed'), rpP = document.getElementById('rp-pasted');
+  const script = [
+    { k: 'type', t: 'Cities are not designed for silence. In the spring of 2020, New York recorded its quietest month since seismographs were installed. ' },
+    { k: 'paste', t: 'Urban noise fell by roughly half in the first weeks of lockdown', src: 'jstor.org' },
+    { k: 'type', t: ', and the city noticed what it had never heard: itself. ' },
+    { k: 'del', n: 8 },
+    { k: 'type', t: 'had stopped hearing: itself.' },
+  ];
+  const finalDoc = 'Cities are not designed for silence. In the spring of 2020, New York recorded its quietest month since seismographs were installed. <span class="hl">Urban noise fell by roughly half in the first weeks of lockdown<span class="chip">jstor.org</span></span>, and the city noticed what it had stopped hearing: itself.';
+  const render = (typed, pasted, html) => { const tot = typed + pasted || 1; bar[0].style.width = (typed / tot * 100) + '%'; bar[1].style.width = (pasted / tot * 100) + '%'; rpT.textContent = 'typed ' + Math.round(typed / tot * 100) + '%'; rpP.textContent = 'pasted ' + Math.round(pasted / tot * 100) + '%'; rpW.textContent = html.replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length + ' words'; doc.innerHTML = html + (reduced ? '' : '<span class="caret"></span>'); };
+  if (reduced) { render(168, 64, finalDoc); doc.innerHTML = finalDoc; }
+  else (async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    while (true) {
+      let html = '', typed = 0, pasted = 0;
+      for (const step of script) {
+        if (step.k === 'type') { for (const ch of step.t) { html += ch; typed++; render(typed, pasted, html); await sleep(22 + Math.random() * 30); } }
+        if (step.k === 'paste') { html += '<span class="hl">' + step.t + '<span class="chip">' + step.src + '</span></span>'; pasted += step.t.length; render(typed, pasted, html); await sleep(700); }
+        if (step.k === 'del') { for (let i = 0; i < step.n; i++) { html = html.slice(0, -1); render(typed, pasted, html); await sleep(70); } }
+      }
+      await sleep(2600);
+    }
+  })();
+
+  // ---- chain diagram + tamper
+  const ev = document.getElementById('ev');
+  const hashes = ['a41f', '9c02', '77be', 'e3d0', 'c01a'];
+  const build = (badIdx) => {
+    let s = '';
+    for (let i = 0; i < 5; i++) {
+      const x = 20 + i * 100; const bad = badIdx >= 0 && i >= badIdx;
+      s += `<rect class="box${bad ? ' bad' : ''}" x="${x}" y="20" width="76" height="56" rx="8"/>`;
+      s += `<text x="${x + 10}" y="42">ev ${i + 1}</text><text class="${bad ? '' : 'h'}" x="${x + 10}" y="62" ${bad ? 'fill="#E06A5A"' : ''}>#${bad && i === badIdx ? 'f0a2' : hashes[i]}</text>`;
+      if (i < 4) s += `<path class="link${bad ? ' bad' : ''}" d="M${x + 76} 48 C ${x + 88} 48, ${x + 88} 48, ${x + 100} 48" style="animation-delay:${(i * .22).toFixed(2)}s"/>`;
+    }
+    s += '<text x="20" y="104" style="font-size:11px">each fingerprint includes the previous one, so a change anywhere breaks every link after it</text>';
+    ev.innerHTML = s;
+  };
+  build(-1);
+  const verdict = document.getElementById('verdict');
+  document.getElementById('tamper').addEventListener('click', () => { build(2); verdict.className = 'verdict bad'; verdict.textContent = 'Failed: event 3 no longer matches its fingerprint; links 3 → 4 → 5 break; the signed head no longer describes this record.'; });
+  document.getElementById('restore').addEventListener('click', () => { build(-1); verdict.className = 'verdict ok'; verdict.textContent = 'Verified: every link holds, signatures match the live key.'; });
+
+  // ---- count-up on the proof slide (numbers are already their final value at rest)
+  if (!reduced) {
+    const counters = [...document.querySelectorAll('[data-count]')];
+    const co = new IntersectionObserver((es) => {
+      es.forEach((e) => {
+        if (!e.isIntersecting) return; co.unobserve(e.target);
+        const el = e.target, target = +el.dataset.count, t0 = performance.now(), dur = 1200;
+        const step = (t) => { const k = Math.min(1, (t - t0) / dur), v = Math.round(target * (1 - Math.pow(1 - k, 3))); el.textContent = v.toLocaleString('en-US'); if (k < 1) requestAnimationFrame(step); };
+        requestAnimationFrame(step);
+      });
+    }, { threshold: 0.6 });
+    counters.forEach((c) => co.observe(c));
+  }
+
+  // ---- compare table: rows light in sequence when in view
+  const cmp = document.getElementById('cmp');
+  if (cmp && !reduced) {
+    const rows = [...cmp.querySelectorAll('tbody tr')];
+    const to = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { to.disconnect(); rows.forEach((r, i) => setTimeout(() => { r.classList.add('lit'); setTimeout(() => r.classList.remove('lit'), 900); }, 300 + i * 260)); } }, { threshold: 0.4 });
+    to.observe(cmp);
+  }
+})();
+</script>

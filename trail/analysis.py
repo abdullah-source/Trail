@@ -10,6 +10,9 @@ contains and lets a tutor or panel draw the conclusion.
     regularity     signals that the typing was produced by a script rather
                    than a person (too regular, no corrections, no pauses)
     timeline       activity per bucket over the life of the document
+    ai_presence    which AI sites were in front while the document was open,
+                   how often the writer came back from one, and what was typed
+                   right after. Facts about tabs and timing only; no verdict.
 """
 
 from __future__ import annotations
@@ -21,12 +24,13 @@ from typing import Any, Iterable
 
 from trail.core.timeutil import ms
 from trail.document import Document, replay
-from trail.events import Event
+from trail.events import Event, classify_source
 
-ANALYSIS_VERSION = "1.0"
+ANALYSIS_VERSION = "1.1"
 PAUSE_MS = 2000          # a gap longer than this between keystrokes is a pause
 IDLE_MS = 120_000        # a gap longer than this ends an active stretch
 BUCKET_MS = 10 * 60_000  # timeline resolution
+SWITCH_WINDOW_MS = 60_000  # typing this soon after returning from an AI tab is counted as "after a switch"
 
 
 def _intervals(events: list[Event]) -> list[int]:
@@ -209,6 +213,103 @@ def sessions_summary(events: list[Event]) -> list[dict[str, Any]]:
     return out
 
 
+# ---- AI sites in front -------------------------------------------------------------------------
+# The extension records `source.visit {host, dwell_ms, ai?}` when a tab leaves the front of a focused
+# window while a session is open, and `focus {state: "focus", from_host, from_ai}` when the editor tab
+# comes back in front. Older records carry no `ai` flag, so the host list decides for them.
+
+def _is_ai_visit(e: Event) -> bool:
+    return e.kind == "source.visit" and (bool(e.data.get("ai")) or classify_source(str(e.data.get("host") or "")) == "ai")
+
+
+def _is_ai_switch(e: Event) -> bool:
+    return e.kind == "focus" and bool(e.data.get("from_ai"))
+
+
+def _is_ai_paste(e: Event) -> bool:
+    if e.kind != "paste":
+        return False
+    kind = e.data.get("source_kind") or classify_source(e.data.get("source_host"), bool(e.data.get("from_self")))
+    return str(kind) == "ai"
+
+
+def _burst_starts(events: list[Event]) -> list[int]:
+    """Start (ms) of each run of keystroke batches with no pause of PAUSE_MS or more between them."""
+    starts: list[int] = []
+    prev_end: int | None = None
+    for e in events:
+        if e.kind not in ("insert", "delete"):
+            continue
+        dts = [int(x) for x in (e.data.get("dts") or [])]
+        start = ms(e.ts)
+        end = start + sum(dts[1:])
+        if prev_end is None or start - prev_end >= PAUSE_MS:
+            starts.append(start)
+        prev_end = max(end, prev_end if prev_end is not None else end)
+    return starts
+
+
+def _ai_presence_for(evs: list[Event]) -> dict[str, Any]:
+    """The ai_presence facts over one list of events (already sorted by ts, seq)."""
+    hosts_ms: dict[str, int] = {}
+    switches: list[int] = []
+    for e in evs:
+        if _is_ai_visit(e):
+            h = str(e.data.get("host"))
+            hosts_ms[h] = hosts_ms.get(h, 0) + int(e.data.get("dwell_ms") or 0)
+        elif _is_ai_switch(e):
+            switches.append(ms(e.ts))
+
+    def after_switch(t: int) -> bool:
+        return any(s <= t <= s + SWITCH_WINDOW_MS for s in switches)
+
+    typed = deleted = typed_w = deleted_w = 0
+    for e in evs:
+        if e.kind == "insert":
+            n = len(e.data["text"])
+            typed += n
+            if after_switch(ms(e.ts)):
+                typed_w += n
+        elif e.kind == "delete":
+            n = int(e.data["len"])
+            deleted += n
+            if after_switch(ms(e.ts)):
+                deleted_w += n
+    total_ms = sum(hosts_ms.values())
+    return {
+        "ai_minutes": round(total_ms / 60_000, 1),
+        "ai_hosts": [{"host": h, "minutes": round(d / 60_000, 1)} for h, d in sorted(hosts_ms.items(), key=lambda x: (-x[1], x[0]))],
+        "switches": len(switches),
+        "typed_after_switch_chars": typed_w,
+        "bursts_after_switch": sum(1 for s in _burst_starts(evs) if after_switch(s)),
+        "correction_ratio_after_switch": round(deleted_w / typed_w, 4) if typed_w else None,
+        "correction_ratio_overall": round(deleted / typed, 4) if typed else None,
+        "ai_copy_paste_matches": sum(1 for e in evs if _is_ai_paste(e)),
+    }
+
+
+def ai_presence(events: list[Event]) -> dict[str, Any]:
+    """AI sites that were in front while the document was open, per document and per session.
+    Every number is an observation about tabs and timing on the writer's computer: nothing here
+    says what was on the screen, and nothing here is a judgement."""
+    evs = sorted(events, key=lambda e: (e.ts, e.seq))
+    out = _ai_presence_for(evs)
+    by: dict[str, list[Event]] = {}
+    for e in evs:
+        by.setdefault(e.session, []).append(e)
+    per = []
+    for sid, sevs in by.items():
+        sevs.sort(key=lambda e: e.seq)
+        row = {"session": sid, "start": sevs[0].ts}
+        row.update(_ai_presence_for(sorted(sevs, key=lambda e: (e.ts, e.seq))))
+        per.append(row)
+    per.sort(key=lambda s: s["start"])
+    out["sessions_with_ai"] = sum(1 for s in per if s["ai_hosts"] or s["switches"])
+    out["sessions_total"] = len(per)
+    out["by_session"] = per
+    return out
+
+
 def analyse(events: Iterable[Event]) -> dict[str, Any]:
     evs = sorted(events, key=lambda e: (e.ts, e.seq))
     doc = replay(evs)
@@ -240,6 +341,7 @@ def analyse(events: Iterable[Event]) -> dict[str, Any]:
         "timeline": timeline(evs),
         "sources": sources(evs),
         "sessions": sessions_summary(evs),
+        "ai_presence": ai_presence(evs),
         "ai_notes": [{"ts": e.ts, **e.data} for e in evs if e.kind == "ai.note"],
         "first_event": evs[0].ts if evs else None,
         "last_event": evs[-1].ts if evs else None,
