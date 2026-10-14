@@ -1,0 +1,2034 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trail desktop style guide</title>
+<meta name="description" content="Static style guide for the Trail desktop design system: every component with real Trail content, Daytime and After Dark." />
+<style>
+/* ---- fonts: same files as production, relative so file:// and /desktop-preview.html both work ---- */
+/* Self-hosted fonts (DESIGN.md §4, DECISIONS §7): Newsreader, IBM Plex Sans, IBM Plex Mono.
+   Files live in web/public/fonts/; this file was produced from the Google Fonts CSS with the
+   URLs rewritten to same-origin paths. No request ever goes to Google. */
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/ibm-plex-mono/-F63fjptAgt5VM-kVkqdyU8n1iIq131nj-otFQ.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/ibm-plex-mono/-F63fjptAgt5VM-kVkqdyU8n1isq131nj-otFQ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/ibm-plex-mono/-F63fjptAgt5VM-kVkqdyU8n1iAq131nj-otFQ.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/ibm-plex-mono/-F63fjptAgt5VM-kVkqdyU8n1iEq131nj-otFQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/ibm-plex-mono/-F63fjptAgt5VM-kVkqdyU8n1i8q131nj-o.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llDCqg4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llDA6g4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llDBKg4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llDCKg4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llDCag4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llDB6g4tIOm68Dd.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSDNF5DCqg4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSDNF5DA6g4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSDNF5DBKg4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSDNF5DCKg4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSDNF5DCag4tIOm68DdLVQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+  font-display: swap;
+  src: url(fonts/ibm-plex-sans/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSDNF5DB6g4tIOm68Dd.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9kfjOCX1hbuyalUrK439vogqC9yFZCYg7oRZaLP4obnf7fTXglsMwoT9ZIFjSShVCj_SV-Mg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9kfjOCX1hbuyalUrK439vogqC9yFZCYg7oRZaLP4obnf7fTXglsMwoT9ZJFjSShVCj_SV-Mg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9kfjOCX1hbuyalUrK439vogqC9yFZCYg7oRZaLP4obnf7fTXglsMwoT9ZHFjSShVCj_SU.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9qfjOCX1hbuyalUrK49dLac06G1ZGsZBtoBCzBDXXD9JVF438weI_wBOZFHDWwgXih5SY.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9qfjOCX1hbuyalUrK49dLac06G1ZGsZBtoBCzBDXXD9JVF438weI_wBeZFHDWwgXih5SY.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9qfjOCX1hbuyalUrK49dLac06G1ZGsZBtoBCzBDXXD9JVF438weI_wC-ZFHDWwgXih.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9qfjOCX1hbuyalUrK49dLac06G1ZGsZBtoBCzBDXXD9JVF438wSo_wBOZFHDWwgXih5SY.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9qfjOCX1hbuyalUrK49dLac06G1ZGsZBtoBCzBDXXD9JVF438wSo_wBeZFHDWwgXih5SY.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/newsreader/cY9qfjOCX1hbuyalUrK49dLac06G1ZGsZBtoBCzBDXXD9JVF438wSo_wC-ZFHDWwgXih.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Desktop display face: Pixelify Sans (variable, 400–700), self-hosted like the Plex files.
+   Files live in web/public/fonts/pixelify-sans/ (from Google Fonts, URLs rewritten to same
+   origin; no request ever goes to Google). Import this AFTER src/design/fonts.css, which
+   still supplies IBM Plex Sans and IBM Plex Mono. See web/DESIGN-desktop.md §3. */
+/* cyrillic */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(fonts/pixelify-sans/CHylV-3HFUT7aC4iv1TxGDR9JnkEi0tSaJ1f2A.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(fonts/pixelify-sans/CHylV-3HFUT7aC4iv1TxGDR9JnMEi0tSaJ1f2A.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(fonts/pixelify-sans/CHylV-3HFUT7aC4iv1TxGDR9Jn0Ei0tSaJ0.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---- tokens.css, copied by scripts (design/desktop/tokens.css is the source) ---- */
+/* ---------------------------------------------------------------------------
+   Trail desktop design tokens. Owned by design (see web/DESIGN-desktop.md).
+   Engineering imports this file from src/index.css in place of design/tokens.css
+   and never edits it. Same structure as tokens.css: bare :root is Daytime,
+   After Dark applies under prefers-color-scheme (unless html[data-theme="light"])
+   and under html[data-theme="dark"]. Every Tailwind utility name is unchanged.
+
+   Concept: the desktop. A grey desk with a dithered pattern, windows with
+   striped title bars, 1 px black frames with white/dark-grey bevels, a menu bar.
+   Chrome carries only ink. Colour (typed green, pasted amber, signed blue)
+   lives on paper, which is the white inside a window.
+--------------------------------------------------------------------------- */
+/* Fonts: self-hosted. design/fonts.css (Plex) then design/desktop/fonts.css (Pixelify). */
+
+:root {
+  /* the desk */
+  --paper: #a9a9a9; /* flat desk: what bg-paper paints; the pattern below averages to it */
+  --desk: #b4b4b4;
+  --desk-dot: #9e9e9e;
+  --desk-pattern: repeating-conic-gradient(var(--desk) 0 25%, var(--desk-dot) 0 50%);
+  /* paper: the inside of a window */
+  --sheet: #ffffff;
+  --well: #f0f0f0; /* sunken fields, list wells */
+  /* chrome: window faces, title bars, menu bar, buttons */
+  --chrome: #dcdcdc;
+  --chrome-deep: #c0c0c0; /* pressed faces, scrollbar dither partner, icon greys */
+  --frame: #000000; /* the 1 px line around everything */
+  --bevel-hi: #ffffff;
+  --bevel-lo: #808080;
+  --title-stripe: #6e6e6e;
+  --shadow-ink: #000000;
+  /* text */
+  --ink: #000000;
+  --ink-soft: #4d4d4d; /* 6.2:1 on chrome, 8.5:1 on sheet */
+  --ink-faint: #767676; /* 4.5:1 on sheet only: large or decorative text */
+  /* lines */
+  --rule: #9e9e9e; /* hairlines inside paper */
+  --rule-strong: #000000; /* control borders are frames */
+  --margin: #000000; /* the pencil tick: list bullets, scrubber ticks; never red here */
+  /* provenance: the one modern element. Text in these sits on sheet or well, never on chrome. */
+  --typed: #1c6b4c;
+  --paste: #a84e0c;
+  --mixed: #7f6410;
+  --unobserved: #6a6a6a;
+  --typed-wash: rgba(28, 107, 76, 0.12);
+  --paste-wash: rgba(224, 166, 75, 0.38); /* highlighter over pasted text */
+  --paste-wash-soft: rgba(224, 166, 75, 0.2);
+  --unobserved-wash: rgba(106, 106, 106, 0.18);
+  --on-typed: #ffffff; /* text on a typed-coloured fill (ink would be 3.3:1) */
+  --on-paste: #ffffff;
+  /* signed blue: links on paper, focus, caret, progress, selection */
+  --accent: #1e3ea3;
+  --accent-ink: #ffffff;
+  --accent-wash: rgba(30, 62, 163, 0.1);
+  --select: var(--accent);
+  --select-ink: var(--accent-ink);
+  /* misc */
+  --shadow: 2px 2px 0 0 var(--shadow-ink); /* the System 7 window drop */
+  --focus: var(--accent);
+  /* glyphs baked for native controls (checkbox, radio, scrollbar buttons) */
+  --glyph-check: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-radio: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23ffffff' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h14v1h-14zM1 6h14v1h-14zM1 7h14v1h-14zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-radio-on: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM6 5h4v1h-4zM15 5h1v1h-1zM0 6h1v1h-1zM5 6h6v1h-6zM15 6h1v1h-1zM0 7h1v1h-1zM5 7h6v1h-6zM15 7h1v1h-1zM0 8h1v1h-1zM5 8h6v1h-6zM15 8h1v1h-1zM0 9h1v1h-1zM5 9h6v1h-6zM15 9h1v1h-1zM0 10h1v1h-1zM6 10h4v1h-4zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23ffffff' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h5v1h-5zM10 5h5v1h-5zM1 6h4v1h-4zM11 6h4v1h-4zM1 7h4v1h-4zM11 7h4v1h-4zM1 8h4v1h-4zM11 8h4v1h-4zM1 9h4v1h-4zM11 9h4v1h-4zM1 10h5v1h-5zM10 10h5v1h-5zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-up: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M7 4h2v1h-2zM6 5h4v1h-4zM5 6h6v1h-6zM4 7h8v1h-8zM3 8h10v1h-10z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-down: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M3 7h10v1h-10zM4 8h8v1h-8zM5 9h6v1h-6zM6 10h4v1h-4zM7 11h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-left: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M8 3h1v1h-1zM7 4h2v1h-2zM6 5h3v1h-3zM5 6h4v1h-4zM4 7h5v1h-5zM4 8h5v1h-5zM5 9h4v1h-4zM6 10h3v1h-3zM7 11h2v1h-2zM8 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-right: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M7 3h1v1h-1zM7 4h2v1h-2zM7 5h3v1h-3zM7 6h4v1h-4zM7 7h5v1h-5zM7 8h5v1h-5zM7 9h4v1h-4zM7 10h3v1h-3zM7 11h2v1h-2zM7 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+  color-scheme: light;
+}
+
+
+
+:root[data-theme="dark"] {
+    --paper: #262626;
+    --desk: #2a2a2a;
+    --desk-dot: #1f1f1f;
+    --sheet: #161616;
+    --well: #1f1f1f;
+    --chrome: #3d3d3d;
+    --chrome-deep: #2e2e2e;
+    --frame: #9a9a9a;
+    --bevel-hi: #6e6e6e;
+    --bevel-lo: #0e0e0e;
+    --title-stripe: #8a8a8a;
+    --shadow-ink: #000000;
+    --ink: #e8e8e8;
+    --ink-soft: #b0b0b0;
+    --ink-faint: #7a7a7a;
+    --rule: #4a4a4a;
+    --rule-strong: #9a9a9a;
+    --margin: #e8e8e8;
+    --typed: #5fcb84;
+    --paste: #e0a64b;
+    --mixed: #d6b65a;
+    --unobserved: #9a9a9a;
+    --typed-wash: rgba(95, 203, 132, 0.14);
+    --paste-wash: rgba(224, 166, 75, 0.3);
+    --paste-wash-soft: rgba(224, 166, 75, 0.16);
+    --unobserved-wash: rgba(154, 154, 154, 0.2);
+    --on-typed: #161616;
+    --on-paste: #161616;
+    --accent: #6b8cff;
+    --accent-ink: #0b1020;
+    --accent-wash: rgba(107, 140, 255, 0.14);
+    --shadow: 2px 2px 0 0 var(--shadow-ink);
+    --glyph-check: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-radio: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h14v1h-14zM1 6h14v1h-14zM1 7h14v1h-14zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-radio-on: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM6 5h4v1h-4zM15 5h1v1h-1zM0 6h1v1h-1zM5 6h6v1h-6zM15 6h1v1h-1zM0 7h1v1h-1zM5 7h6v1h-6zM15 7h1v1h-1zM0 8h1v1h-1zM5 8h6v1h-6zM15 8h1v1h-1zM0 9h1v1h-1zM5 9h6v1h-6zM15 9h1v1h-1zM0 10h1v1h-1zM6 10h4v1h-4zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h5v1h-5zM10 5h5v1h-5zM1 6h4v1h-4zM11 6h4v1h-4zM1 7h4v1h-4zM11 7h4v1h-4zM1 8h4v1h-4zM11 8h4v1h-4zM1 9h4v1h-4zM11 9h4v1h-4zM1 10h5v1h-5zM10 10h5v1h-5zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-up: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 4h2v1h-2zM6 5h4v1h-4zM5 6h6v1h-6zM4 7h8v1h-8zM3 8h10v1h-10z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-down: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M3 7h10v1h-10zM4 8h8v1h-8zM5 9h6v1h-6zM6 10h4v1h-4zM7 11h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-left: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M8 3h1v1h-1zM7 4h2v1h-2zM6 5h3v1h-3zM5 6h4v1h-4zM4 7h5v1h-5zM4 8h5v1h-5zM5 9h4v1h-4zM6 10h3v1h-3zM7 11h2v1h-2zM8 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-right: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 3h1v1h-1zM7 4h2v1h-2zM7 5h3v1h-3zM7 6h4v1h-4zM7 7h5v1h-5zM7 8h5v1h-5zM7 9h4v1h-4zM7 10h3v1h-3zM7 11h2v1h-2zM7 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+    color-scheme: dark;
+}
+.theme-dark {
+    --paper: #262626;
+    --desk: #2a2a2a;
+    --desk-dot: #1f1f1f;
+    --sheet: #161616;
+    --well: #1f1f1f;
+    --chrome: #3d3d3d;
+    --chrome-deep: #2e2e2e;
+    --frame: #9a9a9a;
+    --bevel-hi: #6e6e6e;
+    --bevel-lo: #0e0e0e;
+    --title-stripe: #8a8a8a;
+    --shadow-ink: #000000;
+    --ink: #e8e8e8;
+    --ink-soft: #b0b0b0;
+    --ink-faint: #7a7a7a;
+    --rule: #4a4a4a;
+    --rule-strong: #9a9a9a;
+    --margin: #e8e8e8;
+    --typed: #5fcb84;
+    --paste: #e0a64b;
+    --mixed: #d6b65a;
+    --unobserved: #9a9a9a;
+    --typed-wash: rgba(95, 203, 132, 0.14);
+    --paste-wash: rgba(224, 166, 75, 0.3);
+    --paste-wash-soft: rgba(224, 166, 75, 0.16);
+    --unobserved-wash: rgba(154, 154, 154, 0.2);
+    --on-typed: #161616;
+    --on-paste: #161616;
+    --accent: #6b8cff;
+    --accent-ink: #0b1020;
+    --accent-wash: rgba(107, 140, 255, 0.14);
+    --shadow: 2px 2px 0 0 var(--shadow-ink);
+    --glyph-check: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-radio: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h14v1h-14zM1 6h14v1h-14zM1 7h14v1h-14zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-radio-on: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM6 5h4v1h-4zM15 5h1v1h-1zM0 6h1v1h-1zM5 6h6v1h-6zM15 6h1v1h-1zM0 7h1v1h-1zM5 7h6v1h-6zM15 7h1v1h-1zM0 8h1v1h-1zM5 8h6v1h-6zM15 8h1v1h-1zM0 9h1v1h-1zM5 9h6v1h-6zM15 9h1v1h-1zM0 10h1v1h-1zM6 10h4v1h-4zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h5v1h-5zM10 5h5v1h-5zM1 6h4v1h-4zM11 6h4v1h-4zM1 7h4v1h-4zM11 7h4v1h-4zM1 8h4v1h-4zM11 8h4v1h-4zM1 9h4v1h-4zM11 9h4v1h-4zM1 10h5v1h-5zM10 10h5v1h-5zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-up: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 4h2v1h-2zM6 5h4v1h-4zM5 6h6v1h-6zM4 7h8v1h-8zM3 8h10v1h-10z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-down: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M3 7h10v1h-10zM4 8h8v1h-8zM5 9h6v1h-6zM6 10h4v1h-4zM7 11h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-left: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M8 3h1v1h-1zM7 4h2v1h-2zM6 5h3v1h-3zM5 6h4v1h-4zM4 7h5v1h-5zM4 8h5v1h-5zM5 9h4v1h-4zM6 10h3v1h-3zM7 11h2v1h-2zM8 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-right: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 3h1v1h-1zM7 4h2v1h-2zM7 5h3v1h-3zM7 6h4v1h-4zM7 7h5v1h-5zM7 8h5v1h-5zM7 9h4v1h-4zM7 10h3v1h-3zM7 11h2v1h-2zM7 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+    color-scheme: dark;
+}
+
+/* Tailwind v4 theme: every utility resolves to a variable, so `bg-paper text-ink`
+   is right in both themes without dark: variants. Names match design/tokens.css;
+   the desktop adds chrome, frame, bevel, desk and select. */
+:root {
+
+  --font-display: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
+  --font-serif: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; /* no serif on the desktop */
+  --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* 4 px base so existing utilities keep their size; lay out on even steps (8 px grid) */
+  --spacing: 0.25rem;
+
+  /* 12 14 16 18 24 32 40 48 64: whole multiples suit the pixel display face */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.5rem;
+  --text-4xl: 3rem;
+  --text-5xl: 4rem;
+
+  /* nothing is rounded on the desktop */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  --shadow-sheet: var(--shadow);
+
+  --ease-out: steps(3, end);
+}
+
+@layer base {
+  html {
+    background: var(--paper) var(--desk-pattern) 0 0 / 4px 4px;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern", "liga";
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.1;
+    text-wrap: balance;
+    margin: 0;
+  }
+  p {
+    text-wrap: pretty;
+    margin: 0;
+  }
+  a {
+    color: inherit;
+  }
+  ::selection {
+    background: var(--select);
+    color: var(--select-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 0;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* mono caps: the label under an icon, the legend on a panel */
+  .marginal {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  /* essay body text: the document inside the player, mono like a text editor */
+  .essay {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    color: var(--accent);
+  }
+  .link:hover {
+    background: var(--select);
+    color: var(--select-ink);
+    text-decoration-color: var(--select-ink);
+  }
+  /* on chrome the link is ink (accent misses AA on chrome in After Dark) */
+  .on-chrome .link {
+    color: inherit;
+  }
+  /* ruled paper: hairlines every 1.6em */
+  .ruled {
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1.6em - 1px), var(--rule) calc(1.6em - 1px), var(--rule) 1.6em);
+    background-attachment: local;
+  }
+  .caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    vertical-align: -0.18em;
+    background: var(--accent);
+    margin-left: 1px;
+    animation: caret-blink 1s steps(2, start) infinite;
+  }
+  @keyframes caret-blink {
+    to {
+      visibility: hidden;
+    }
+  }
+  .prov-typed {
+    color: var(--ink);
+  }
+  .prov-paste {
+    background: var(--paste-wash);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0.04em 0;
+  }
+  .prov-paste-edited {
+    background: var(--paste-wash-soft);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0.04em 0;
+  }
+  .prov-unobserved {
+    background: var(--unobserved-wash);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .strike {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--ink);
+    color: var(--ink-faint);
+  }
+
+  /* ------------------------------------------------------------- the desk */
+  .desk {
+    background: var(--paper) var(--desk-pattern) 0 0 / 4px 4px;
+  }
+  .desk-plain {
+    background: var(--paper);
+  }
+  /* an icon's label on the desk: ink on a sheet plate, always readable */
+  .label-plate {
+    display: inline-block;
+    background: var(--sheet);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    padding: 0 4px;
+    border: 1px solid var(--frame);
+  }
+  .inverse {
+    background: var(--ink);
+    color: var(--sheet);
+  }
+  /* a 50% dither in one dimension: the Mac menu separator */
+  .hr-dither {
+    height: 1px;
+    border: 0;
+    margin: 0;
+    background: repeating-linear-gradient(to right, var(--ink) 0 1px, transparent 1px 2px);
+  }
+  .dither {
+    background: repeating-conic-gradient(var(--chrome) 0 25%, var(--sheet) 0 50%) 0 0 / 2px 2px;
+  }
+
+  /* ------------------------------------------------------------- bevels */
+  .bevel-out {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .bevel-in {
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo), inset -1px -1px 0 var(--bevel-hi);
+  }
+  .panel {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+    padding: 16px;
+  }
+  .panel-legend {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: -8px 0 12px;
+  }
+
+  /* ------------------------------------------------------------- window */
+  .win {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    background: var(--chrome);
+    color: var(--ink);
+    border: 1px solid var(--frame);
+    box-shadow: var(--shadow);
+  }
+  .win-open {
+    animation: win-open 180ms steps(4, end) both;
+    transform-origin: 50% 40%;
+  }
+  @keyframes win-open {
+    from {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  .win-title {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    padding: 0 4px;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--frame);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+    user-select: none;
+  }
+  .win-title::before {
+    content: "";
+    position: absolute;
+    inset: 4px 4px 3px;
+    background: repeating-linear-gradient(to bottom, var(--title-stripe) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+  .win-inactive > .win-title::before {
+    display: none;
+  }
+  .win-inactive > .win-title {
+    color: var(--ink-soft);
+  }
+  .win-title > * {
+    position: relative;
+  }
+  .win-title-text {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 0 8px;
+    background: var(--chrome);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font: inherit;
+    text-align: center;
+  }
+  .win-title-text > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .win-title-right {
+    flex: none; /* the timecode stays whole; the title truncates */
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+    background: var(--chrome);
+    padding: 0 4px;
+  }
+  /* close box and zoom box: 12 px squares on a chrome plate */
+  .win-box {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    background: var(--chrome);
+    cursor: pointer;
+  }
+  .win-box::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    box-sizing: border-box;
+    border: 1px solid var(--frame);
+    background: var(--chrome);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .win-box:active::before,
+  .win-box[aria-pressed="true"]::before {
+    background: var(--ink);
+    box-shadow: none;
+  }
+  .win-box-zoom::after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    box-sizing: border-box;
+    border: 1px solid var(--frame);
+    left: 5px;
+    top: 5px;
+  }
+  .win-box-spacer {
+    width: 20px;
+    height: 20px;
+    background: var(--chrome);
+  }
+  .win-body {
+    background: var(--sheet);
+    min-width: 0;
+    padding: 16px;
+  }
+  .win-body-chrome {
+    background: var(--chrome);
+  }
+  .win-grip {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    background: var(--chrome);
+    border-top: 1px solid var(--frame);
+    border-left: 1px solid var(--frame);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    pointer-events: none;
+  }
+  .win-resizable > .win-body {
+    padding-bottom: 24px;
+  }
+
+  /* ------------------------------------------------------------- menu bar */
+  .menubar {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    height: 24px;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--frame);
+    box-shadow: 0 1px 0 var(--bevel-hi) inset;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    user-select: none;
+  }
+  .menubar-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    color: var(--ink);
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .menubar-item:hover,
+  .menubar-item:focus-visible,
+  .menubar-item[aria-current="page"],
+  .menubar-item[aria-expanded="true"] {
+    background: var(--ink);
+    color: var(--sheet);
+    outline: none;
+  }
+  .menubar-item[aria-current="page"] {
+    font-weight: 600;
+  }
+  .menubar-item[aria-disabled="true"] {
+    color: var(--ink-faint);
+    cursor: default;
+    background: transparent;
+  }
+  .menubar-brand {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .menubar-right {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: stretch;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .menubar-right > .menubar-item {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 700px) {
+    .menubar-item {
+      padding: 0 8px;
+    }
+    .hide-phone {
+      display: none;
+    }
+  }
+  /* the pull-down that holds the items below 700 px */
+  .menubar-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: 40;
+    display: grid;
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    border-top: 0;
+    box-shadow: var(--shadow);
+  }
+  .menubar-sheet[hidden] {
+    display: none;
+  }
+  .menubar-sheet .menubar-item {
+    height: 32px;
+  }
+  .menubar-toggle {
+    display: none;
+  }
+  @media (max-width: 700px) {
+    .menubar-items {
+      display: none;
+    }
+    .menubar-toggle {
+      display: inline-flex;
+    }
+  }
+
+  /* ------------------------------------------------------------- buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 16px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .btn:hover {
+    background: var(--chrome-deep);
+  }
+  .btn:active,
+  .btn[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--sheet);
+    box-shadow: none;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--sheet);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .btn-primary:hover {
+    background: var(--ink-soft);
+  }
+  .btn-primary:active {
+    background: var(--chrome);
+    color: var(--ink);
+  }
+  /* the default button in a dialog: the thick ring means Enter */
+  .btn-ring {
+    outline: 3px solid var(--frame);
+    outline-offset: 2px;
+  }
+  .btn-ring:focus-visible {
+    outline-color: var(--focus);
+  }
+  .btn-quiet {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    padding: 0 8px;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+  .btn-quiet:hover {
+    background: var(--ink);
+    color: var(--sheet);
+  }
+  .btn-lg {
+    height: 40px;
+    padding: 0 24px;
+    font-size: 1rem;
+  }
+  .btn-sm {
+    height: 24px;
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+  .btn-icon {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    color: var(--ink-faint);
+    cursor: not-allowed;
+    background: var(--chrome);
+    box-shadow: none;
+    border-color: var(--bevel-lo);
+  }
+
+  /* ------------------------------------------------------------- dialog */
+  .dialog {
+    position: relative;
+    background: var(--sheet);
+    color: var(--ink);
+    border: 1px solid var(--frame);
+    box-shadow: 0 0 0 1px var(--sheet), 0 0 0 3px var(--frame), 4px 4px 0 3px var(--shadow-ink);
+    padding: 24px;
+    margin: 4px; /* room for the outer frame */
+  }
+  .dialog-head {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .dialog-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+  .dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: repeating-conic-gradient(rgba(0, 0, 0, 0.5) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+  }
+
+  /* ------------------------------------------------------------- controls */
+  .chk,
+  .radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex-shrink: 0;
+    vertical-align: -4px;
+    background: var(--sheet) no-repeat center / 16px 16px;
+    cursor: pointer;
+  }
+  .chk {
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .chk:checked {
+    background-image: var(--glyph-check);
+  }
+  .radio {
+    background-color: transparent;
+    background-image: var(--glyph-radio);
+    background-size: 18px 18px;
+  }
+  .radio:checked {
+    background-image: var(--glyph-radio-on);
+  }
+  .chk:disabled,
+  .radio:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .choice {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 18px;
+    cursor: pointer;
+  }
+  .choice:has(:disabled) {
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+  .field {
+    height: 32px;
+    width: 100%;
+    padding: 0 8px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: var(--sheet);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .field::placeholder {
+    color: var(--ink-faint);
+  }
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* ------------------------------------------------------------- progress */
+  .progress {
+    position: relative;
+    display: block;
+    height: 14px;
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+    overflow: hidden;
+  }
+  /* 6 px segments on an 8 px period; the fill ends on a whole segment where round() exists */
+  .progress-fill {
+    --seg: 8px;
+    display: block;
+    width: calc(var(--p, 0) * 100%);
+    height: calc(100% - 2px);
+    margin: 1px 0 0 2px;
+    background: repeating-linear-gradient(to right, var(--progress-ink, var(--accent)) 0 calc(var(--seg) - 2px), transparent calc(var(--seg) - 2px) var(--seg));
+  }
+  @supports (width: round(down, 50%, 8px)) {
+    .progress-fill {
+      width: round(down, calc(var(--p, 0) * 100%), var(--seg));
+    }
+  }
+  .progress-typed {
+    --progress-ink: var(--typed);
+  }
+  .progress-paste {
+    --progress-ink: var(--paste);
+  }
+  .progress-ink {
+    --progress-ink: var(--ink);
+  }
+
+  /* ------------------------------------------------------------- scroll area */
+  .scroll {
+    overflow: auto;
+    min-width: 0;
+    max-width: 100%;
+    contain: inline-size; /* a wide table scrolls here instead of widening its window */
+  }
+  /* Firefox only: in Chromium a non-auto scrollbar-color disables every ::-webkit-scrollbar rule below */
+  @supports not selector(::-webkit-scrollbar) {
+    .scroll {
+      scrollbar-width: auto;
+      scrollbar-color: var(--chrome) var(--well);
+    }
+  }
+  .scroll::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+  }
+  .scroll::-webkit-scrollbar-track {
+    background: repeating-conic-gradient(var(--chrome) 0 25%, var(--sheet) 0 50%) 0 0 / 2px 2px;
+  }
+  .scroll::-webkit-scrollbar-track:vertical {
+    border-left: 1px solid var(--frame);
+  }
+  .scroll::-webkit-scrollbar-track:horizontal {
+    border-top: 1px solid var(--frame);
+  }
+  .scroll::-webkit-scrollbar-thumb {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .scroll::-webkit-scrollbar-button:single-button {
+    display: block;
+    width: 16px;
+    height: 16px;
+    background: var(--chrome) no-repeat center / 16px 16px;
+    border: 1px solid var(--frame);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:vertical:decrement {
+    background-image: var(--glyph-arrow-up);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:vertical:increment {
+    background-image: var(--glyph-arrow-down);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:horizontal:decrement {
+    background-image: var(--glyph-arrow-left);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:horizontal:increment {
+    background-image: var(--glyph-arrow-right);
+  }
+  .scroll::-webkit-scrollbar-corner {
+    background: var(--chrome);
+  }
+
+  /* ------------------------------------------------------------- stat, chip */
+  .stat {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+    padding: 12px 12px 12px;
+    display: grid;
+    gap: 4px;
+    align-content: start;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    /* colour lives on paper: tone the value on a sheet plate */
+    display: inline-block;
+    background: var(--sheet);
+    padding: 4px 6px 2px;
+    border: 1px solid var(--frame);
+    justify-self: start;
+  }
+  .stat-detail {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+    padding: 0 5px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    white-space: nowrap;
+    background: var(--sheet);
+    color: var(--ink);
+    border: 1px solid var(--frame);
+  }
+  .chip-typed {
+    color: var(--typed);
+  }
+  .chip-paste,
+  .chip-pasted,
+  .chip-ai {
+    color: var(--paste);
+  }
+  .chip-ai {
+    background: var(--paste-wash-soft);
+  }
+  .chip-mixed {
+    color: var(--mixed);
+  }
+  .chip-unobserved {
+    color: var(--unobserved);
+  }
+  .chip-accent {
+    color: var(--accent);
+  }
+  .chip-neutral {
+    color: var(--ink-soft);
+  }
+  .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--frame);
+    vertical-align: -1px;
+  }
+
+  /* ------------------------------------------------------------- scrubber */
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 24px;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 8px;
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .range::-moz-range-track {
+    height: 8px;
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 20px;
+    margin-top: -7px;
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .range::-moz-range-thumb {
+    width: 10px;
+    height: 18px;
+    border-radius: 0;
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .range:focus-visible {
+    outline: none;
+  }
+  .range:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+  .range:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+  .range.bare::-webkit-slider-runnable-track {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .range.bare::-moz-range-track {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  /* ------------------------------------------------------------- provenance strip */
+  .prov-strip {
+    display: flex;
+    height: 16px;
+    gap: 1px;
+    padding: 1px;
+    background: var(--frame);
+    border: 1px solid var(--frame);
+  }
+  .prov-strip > * {
+    flex: 1;
+    min-width: 2px;
+    background: var(--unobserved);
+  }
+  .prov-strip > .is-typed {
+    background: var(--typed);
+  }
+  .prov-strip > .is-pasted {
+    background: var(--paste);
+  }
+  .prov-strip > .is-pasted-edited {
+    background: var(--paste-wash);
+  }
+  .prov-strip > .is-mixed {
+    background: var(--mixed);
+  }
+}
+
+@layer components {
+  /* an icon on the desk */
+  .desk-icon {
+    display: inline-grid;
+    justify-items: center;
+    gap: 4px;
+    width: 96px;
+    padding: 8px 4px;
+    color: var(--ink);
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  .desk-icon:hover .label-plate,
+  .desk-icon:focus-visible .label-plate {
+    background: var(--ink);
+    color: var(--sheet);
+  }
+  /* the player's transport bar: chrome strip under the sheet */
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--chrome);
+    border-top: 1px solid var(--frame);
+    box-shadow: inset 0 1px 0 var(--bevel-hi);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+}
+
+/* ---- preview-only layout ---- */
+html { background: var(--chrome); }
+body { min-height: 100vh; }
+.section { color: var(--ink); }
+.theme-dark { color-scheme: dark; }
+.section-head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; padding: 16px; background: var(--chrome); border-bottom: 1px solid var(--frame); font-family: var(--font-mono); font-size: 14px; }
+.section-head h1 { font-size: 24px; }
+.desk-area { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 112px; gap: 24px; align-items: start; padding: 24px 16px 48px; max-width: 1280px; margin: 0 auto; }
+.col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-width: 0; }
+.col-b { margin-top: 40px; }
+.desk-icons { display: grid; justify-items: center; gap: 8px; }
+@media (max-width: 700px) {
+  .desk-area { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 16px 16px 40px; }
+  .col-b { margin-top: 0; }
+  .desk-icons { grid-template-columns: repeat(3, 1fr); order: -1; }
+}
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+.sheet-text p + p { margin-top: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.checks li { display: grid; grid-template-columns: 16px 1fr; gap: 10px; align-items: start; line-height: 1.4; }
+.checks .name { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); display: block; }
+.check-skip { display: inline-block; width: 16px; height: 16px; text-align: center; line-height: 16px; font-family: var(--font-mono); color: var(--ink-faint); }
+.bars { display: grid; gap: 8px; font-family: var(--font-mono); font-size: 12px; }
+.bars > div { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; }
+.obs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.obs li { display: flex; gap: 10px; }
+.obs li::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: 7px; background: var(--ink); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-family: var(--font-mono); white-space: nowrap; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--rule); }
+th { font-weight: 400; color: var(--ink-soft); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+td.r, th.r { text-align: right; }
+.type-spec > * { margin: 0; }
+.type-spec h1 { font-size: clamp(32px, 9vw, 48px) !important; }
+.type-spec .l { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); margin-top: 12px; }
+.win-wide { grid-column: 1 / -1; }
+.heat { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
+.heat i { display: block; aspect-ratio: 1; background: var(--well); border: 1px solid var(--rule); }
+.heat .h1 { background: var(--typed-wash); } .heat .h2 { background: color-mix(in srgb, var(--typed) 50%, var(--sheet)); } .heat .h3 { background: var(--typed); }
+.prose { max-width: 60ch; }
+.prose p + p { margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<section class="section " aria-labelledby="day-h">
+  <div class="desk">
+    <div class="section-head">
+      <h1 id="day-h">Daytime</h1>
+      <span>grey desk · white paper · black frames · typed #1c6b4c · pasted #a84e0c · signed #1e3ea3</span>
+    </div>
+
+    <nav class="menubar on-chrome" aria-label="App">
+      <a class="menubar-item menubar-brand" href="#" aria-label="Trail home"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M7 1h2v1h-2zM6 2h1v1h-1zM9 2h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM6 4h1v1h-1zM9 4h1v1h-1zM5 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM8 7h1v1h-1zM4 8h1v1h-1zM7 8h1v1h-1zM4 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM4 11h2v1h-2zM4 12h1v1h-1zM7 12h2v1h-2zM5 13h2v1h-2z"/><path fill="var(--accent)" d="M12 3h2v1h-2zM12 4h2v1h-2zM12 5h2v1h-2zM12 6h2v1h-2zM12 7h2v1h-2zM12 8h2v1h-2zM12 9h2v1h-2zM12 10h2v1h-2zM12 11h2v1h-2z"/></svg> Trail</a>
+      <div class="menubar-items">
+        <a class="menubar-item" href="#" aria-current="page">Essays</a>
+        <a class="menubar-item" href="#">Time</a>
+        <a class="menubar-item" href="#">Patterns</a>
+        <a class="menubar-item" href="#">Invite</a>
+        <a class="menubar-item" href="#">Settings</a>
+      </div>
+      <button type="button" class="menubar-item menubar-toggle" aria-expanded="false" aria-controls="day-sheet">Menu</button>
+      <div class="menubar-right">
+        <span class="menubar-item tabular" aria-label="Clock">21:40</span>
+        <button type="button" class="menubar-item" aria-label="Switch to After Dark theme"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M5 2h4v1h-4zM3 3h2v1h-2zM9 3h1v1h-1zM2 4h1v1h-1zM8 4h1v1h-1zM1 5h1v1h-1zM7 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM0 7h1v1h-1zM6 7h1v1h-1zM0 8h1v1h-1zM6 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM1 10h1v1h-1zM7 10h1v1h-1zM2 11h1v1h-1zM8 11h1v1h-1zM3 12h2v1h-2zM9 12h1v1h-1zM5 13h4v1h-4z"/><path fill="var(--sheet)" d="M5 3h4v1h-4zM3 4h5v1h-5zM2 5h5v1h-5zM2 6h4v1h-4zM1 7h5v1h-5zM1 8h5v1h-5zM2 9h4v1h-4zM2 10h5v1h-5zM3 11h5v1h-5zM5 12h4v1h-4z"/></svg></button>
+        <span class="menubar-item hide-phone" title="abdullah@gmail.com">abdullah@gmail.com</span>
+      </div>
+      <div id="day-sheet" class="menubar-sheet" hidden>
+        <a class="menubar-item" href="#" aria-current="page">Essays</a>
+        <a class="menubar-item" href="#">Time</a>
+        <a class="menubar-item" href="#">Patterns</a>
+        <a class="menubar-item" href="#">Invite</a>
+        <a class="menubar-item" href="#">Settings</a>
+      </div>
+    </nav>
+
+    <div class="desk-area">
+      <!-- ============================================ column A: the player -->
+      <div class="col">
+        <section class="win win-resizable" aria-labelledby="day-replay">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="day-replay" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 0h10v1h-10zM2 1h1v1h-1zM11 1h2v1h-2zM2 2h1v1h-1zM11 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM11 3h4v1h-4zM2 4h1v1h-1zM5 4h6v1h-6zM14 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h7v1h-7zM14 6h1v1h-1zM2 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM5 8h7v1h-7zM14 8h1v1h-1zM2 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM5 10h7v1h-7zM14 10h1v1h-1zM2 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM5 12h5v1h-5zM14 12h1v1h-1zM2 13h1v1h-1zM14 13h1v1h-1zM2 14h13v1h-13z"/><path fill="var(--sheet)" d="M3 1h8v1h-8zM3 2h8v1h-8zM12 2h1v1h-1zM3 3h8v1h-8zM3 4h2v1h-2zM11 4h3v1h-3zM3 5h11v1h-11zM3 6h2v1h-2zM12 6h2v1h-2zM3 7h11v1h-11zM3 8h2v1h-2zM12 8h2v1h-2zM3 9h11v1h-11zM3 10h2v1h-2zM12 10h2v1h-2zM3 11h11v1h-11zM3 12h2v1h-2zM10 12h4v1h-4zM3 13h11v1h-11z"/></svg><span>Hamlet and the cost of waiting</span><span class="win-title-right tabular">00:48 / 02:55</span></h2>
+            <button type="button" class="win-box win-box-zoom" aria-label="Zoom"></button>
+          </div>
+          <div class="win-body" style="padding: 0;">
+            <div class="essay sheet-text" style="padding: 16px 16px 20px;">
+              <p>Hamlet's delay is usually read as a flaw. I want to argue the opposite: that the play treats waiting as the only honest response to a claim that cannot be checked. The ghost asks for revenge on the strength of a story, and Hamlet, unlike Laertes, refuses to act on a story alone.</p>
+              <p>The line <span class="prov-paste">"the readiness is all" (5.2.215)</span> <span class="chip chip-paste">jstor.org</span> has been quoted so often that it reads as resignation, but in context it is the end of a long test of evidence. He acts when the record is complete.<span class="caret" aria-hidden="true"></span></p>
+            </div>
+            <div class="transport">
+              <button type="button" class="btn btn-icon" aria-label="Step back"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M3 3h2v1h-2zM12 3h1v1h-1zM3 4h2v1h-2zM11 4h2v1h-2zM3 5h2v1h-2zM10 5h3v1h-3zM3 6h2v1h-2zM9 6h4v1h-4zM3 7h2v1h-2zM8 7h5v1h-5zM3 8h2v1h-2zM8 8h5v1h-5zM3 9h2v1h-2zM9 9h4v1h-4zM3 10h2v1h-2zM10 10h3v1h-3zM3 11h2v1h-2zM11 11h2v1h-2zM3 12h2v1h-2zM12 12h1v1h-1z"/></svg></button>
+              <button type="button" class="btn btn-icon" aria-pressed="true" aria-label="Pause"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h3v1h-3zM9 3h3v1h-3zM4 4h3v1h-3zM9 4h3v1h-3zM4 5h3v1h-3zM9 5h3v1h-3zM4 6h3v1h-3zM9 6h3v1h-3zM4 7h3v1h-3zM9 7h3v1h-3zM4 8h3v1h-3zM9 8h3v1h-3zM4 9h3v1h-3zM9 9h3v1h-3zM4 10h3v1h-3zM9 10h3v1h-3zM4 11h3v1h-3zM9 11h3v1h-3zM4 12h3v1h-3zM9 12h3v1h-3z"/></svg></button>
+              <button type="button" class="btn btn-icon" aria-label="Step forward"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M3 3h1v1h-1zM11 3h2v1h-2zM3 4h2v1h-2zM11 4h2v1h-2zM3 5h3v1h-3zM11 5h2v1h-2zM3 6h4v1h-4zM11 6h2v1h-2zM3 7h5v1h-5zM11 7h2v1h-2zM3 8h5v1h-5zM11 8h2v1h-2zM3 9h4v1h-4zM11 9h2v1h-2zM3 10h3v1h-3zM11 10h2v1h-2zM3 11h2v1h-2zM11 11h2v1h-2zM3 12h1v1h-1zM11 12h2v1h-2z"/></svg></button>
+              <input class="range" type="range" min="0" max="175" value="48" aria-label="Scrub the replay" style="flex: 1; min-width: 80px;" />
+              <span class="tabular">session 2 of 4</span>
+            </div>
+            <div class="stack" style="padding: 16px;">
+              <div class="stack" style="gap: 8px;">
+                <span class="marginal">Where each line came from</span>
+                <div class="prov-strip" role="img" aria-label="Where each line came from: 19 typed, 1 pasted, 1 pasted then edited, 1 mixed">
+                  <i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-pasted-edited"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-mixed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-pasted"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i>
+                </div>
+                <div class="legend tabular">
+                  <span><i class="swatch" style="background: var(--typed);"></i> typed 19</span>
+                  <span><i class="swatch" style="background: var(--paste);"></i> pasted 1</span>
+                  <span><i class="swatch" style="background: var(--paste-wash);"></i> pasted, then edited 1</span>
+                  <span><i class="swatch" style="background: var(--mixed);"></i> mixed 1</span>
+                </div>
+              </div>
+              <div class="stats">
+                <div class="stat on-chrome"><span class="marginal">Final length</span><span class="stat-value">1,842</span><span class="stat-detail">words, 64 lines</span></div>
+                <div class="stat on-chrome"><span class="marginal">Typed</span><span class="stat-value" style="color: var(--typed);">91%</span><span class="stat-detail">of the final text</span></div>
+                <div class="stat on-chrome"><span class="marginal">Pasted</span><span class="stat-value" style="color: var(--paste);">6%</span><span class="stat-detail">3 pastes, 1 from AI tools</span></div>
+                <div class="stat on-chrome"><span class="marginal">Active time</span><span class="stat-value">2h 55m</span><span class="stat-detail">over 4 sessions</span></div>
+                <div class="stat on-chrome"><span class="marginal">Deleted</span><span class="stat-value">1,412</span><span class="stat-detail">characters removed</span></div>
+              </div>
+            </div>
+          </div>
+          <span class="win-grip" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 2h9v1h-9zM2 3h1v1h-1zM10 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM10 5h1v1h-1zM2 6h1v1h-1zM10 6h1v1h-1zM2 7h1v1h-1zM7 7h7v1h-7zM2 8h1v1h-1zM7 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM7 9h1v1h-1zM13 9h1v1h-1zM2 10h6v1h-6zM13 10h1v1h-1zM7 11h1v1h-1zM13 11h1v1h-1zM7 12h1v1h-1zM13 12h1v1h-1zM7 13h7v1h-7z"/><path fill="var(--sheet)" d="M3 3h7v1h-7zM3 4h7v1h-7zM3 5h7v1h-7zM3 6h7v1h-7zM3 7h4v1h-4zM3 8h4v1h-4zM8 8h5v1h-5zM3 9h4v1h-4zM8 9h5v1h-5zM8 10h5v1h-5zM8 11h5v1h-5zM8 12h5v1h-5z"/></svg></span>
+        </section>
+
+        <section class="win" aria-labelledby="day-decl">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="day-decl" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 0h10v1h-10zM2 1h1v1h-1zM11 1h2v1h-2zM2 2h1v1h-1zM11 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM11 3h4v1h-4zM2 4h1v1h-1zM5 4h6v1h-6zM14 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h7v1h-7zM14 6h1v1h-1zM2 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM5 8h7v1h-7zM14 8h1v1h-1zM2 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM5 10h7v1h-7zM14 10h1v1h-1zM2 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM5 12h5v1h-5zM14 12h1v1h-1zM2 13h1v1h-1zM14 13h1v1h-1zM2 14h13v1h-13z"/><path fill="var(--sheet)" d="M3 1h8v1h-8zM3 2h8v1h-8zM12 2h1v1h-1zM3 3h8v1h-8zM3 4h2v1h-2zM11 4h3v1h-3zM3 5h11v1h-11zM3 6h2v1h-2zM12 6h2v1h-2zM3 7h11v1h-11zM3 8h2v1h-2zM12 8h2v1h-2zM3 9h11v1h-11zM3 10h2v1h-2zM12 10h2v1h-2zM3 11h11v1h-11zM3 12h2v1h-2zM10 12h4v1h-4zM3 13h11v1h-11z"/></svg><span>AI-use declaration</span><span class="win-title-right">draft</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body essay sheet-text">
+            <p>I wrote this essay in Google Docs across four sessions between 12 and 14 October 2026, about 2 hours 55 minutes of active writing.</p>
+            <p>Two pastes came from outside this document. One quotation from jstor.org (101 characters) remains, edited. One paste from <span class="prov-paste">chatgpt.com (83 characters)</span> was deleted in full within two minutes; none of it remains.</p>
+            <p>I did not use any AI tool to produce text that remains in the final essay. This record cannot see text retyped by hand.</p>
+            <div class="row" style="margin-top: 16px;">
+              <button type="button" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h6v1h-6zM3 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM5 5h4v1h-4zM11 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM2 8h1v1h-1zM5 8h4v1h-4zM11 8h1v1h-1zM3 9h1v1h-1zM10 9h1v1h-1zM4 10h2v1h-2zM8 10h2v1h-2zM6 11h1v1h-1zM8 11h1v1h-1zM6 12h1v1h-1zM8 12h3v1h-3zM6 13h1v1h-1zM10 13h1v1h-1zM6 14h1v1h-1zM8 14h3v1h-3zM6 15h3v1h-3z"/><path fill="var(--sheet)" d="M4 4h6v1h-6zM3 5h2v1h-2zM9 5h2v1h-2zM3 6h1v1h-1zM10 6h1v1h-1zM3 7h1v1h-1zM10 7h1v1h-1zM3 8h2v1h-2zM9 8h2v1h-2zM4 9h6v1h-6zM6 10h2v1h-2zM7 11h1v1h-1zM7 12h1v1h-1zM7 13h3v1h-3zM7 14h1v1h-1z"/></svg> Sign and export</button>
+              <button type="button" class="btn">Edit the wording</button>
+              <span class="chip chip-neutral">from the record</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="win" aria-labelledby="day-ctl">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="day-ctl" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h6v1h-6zM3 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM5 5h4v1h-4zM11 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM2 8h1v1h-1zM5 8h4v1h-4zM11 8h1v1h-1zM3 9h1v1h-1zM10 9h1v1h-1zM4 10h2v1h-2zM8 10h2v1h-2zM6 11h1v1h-1zM8 11h1v1h-1zM6 12h1v1h-1zM8 12h3v1h-3zM6 13h1v1h-1zM10 13h1v1h-1zM6 14h1v1h-1zM8 14h3v1h-3zM6 15h3v1h-3z"/><path fill="var(--sheet)" d="M4 4h6v1h-6zM3 5h2v1h-2zM9 5h2v1h-2zM3 6h1v1h-1zM10 6h1v1h-1zM3 7h1v1h-1zM10 7h1v1h-1zM3 8h2v1h-2zM9 8h2v1h-2zM4 9h6v1h-6zM6 10h2v1h-2zM7 11h1v1h-1zM7 12h1v1h-1zM7 13h3v1h-3zM7 14h1v1h-1z"/></svg><span>Controls</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body win-body-chrome on-chrome stack">
+            <div class="panel on-chrome"><div class="panel-legend">Buttons</div>
+              <div class="row">
+                <button type="button" class="btn">Default</button>
+                <button type="button" class="btn btn-primary">Primary</button>
+                <button type="button" class="btn btn-ring">Done</button>
+                <button type="button" class="btn" disabled>Disabled</button>
+                <button type="button" class="btn btn-quiet">Quiet</button>
+                <button type="button" class="btn btn-lg"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 0h14v1h-14zM1 1h1v1h-1zM4 1h8v1h-8zM14 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM4 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM4 5h8v1h-8zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h10v1h-10zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM3 11h1v1h-1zM5 11h6v1h-6zM12 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h4v1h-4zM12 12h1v1h-1zM14 12h1v1h-1zM1 13h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM1 14h14v1h-14z"/><path fill="var(--chrome-deep)" d="M2 1h2v1h-2zM12 1h2v1h-2zM2 2h2v1h-2zM12 2h2v1h-2zM2 3h2v1h-2zM12 3h2v1h-2zM2 4h2v1h-2zM12 4h2v1h-2zM2 5h2v1h-2zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h12v1h-12zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1z"/><path fill="var(--sheet)" d="M5 2h4v1h-4zM10 2h1v1h-1zM5 3h4v1h-4zM10 3h1v1h-1zM5 4h4v1h-4zM10 4h1v1h-1zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM4 12h1v1h-1zM9 12h3v1h-3zM4 13h8v1h-8z"/></svg> Add to Chrome</button>
+                <button type="button" class="btn btn-sm">Small</button>
+                <button type="button" class="btn btn-icon" aria-label="Play"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M5 3h1v1h-1zM5 4h2v1h-2zM5 5h3v1h-3zM5 6h4v1h-4zM5 7h5v1h-5zM5 8h5v1h-5zM5 9h4v1h-4zM5 10h3v1h-3zM5 11h2v1h-2zM5 12h1v1h-1z"/></svg></button>
+              </div>
+            </div>
+            <div class="row" style="align-items: stretch;">
+              <div class="panel on-chrome" style="flex: 1; min-width: 200px;"><div class="panel-legend">Choices</div>
+                <div class="stack" style="gap: 8px;">
+                  <label class="choice"><input type="checkbox" class="chk" checked /> <span>Record in Google Docs</span></label>
+                  <label class="choice"><input type="checkbox" class="chk" /> <span>Record in Notion</span></label>
+                  <label class="choice"><input type="checkbox" class="chk" disabled checked /> <span>Sign checkpoints every 10 minutes<span style="display:block;font-size:12px;color:var(--ink-soft)">Always on. Only a fingerprint leaves the device.</span></span></label>
+                  <hr class="hr-dither" />
+                  <label class="choice"><input type="radio" class="radio" name="day-plan" checked /> <span>Semester, $12</span></label>
+                  <label class="choice"><input type="radio" class="radio" name="day-plan" /> <span>Monthly, $3.99</span></label>
+                </div>
+              </div>
+              <div class="panel on-chrome" style="flex: 1; min-width: 200px;"><div class="panel-legend">Fields</div>
+                <div class="stack" style="gap: 12px;">
+                  <div style="display: grid; gap: 4px;"><label class="field-label" for="day-email">Email</label><input id="day-email" class="field" type="email" placeholder="you@school.edu" /><span style="font-size: 12px; color: var(--ink-soft);">For the sign-in link and nothing else.</span></div>
+                  <div style="display: grid; gap: 4px;"><label class="field-label" for="day-title">Essay title</label><input id="day-title" class="field" type="text" value="Hamlet and the cost of waiting" /></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel on-chrome"><div class="panel-legend">Progress</div>
+              <div class="stack" style="gap: 10px; font-family: var(--font-mono); font-size: 12px;">
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Installing" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill" style="--p: .62;"></span></span><span class="tabular">62%</span></div>
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Typed share" aria-valuenow="91" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill progress-typed" style="--p: .91;"></span></span><span class="tabular">91%</span></div>
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Pasted share" aria-valuenow="6" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill progress-paste" style="--p: .06;"></span></span><span class="tabular">6%</span></div>
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Steps" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 164px;"><span class="progress-fill progress-ink" style="width: 80px;"></span></span><span>step 2 of 4, fixed 20 segments</span></div>
+              </div>
+            </div>
+            <div class="panel on-chrome"><div class="panel-legend">Chips and swatches</div>
+              <div class="row" style="gap: 8px;">
+                <span class="chip chip-typed">typed</span><span class="chip chip-paste">pasted</span><span class="chip chip-ai">ai · chatgpt.com</span><span class="chip chip-mixed">mixed</span><span class="chip chip-unobserved">unobserved</span><span class="chip chip-neutral">web · jstor.org</span><span class="chip chip-accent">signed 21:40</span>
+                <span class="legend"><i class="swatch" style="background: var(--typed);"></i> <i class="swatch" style="background: var(--paste);"></i> <i class="swatch" style="background: var(--mixed);"></i> <i class="swatch" style="background: var(--unobserved);"></i></span>
+              </div>
+            </div>
+            <div class="panel on-chrome"><div class="panel-legend">Scroll area: sessions</div>
+              <div class="scroll bevel-in" role="region" aria-label="Sessions" tabindex="0" style="max-height: 132px; background: var(--sheet);">
+                <table>
+                  <thead><tr><th>#</th><th>Started</th><th>Editor</th><th class="r">Active</th><th class="r">Typed</th><th class="r">Pasted</th><th class="r">Deleted</th></tr></thead>
+                  <tbody>
+                    <tr><td style="color: var(--ink-faint);">01</td><td>Tue 12 Oct 22:41</td><td>Google Docs</td><td class="r">48 min</td><td class="r" style="color: var(--typed);">2,912</td><td class="r" style="color: var(--paste);">101</td><td class="r">412</td></tr>
+                    <tr><td style="color: var(--ink-faint);">02</td><td>Wed 13 Oct 23:10</td><td>Google Docs</td><td class="r">72 min</td><td class="r" style="color: var(--typed);">4,106</td><td class="r" style="color: var(--paste);">83</td><td class="r">690</td></tr>
+                    <tr><td style="color: var(--ink-faint);">03</td><td>Thu 14 Oct 00:05</td><td>Google Docs</td><td class="r">19 min</td><td class="r" style="color: var(--typed);">1,040</td><td class="r" style="color: var(--ink-faint);">0</td><td class="r">118</td></tr>
+                    <tr><td style="color: var(--ink-faint);">04</td><td>Sat 16 Oct 15:02</td><td>Google Docs</td><td class="r">36 min</td><td class="r" style="color: var(--typed);">1,988</td><td class="r" style="color: var(--paste);">212</td><td class="r">192</td></tr>
+                    <tr><td style="color: var(--ink-faint);">05</td><td>Sat 16 Oct 16:20</td><td>Notion</td><td class="r">11 min</td><td class="r" style="color: var(--typed);">402</td><td class="r" style="color: var(--ink-faint);">0</td><td class="r">40</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============================================ column B: dialogs and the desk accessory -->
+      <div class="col col-b">
+        <div class="dialog" role="dialog" aria-labelledby="day-verify">
+          <div class="dialog-head">
+            <svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 0h14v1h-14zM1 1h1v1h-1zM4 1h8v1h-8zM14 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM4 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM4 5h8v1h-8zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h10v1h-10zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM3 11h1v1h-1zM5 11h6v1h-6zM12 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h4v1h-4zM12 12h1v1h-1zM14 12h1v1h-1zM1 13h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM1 14h14v1h-14z"/><path fill="var(--chrome-deep)" d="M2 1h2v1h-2zM12 1h2v1h-2zM2 2h2v1h-2zM12 2h2v1h-2zM2 3h2v1h-2zM12 3h2v1h-2zM2 4h2v1h-2zM12 4h2v1h-2zM2 5h2v1h-2zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h12v1h-12zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1z"/><path fill="var(--sheet)" d="M5 2h4v1h-4zM10 2h1v1h-1zM5 3h4v1h-4zM10 3h1v1h-1zM5 4h4v1h-4zM10 4h1v1h-1zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM4 12h1v1h-1zM9 12h3v1h-3zM4 13h8v1h-8z"/></svg>
+            <div class="stack" style="flex: 1; min-width: 0; gap: 12px;">
+              <h2 id="day-verify" class="dialog-title">Verify a record</h2>
+              <p style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); overflow-wrap: anywhere;">hamlet-waiting.trail.tar.gz · 1,214 events · 4 sessions · 18 checkpoints · checked in this browser, nothing uploaded</p>
+              <div class="row" style="gap: 8px; font-family: var(--font-mono); font-size: 12px;"><span class="progress" role="progressbar" aria-label="Checks run" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill" style="--p: 1;"></span></span><span class="tabular">14 of 14</span></div>
+              <ul class="checks">
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>The file could be opened as a Trail record<span class="name">archive</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every file in the pack still matches its fingerprint<span class="name">manifest file hashes</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every event still matches its own fingerprint<span class="name">event hashes</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every event points at the one before it, so nothing was inserted, removed or edited<span class="name">chain linkage</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>The signatures come from Trail's key, fetched from this site rather than from inside the file<span class="name">signed by Trail's key</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every checkpoint appears in Trail's public, append-only log<span class="name">checkpoints in the public log</span></span></li>
+                <li><span class="check-skip" aria-label="skipped">—</span><span style="color: var(--ink-soft);">Some writing sessions had not been checkpointed yet when the pack was built<span class="name">checkpoint coverage · skipped</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>The pack as a whole was signed by Trail<span class="name">manifest signature</span></span></li>
+              </ul>
+              <p><strong>This record is intact and was signed by Trail at 14 Oct 2026, 21:40.</strong></p>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" class="btn">Now tamper with it</button>
+            <button type="button" class="btn btn-ring">Done</button>
+          </div>
+        </div>
+
+        <div class="dialog" role="alertdialog" aria-labelledby="day-broken">
+          <div class="dialog-head">
+            <svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M7 0h2v1h-2zM7 1h2v1h-2zM6 2h1v1h-1zM9 2h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM5 5h1v1h-1zM7 5h2v1h-2zM10 5h1v1h-1zM4 6h1v1h-1zM7 6h2v1h-2zM11 6h1v1h-1zM4 7h1v1h-1zM7 7h2v1h-2zM11 7h1v1h-1zM3 8h1v1h-1zM7 8h2v1h-2zM12 8h1v1h-1zM3 9h1v1h-1zM7 9h2v1h-2zM12 9h1v1h-1zM2 10h1v1h-1zM7 10h2v1h-2zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM1 12h1v1h-1zM7 12h2v1h-2zM14 12h1v1h-1zM1 13h1v1h-1zM14 13h1v1h-1zM0 14h16v1h-16z"/><path fill="var(--paste)" d="M7 2h2v1h-2zM7 3h2v1h-2zM6 4h4v1h-4zM6 5h1v1h-1zM9 5h1v1h-1zM5 6h2v1h-2zM9 6h2v1h-2zM5 7h2v1h-2zM9 7h2v1h-2zM4 8h3v1h-3zM9 8h3v1h-3zM4 9h3v1h-3zM9 9h3v1h-3zM3 10h4v1h-4zM9 10h4v1h-4zM3 11h10v1h-10zM2 12h5v1h-5zM9 12h5v1h-5zM2 13h12v1h-12z"/></svg>
+            <div class="stack" style="flex: 1; min-width: 0; gap: 12px;">
+              <h2 id="day-broken" class="dialog-title">Chain broken at event #412</h2>
+              <p style="font-size: 14px;">Event <span style="font-family: var(--font-mono);">#412</span> no longer matches its fingerprint, and event #413 points at a fingerprint that does not exist. Everything before #412 is intact; nothing after it can be trusted.</p>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" class="btn">Show event #412</button>
+            <button type="button" class="btn btn-ring">Put it back</button>
+          </div>
+        </div>
+
+        <section class="win" aria-labelledby="day-time">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="day-time" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM7 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM7 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM7 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM7 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM7 7h4v1h-4zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z"/><path fill="var(--sheet)" d="M5 1h6v1h-6zM3 2h10v1h-10zM2 3h5v1h-5zM8 3h6v1h-6zM2 4h5v1h-5zM8 4h6v1h-6zM1 5h6v1h-6zM8 5h7v1h-7zM1 6h6v1h-6zM8 6h7v1h-7zM1 7h6v1h-6zM11 7h4v1h-4zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z"/></svg><span>Time</span><span class="win-title-right">this week</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body stack">
+            <div class="row" style="gap: 16px;">
+              <label class="choice"><input type="radio" class="radio" name="day-range" checked /> <span>This week</span></label>
+              <label class="choice"><input type="radio" class="radio" name="day-range" /> <span>Last week</span></label>
+              <label class="choice"><input type="radio" class="radio" name="day-range" /> <span>Semester</span></label>
+            </div>
+            <div class="row" style="gap: 12px; align-items: baseline;">
+              <span class="display" style="font-size: 40px; line-height: 1;">7h 20m</span>
+              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft);">+1h 05m vs last week · 5 of 7 days · 4-day streak</span>
+            </div>
+            <div class="bars tabular">
+              <div><span>BIO 101</span><span class="progress" role="progressbar" aria-label="BIO 101" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: 1;"></span></span><span>2h 44m · 3 items</span></div>
+              <div><span>ENGL 101</span><span class="progress" role="progressbar" aria-label="ENGL 101" aria-valuenow="74" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: .74;"></span></span><span>2h 01m · 2 items</span></div>
+              <div><span>HIST 210</span><span class="progress" role="progressbar" aria-label="HIST 210" aria-valuenow="59" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: .59;"></span></span><span>1h 37m · 2 items</span></div>
+              <div><span>MATH 140</span><span class="progress" role="progressbar" aria-label="MATH 140" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: .35;"></span></span><span>58 min · 2 items</span></div>
+            </div>
+            <div class="stack" style="gap: 6px;">
+              <span class="marginal">When you work · Tuesday</span>
+              <div class="heat" role="img" aria-label="Active minutes by hour on Tuesday, busiest after 11pm">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="h1"></i><i class="h1"></i><i></i><i></i><i class="h1"></i><i class="h2"></i><i class="h1"></i><i></i><i></i><i></i><i></i><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h3"></i>
+              </div>
+            </div>
+            <ul class="obs">
+              <li>Most of your Tuesday work happened after 11pm.</li>
+              <li>Your longest unbroken stretch was 94 minutes on Thursday.</li>
+            </ul>
+            <p style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft);">Counted on this computer. No teacher view, no limit, no sharing.</p>
+          </div>
+        </section>
+
+        <section class="win win-inactive" aria-labelledby="day-type">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="day-type" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 0h10v1h-10zM2 1h1v1h-1zM11 1h2v1h-2zM2 2h1v1h-1zM11 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM11 3h4v1h-4zM2 4h1v1h-1zM5 4h6v1h-6zM14 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h7v1h-7zM14 6h1v1h-1zM2 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM5 8h7v1h-7zM14 8h1v1h-1zM2 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM5 10h7v1h-7zM14 10h1v1h-1zM2 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM5 12h5v1h-5zM14 12h1v1h-1zM2 13h1v1h-1zM14 13h1v1h-1zM2 14h13v1h-13z"/><path fill="var(--sheet)" d="M3 1h8v1h-8zM3 2h8v1h-8zM12 2h1v1h-1zM3 3h8v1h-8zM3 4h2v1h-2zM11 4h3v1h-3zM3 5h11v1h-11zM3 6h2v1h-2zM12 6h2v1h-2zM3 7h11v1h-11zM3 8h2v1h-2zM12 8h2v1h-2zM3 9h11v1h-11zM3 10h2v1h-2zM12 10h2v1h-2zM3 11h11v1h-11zM3 12h2v1h-2zM10 12h4v1h-4zM3 13h11v1h-11z"/></svg><span>Type (inactive window)</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body type-spec">
+            <p class="l">display · Pixelify Sans 500 · 48 / 32 / 24</p>
+            <h1 style="font-size: 48px;">See how you write.</h1>
+            <h2 style="font-size: 32px; margin-top: 8px;">Watch 2,000 words happen.</h2>
+            <h3 style="font-size: 24px; margin-top: 8px;">A statement written from what happened.</h3>
+            <p class="l">body · IBM Plex Sans 400 · 16 / 1.55</p>
+            <div class="prose"><p>Trail keeps your own record of how each essay gets written. Replay it. Learn your patterns. And if anyone ever questions your work, <a href="#" class="link">the record is already there</a>.</p></div>
+            <p class="l">essay · IBM Plex Mono 400 · 15 / 1.6</p>
+            <p class="essay prose">Most writing tools keep your final version. Trail keeps the whole thing: what you typed, what you pasted, what you deleted, and when.</p>
+            <p class="l">ui · IBM Plex Mono 400 · 14 and 12 caps</p>
+            <p style="font-family: var(--font-mono); font-size: 14px;">Space or K to play and pause. Drag the scrubber to any moment.</p>
+            <p class="marginal">Final length · Typed · Pasted · Active time · Deleted</p>
+            <p class="l">colour lives on paper</p>
+            <p style="font-family: var(--font-mono); font-size: 14px;"><span style="color: var(--typed);">typed #1c6b4c</span> · <span style="color: var(--paste);">pasted #a84e0c</span> · <span style="color: var(--accent);">signed #1e3ea3</span> · <span class="strike">struck</span> · <span class="prov-unobserved">unobserved</span></p>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============================================ desktop icons -->
+      <div class="desk-icons">
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 2h7v1h-7zM1 3h1v1h-1zM7 3h1v1h-1zM0 4h14v1h-14zM0 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM14 6h1v1h-1zM0 7h1v1h-1zM14 7h1v1h-1zM0 8h1v1h-1zM14 8h1v1h-1zM0 9h1v1h-1zM14 9h1v1h-1zM0 10h1v1h-1zM14 10h1v1h-1zM0 11h1v1h-1zM14 11h1v1h-1zM0 12h1v1h-1zM14 12h1v1h-1zM0 13h15v1h-15z"/><path fill="var(--chrome-deep)" d="M2 3h5v1h-5zM2 6h11v1h-11zM2 7h11v1h-11zM2 8h11v1h-11zM2 9h11v1h-11zM2 10h11v1h-11zM2 11h11v1h-11z"/><path fill="var(--sheet)" d="M1 5h13v1h-13zM1 6h1v1h-1zM13 6h1v1h-1zM1 7h1v1h-1zM13 7h1v1h-1zM1 8h1v1h-1zM13 8h1v1h-1zM1 9h1v1h-1zM13 9h1v1h-1zM1 10h1v1h-1zM13 10h1v1h-1zM1 11h1v1h-1zM13 11h1v1h-1zM1 12h13v1h-13z"/></svg><span class="label-plate">Essays</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM7 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM7 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM7 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM7 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM7 7h4v1h-4zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z"/><path fill="var(--sheet)" d="M5 1h6v1h-6zM3 2h10v1h-10zM2 3h5v1h-5zM8 3h6v1h-6zM2 4h5v1h-5zM8 4h6v1h-6zM1 5h6v1h-6zM8 5h7v1h-7zM1 6h6v1h-6zM8 6h7v1h-7zM1 7h6v1h-6zM11 7h4v1h-4zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z"/></svg><span class="label-plate">Time</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M3 1h5v1h-5zM2 2h1v1h-1zM8 2h1v1h-1zM1 3h1v1h-1zM9 3h1v1h-1zM1 4h1v1h-1zM9 4h1v1h-1zM1 5h1v1h-1zM9 5h1v1h-1zM1 6h1v1h-1zM9 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h2v1h-2zM3 9h5v1h-5zM9 9h2v1h-2zM10 10h2v1h-2zM11 11h2v1h-2zM12 12h2v1h-2zM13 13h2v1h-2z"/><path fill="var(--sheet)" d="M3 2h5v1h-5zM2 3h7v1h-7zM2 4h7v1h-7zM2 5h7v1h-7zM2 6h7v1h-7zM2 7h7v1h-7zM3 8h5v1h-5z"/></svg><span class="label-plate">Patterns</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 0h14v1h-14zM1 1h1v1h-1zM4 1h8v1h-8zM14 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM4 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM4 5h8v1h-8zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h10v1h-10zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM3 11h1v1h-1zM5 11h6v1h-6zM12 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h4v1h-4zM12 12h1v1h-1zM14 12h1v1h-1zM1 13h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM1 14h14v1h-14z"/><path fill="var(--chrome-deep)" d="M2 1h2v1h-2zM12 1h2v1h-2zM2 2h2v1h-2zM12 2h2v1h-2zM2 3h2v1h-2zM12 3h2v1h-2zM2 4h2v1h-2zM12 4h2v1h-2zM2 5h2v1h-2zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h12v1h-12zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1z"/><path fill="var(--sheet)" d="M5 2h4v1h-4zM10 2h1v1h-1zM5 3h4v1h-4zM10 3h1v1h-1zM5 4h4v1h-4zM10 4h1v1h-1zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM4 12h1v1h-1zM9 12h3v1h-3zM4 13h8v1h-8z"/></svg><span class="label-plate">Verify</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h6v1h-6zM3 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM5 5h4v1h-4zM11 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM2 8h1v1h-1zM5 8h4v1h-4zM11 8h1v1h-1zM3 9h1v1h-1zM10 9h1v1h-1zM4 10h2v1h-2zM8 10h2v1h-2zM6 11h1v1h-1zM8 11h1v1h-1zM6 12h1v1h-1zM8 12h3v1h-3zM6 13h1v1h-1zM10 13h1v1h-1zM6 14h1v1h-1zM8 14h3v1h-3zM6 15h3v1h-3z"/><path fill="var(--sheet)" d="M4 4h6v1h-6zM3 5h2v1h-2zM9 5h2v1h-2zM3 6h1v1h-1zM10 6h1v1h-1zM3 7h1v1h-1zM10 7h1v1h-1zM3 8h2v1h-2zM9 8h2v1h-2zM4 9h6v1h-6zM6 10h2v1h-2zM7 11h1v1h-1zM7 12h1v1h-1zM7 13h3v1h-3zM7 14h1v1h-1z"/></svg><span class="label-plate">Settings</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 5h12v1h-12zM1 6h1v1h-1zM7 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM7 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM8 8h1v1h-1zM14 8h1v1h-1zM1 9h1v1h-1zM8 9h1v1h-1zM14 9h1v1h-1zM2 10h12v1h-12z"/><path fill="var(--sheet)" d="M2 6h5v1h-5zM8 6h6v1h-6zM2 7h1v1h-1zM8 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM7 8h1v1h-1zM13 8h1v1h-1zM2 9h6v1h-6zM9 9h5v1h-5z"/></svg><span class="label-plate">Invite</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section theme-dark" aria-labelledby="night-h">
+  <div class="desk">
+    <div class="section-head">
+      <h1 id="night-h">After Dark</h1>
+      <span>dark grey desk · near-black paper · grey frames · typed #5FCB84 · pasted #E0A64B · signed #6B8CFF</span>
+    </div>
+
+    <nav class="menubar on-chrome" aria-label="App">
+      <a class="menubar-item menubar-brand" href="#" aria-label="Trail home"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M7 1h2v1h-2zM6 2h1v1h-1zM9 2h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM6 4h1v1h-1zM9 4h1v1h-1zM5 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM8 7h1v1h-1zM4 8h1v1h-1zM7 8h1v1h-1zM4 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM4 11h2v1h-2zM4 12h1v1h-1zM7 12h2v1h-2zM5 13h2v1h-2z"/><path fill="var(--accent)" d="M12 3h2v1h-2zM12 4h2v1h-2zM12 5h2v1h-2zM12 6h2v1h-2zM12 7h2v1h-2zM12 8h2v1h-2zM12 9h2v1h-2zM12 10h2v1h-2zM12 11h2v1h-2z"/></svg> Trail</a>
+      <div class="menubar-items">
+        <a class="menubar-item" href="#" aria-current="page">Essays</a>
+        <a class="menubar-item" href="#">Time</a>
+        <a class="menubar-item" href="#">Patterns</a>
+        <a class="menubar-item" href="#">Invite</a>
+        <a class="menubar-item" href="#">Settings</a>
+      </div>
+      <button type="button" class="menubar-item menubar-toggle" aria-expanded="false" aria-controls="night-sheet">Menu</button>
+      <div class="menubar-right">
+        <span class="menubar-item tabular" aria-label="Clock">21:40</span>
+        <button type="button" class="menubar-item" aria-label="Switch to Daytime theme"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M7 1h2v1h-2zM7 2h2v1h-2zM2 3h2v1h-2zM12 3h2v1h-2zM3 4h1v1h-1zM6 4h4v1h-4zM12 4h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM4 6h1v1h-1zM11 6h1v1h-1zM0 7h2v1h-2zM4 7h1v1h-1zM11 7h1v1h-1zM14 7h2v1h-2zM0 8h2v1h-2zM4 8h1v1h-1zM11 8h1v1h-1zM14 8h2v1h-2zM4 9h1v1h-1zM11 9h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM6 11h4v1h-4zM12 11h1v1h-1zM2 12h2v1h-2zM12 12h2v1h-2zM7 13h2v1h-2zM7 14h2v1h-2z"/><path fill="var(--sheet)" d="M6 5h4v1h-4zM5 6h6v1h-6zM5 7h6v1h-6zM5 8h6v1h-6zM5 9h6v1h-6zM6 10h4v1h-4z"/></svg></button>
+        <span class="menubar-item hide-phone" title="abdullah@gmail.com">abdullah@gmail.com</span>
+      </div>
+      <div id="night-sheet" class="menubar-sheet" hidden>
+        <a class="menubar-item" href="#" aria-current="page">Essays</a>
+        <a class="menubar-item" href="#">Time</a>
+        <a class="menubar-item" href="#">Patterns</a>
+        <a class="menubar-item" href="#">Invite</a>
+        <a class="menubar-item" href="#">Settings</a>
+      </div>
+    </nav>
+
+    <div class="desk-area">
+      <!-- ============================================ column A: the player -->
+      <div class="col">
+        <section class="win win-resizable" aria-labelledby="night-replay">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="night-replay" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 0h10v1h-10zM2 1h1v1h-1zM11 1h2v1h-2zM2 2h1v1h-1zM11 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM11 3h4v1h-4zM2 4h1v1h-1zM5 4h6v1h-6zM14 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h7v1h-7zM14 6h1v1h-1zM2 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM5 8h7v1h-7zM14 8h1v1h-1zM2 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM5 10h7v1h-7zM14 10h1v1h-1zM2 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM5 12h5v1h-5zM14 12h1v1h-1zM2 13h1v1h-1zM14 13h1v1h-1zM2 14h13v1h-13z"/><path fill="var(--sheet)" d="M3 1h8v1h-8zM3 2h8v1h-8zM12 2h1v1h-1zM3 3h8v1h-8zM3 4h2v1h-2zM11 4h3v1h-3zM3 5h11v1h-11zM3 6h2v1h-2zM12 6h2v1h-2zM3 7h11v1h-11zM3 8h2v1h-2zM12 8h2v1h-2zM3 9h11v1h-11zM3 10h2v1h-2zM12 10h2v1h-2zM3 11h11v1h-11zM3 12h2v1h-2zM10 12h4v1h-4zM3 13h11v1h-11z"/></svg><span>Hamlet and the cost of waiting</span><span class="win-title-right tabular">00:48 / 02:55</span></h2>
+            <button type="button" class="win-box win-box-zoom" aria-label="Zoom"></button>
+          </div>
+          <div class="win-body" style="padding: 0;">
+            <div class="essay sheet-text" style="padding: 16px 16px 20px;">
+              <p>Hamlet's delay is usually read as a flaw. I want to argue the opposite: that the play treats waiting as the only honest response to a claim that cannot be checked. The ghost asks for revenge on the strength of a story, and Hamlet, unlike Laertes, refuses to act on a story alone.</p>
+              <p>The line <span class="prov-paste">"the readiness is all" (5.2.215)</span> <span class="chip chip-paste">jstor.org</span> has been quoted so often that it reads as resignation, but in context it is the end of a long test of evidence. He acts when the record is complete.<span class="caret" aria-hidden="true"></span></p>
+            </div>
+            <div class="transport">
+              <button type="button" class="btn btn-icon" aria-label="Step back"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M3 3h2v1h-2zM12 3h1v1h-1zM3 4h2v1h-2zM11 4h2v1h-2zM3 5h2v1h-2zM10 5h3v1h-3zM3 6h2v1h-2zM9 6h4v1h-4zM3 7h2v1h-2zM8 7h5v1h-5zM3 8h2v1h-2zM8 8h5v1h-5zM3 9h2v1h-2zM9 9h4v1h-4zM3 10h2v1h-2zM10 10h3v1h-3zM3 11h2v1h-2zM11 11h2v1h-2zM3 12h2v1h-2zM12 12h1v1h-1z"/></svg></button>
+              <button type="button" class="btn btn-icon" aria-pressed="true" aria-label="Pause"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h3v1h-3zM9 3h3v1h-3zM4 4h3v1h-3zM9 4h3v1h-3zM4 5h3v1h-3zM9 5h3v1h-3zM4 6h3v1h-3zM9 6h3v1h-3zM4 7h3v1h-3zM9 7h3v1h-3zM4 8h3v1h-3zM9 8h3v1h-3zM4 9h3v1h-3zM9 9h3v1h-3zM4 10h3v1h-3zM9 10h3v1h-3zM4 11h3v1h-3zM9 11h3v1h-3zM4 12h3v1h-3zM9 12h3v1h-3z"/></svg></button>
+              <button type="button" class="btn btn-icon" aria-label="Step forward"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M3 3h1v1h-1zM11 3h2v1h-2zM3 4h2v1h-2zM11 4h2v1h-2zM3 5h3v1h-3zM11 5h2v1h-2zM3 6h4v1h-4zM11 6h2v1h-2zM3 7h5v1h-5zM11 7h2v1h-2zM3 8h5v1h-5zM11 8h2v1h-2zM3 9h4v1h-4zM11 9h2v1h-2zM3 10h3v1h-3zM11 10h2v1h-2zM3 11h2v1h-2zM11 11h2v1h-2zM3 12h1v1h-1zM11 12h2v1h-2z"/></svg></button>
+              <input class="range" type="range" min="0" max="175" value="48" aria-label="Scrub the replay" style="flex: 1; min-width: 80px;" />
+              <span class="tabular">session 2 of 4</span>
+            </div>
+            <div class="stack" style="padding: 16px;">
+              <div class="stack" style="gap: 8px;">
+                <span class="marginal">Where each line came from</span>
+                <div class="prov-strip" role="img" aria-label="Where each line came from: 19 typed, 1 pasted, 1 pasted then edited, 1 mixed">
+                  <i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-pasted-edited"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-mixed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-pasted"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i><i class="is-typed"></i>
+                </div>
+                <div class="legend tabular">
+                  <span><i class="swatch" style="background: var(--typed);"></i> typed 19</span>
+                  <span><i class="swatch" style="background: var(--paste);"></i> pasted 1</span>
+                  <span><i class="swatch" style="background: var(--paste-wash);"></i> pasted, then edited 1</span>
+                  <span><i class="swatch" style="background: var(--mixed);"></i> mixed 1</span>
+                </div>
+              </div>
+              <div class="stats">
+                <div class="stat on-chrome"><span class="marginal">Final length</span><span class="stat-value">1,842</span><span class="stat-detail">words, 64 lines</span></div>
+                <div class="stat on-chrome"><span class="marginal">Typed</span><span class="stat-value" style="color: var(--typed);">91%</span><span class="stat-detail">of the final text</span></div>
+                <div class="stat on-chrome"><span class="marginal">Pasted</span><span class="stat-value" style="color: var(--paste);">6%</span><span class="stat-detail">3 pastes, 1 from AI tools</span></div>
+                <div class="stat on-chrome"><span class="marginal">Active time</span><span class="stat-value">2h 55m</span><span class="stat-detail">over 4 sessions</span></div>
+                <div class="stat on-chrome"><span class="marginal">Deleted</span><span class="stat-value">1,412</span><span class="stat-detail">characters removed</span></div>
+              </div>
+            </div>
+          </div>
+          <span class="win-grip" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 2h9v1h-9zM2 3h1v1h-1zM10 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM10 5h1v1h-1zM2 6h1v1h-1zM10 6h1v1h-1zM2 7h1v1h-1zM7 7h7v1h-7zM2 8h1v1h-1zM7 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM7 9h1v1h-1zM13 9h1v1h-1zM2 10h6v1h-6zM13 10h1v1h-1zM7 11h1v1h-1zM13 11h1v1h-1zM7 12h1v1h-1zM13 12h1v1h-1zM7 13h7v1h-7z"/><path fill="var(--sheet)" d="M3 3h7v1h-7zM3 4h7v1h-7zM3 5h7v1h-7zM3 6h7v1h-7zM3 7h4v1h-4zM3 8h4v1h-4zM8 8h5v1h-5zM3 9h4v1h-4zM8 9h5v1h-5zM8 10h5v1h-5zM8 11h5v1h-5zM8 12h5v1h-5z"/></svg></span>
+        </section>
+
+        <section class="win" aria-labelledby="night-decl">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="night-decl" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 0h10v1h-10zM2 1h1v1h-1zM11 1h2v1h-2zM2 2h1v1h-1zM11 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM11 3h4v1h-4zM2 4h1v1h-1zM5 4h6v1h-6zM14 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h7v1h-7zM14 6h1v1h-1zM2 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM5 8h7v1h-7zM14 8h1v1h-1zM2 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM5 10h7v1h-7zM14 10h1v1h-1zM2 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM5 12h5v1h-5zM14 12h1v1h-1zM2 13h1v1h-1zM14 13h1v1h-1zM2 14h13v1h-13z"/><path fill="var(--sheet)" d="M3 1h8v1h-8zM3 2h8v1h-8zM12 2h1v1h-1zM3 3h8v1h-8zM3 4h2v1h-2zM11 4h3v1h-3zM3 5h11v1h-11zM3 6h2v1h-2zM12 6h2v1h-2zM3 7h11v1h-11zM3 8h2v1h-2zM12 8h2v1h-2zM3 9h11v1h-11zM3 10h2v1h-2zM12 10h2v1h-2zM3 11h11v1h-11zM3 12h2v1h-2zM10 12h4v1h-4zM3 13h11v1h-11z"/></svg><span>AI-use declaration</span><span class="win-title-right">draft</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body essay sheet-text">
+            <p>I wrote this essay in Google Docs across four sessions between 12 and 14 October 2026, about 2 hours 55 minutes of active writing.</p>
+            <p>Two pastes came from outside this document. One quotation from jstor.org (101 characters) remains, edited. One paste from <span class="prov-paste">chatgpt.com (83 characters)</span> was deleted in full within two minutes; none of it remains.</p>
+            <p>I did not use any AI tool to produce text that remains in the final essay. This record cannot see text retyped by hand.</p>
+            <div class="row" style="margin-top: 16px;">
+              <button type="button" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h6v1h-6zM3 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM5 5h4v1h-4zM11 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM2 8h1v1h-1zM5 8h4v1h-4zM11 8h1v1h-1zM3 9h1v1h-1zM10 9h1v1h-1zM4 10h2v1h-2zM8 10h2v1h-2zM6 11h1v1h-1zM8 11h1v1h-1zM6 12h1v1h-1zM8 12h3v1h-3zM6 13h1v1h-1zM10 13h1v1h-1zM6 14h1v1h-1zM8 14h3v1h-3zM6 15h3v1h-3z"/><path fill="var(--sheet)" d="M4 4h6v1h-6zM3 5h2v1h-2zM9 5h2v1h-2zM3 6h1v1h-1zM10 6h1v1h-1zM3 7h1v1h-1zM10 7h1v1h-1zM3 8h2v1h-2zM9 8h2v1h-2zM4 9h6v1h-6zM6 10h2v1h-2zM7 11h1v1h-1zM7 12h1v1h-1zM7 13h3v1h-3zM7 14h1v1h-1z"/></svg> Sign and export</button>
+              <button type="button" class="btn">Edit the wording</button>
+              <span class="chip chip-neutral">from the record</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="win" aria-labelledby="night-ctl">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="night-ctl" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h6v1h-6zM3 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM5 5h4v1h-4zM11 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM2 8h1v1h-1zM5 8h4v1h-4zM11 8h1v1h-1zM3 9h1v1h-1zM10 9h1v1h-1zM4 10h2v1h-2zM8 10h2v1h-2zM6 11h1v1h-1zM8 11h1v1h-1zM6 12h1v1h-1zM8 12h3v1h-3zM6 13h1v1h-1zM10 13h1v1h-1zM6 14h1v1h-1zM8 14h3v1h-3zM6 15h3v1h-3z"/><path fill="var(--sheet)" d="M4 4h6v1h-6zM3 5h2v1h-2zM9 5h2v1h-2zM3 6h1v1h-1zM10 6h1v1h-1zM3 7h1v1h-1zM10 7h1v1h-1zM3 8h2v1h-2zM9 8h2v1h-2zM4 9h6v1h-6zM6 10h2v1h-2zM7 11h1v1h-1zM7 12h1v1h-1zM7 13h3v1h-3zM7 14h1v1h-1z"/></svg><span>Controls</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body win-body-chrome on-chrome stack">
+            <div class="panel on-chrome"><div class="panel-legend">Buttons</div>
+              <div class="row">
+                <button type="button" class="btn">Default</button>
+                <button type="button" class="btn btn-primary">Primary</button>
+                <button type="button" class="btn btn-ring">Done</button>
+                <button type="button" class="btn" disabled>Disabled</button>
+                <button type="button" class="btn btn-quiet">Quiet</button>
+                <button type="button" class="btn btn-lg"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 0h14v1h-14zM1 1h1v1h-1zM4 1h8v1h-8zM14 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM4 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM4 5h8v1h-8zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h10v1h-10zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM3 11h1v1h-1zM5 11h6v1h-6zM12 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h4v1h-4zM12 12h1v1h-1zM14 12h1v1h-1zM1 13h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM1 14h14v1h-14z"/><path fill="var(--chrome-deep)" d="M2 1h2v1h-2zM12 1h2v1h-2zM2 2h2v1h-2zM12 2h2v1h-2zM2 3h2v1h-2zM12 3h2v1h-2zM2 4h2v1h-2zM12 4h2v1h-2zM2 5h2v1h-2zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h12v1h-12zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1z"/><path fill="var(--sheet)" d="M5 2h4v1h-4zM10 2h1v1h-1zM5 3h4v1h-4zM10 3h1v1h-1zM5 4h4v1h-4zM10 4h1v1h-1zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM4 12h1v1h-1zM9 12h3v1h-3zM4 13h8v1h-8z"/></svg> Add to Chrome</button>
+                <button type="button" class="btn btn-sm">Small</button>
+                <button type="button" class="btn btn-icon" aria-label="Play"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M5 3h1v1h-1zM5 4h2v1h-2zM5 5h3v1h-3zM5 6h4v1h-4zM5 7h5v1h-5zM5 8h5v1h-5zM5 9h4v1h-4zM5 10h3v1h-3zM5 11h2v1h-2zM5 12h1v1h-1z"/></svg></button>
+              </div>
+            </div>
+            <div class="row" style="align-items: stretch;">
+              <div class="panel on-chrome" style="flex: 1; min-width: 200px;"><div class="panel-legend">Choices</div>
+                <div class="stack" style="gap: 8px;">
+                  <label class="choice"><input type="checkbox" class="chk" checked /> <span>Record in Google Docs</span></label>
+                  <label class="choice"><input type="checkbox" class="chk" /> <span>Record in Notion</span></label>
+                  <label class="choice"><input type="checkbox" class="chk" disabled checked /> <span>Sign checkpoints every 10 minutes<span style="display:block;font-size:12px;color:var(--ink-soft)">Always on. Only a fingerprint leaves the device.</span></span></label>
+                  <hr class="hr-dither" />
+                  <label class="choice"><input type="radio" class="radio" name="night-plan" checked /> <span>Semester, $12</span></label>
+                  <label class="choice"><input type="radio" class="radio" name="night-plan" /> <span>Monthly, $3.99</span></label>
+                </div>
+              </div>
+              <div class="panel on-chrome" style="flex: 1; min-width: 200px;"><div class="panel-legend">Fields</div>
+                <div class="stack" style="gap: 12px;">
+                  <div style="display: grid; gap: 4px;"><label class="field-label" for="night-email">Email</label><input id="night-email" class="field" type="email" placeholder="you@school.edu" /><span style="font-size: 12px; color: var(--ink-soft);">For the sign-in link and nothing else.</span></div>
+                  <div style="display: grid; gap: 4px;"><label class="field-label" for="night-title">Essay title</label><input id="night-title" class="field" type="text" value="Hamlet and the cost of waiting" /></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel on-chrome"><div class="panel-legend">Progress</div>
+              <div class="stack" style="gap: 10px; font-family: var(--font-mono); font-size: 12px;">
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Installing" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill" style="--p: .62;"></span></span><span class="tabular">62%</span></div>
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Typed share" aria-valuenow="91" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill progress-typed" style="--p: .91;"></span></span><span class="tabular">91%</span></div>
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Pasted share" aria-valuenow="6" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill progress-paste" style="--p: .06;"></span></span><span class="tabular">6%</span></div>
+                <div class="row" style="gap: 8px;"><span class="progress" role="progressbar" aria-label="Steps" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 164px;"><span class="progress-fill progress-ink" style="width: 80px;"></span></span><span>step 2 of 4, fixed 20 segments</span></div>
+              </div>
+            </div>
+            <div class="panel on-chrome"><div class="panel-legend">Chips and swatches</div>
+              <div class="row" style="gap: 8px;">
+                <span class="chip chip-typed">typed</span><span class="chip chip-paste">pasted</span><span class="chip chip-ai">ai · chatgpt.com</span><span class="chip chip-mixed">mixed</span><span class="chip chip-unobserved">unobserved</span><span class="chip chip-neutral">web · jstor.org</span><span class="chip chip-accent">signed 21:40</span>
+                <span class="legend"><i class="swatch" style="background: var(--typed);"></i> <i class="swatch" style="background: var(--paste);"></i> <i class="swatch" style="background: var(--mixed);"></i> <i class="swatch" style="background: var(--unobserved);"></i></span>
+              </div>
+            </div>
+            <div class="panel on-chrome"><div class="panel-legend">Scroll area: sessions</div>
+              <div class="scroll bevel-in" role="region" aria-label="Sessions" tabindex="0" style="max-height: 132px; background: var(--sheet);">
+                <table>
+                  <thead><tr><th>#</th><th>Started</th><th>Editor</th><th class="r">Active</th><th class="r">Typed</th><th class="r">Pasted</th><th class="r">Deleted</th></tr></thead>
+                  <tbody>
+                    <tr><td style="color: var(--ink-faint);">01</td><td>Tue 12 Oct 22:41</td><td>Google Docs</td><td class="r">48 min</td><td class="r" style="color: var(--typed);">2,912</td><td class="r" style="color: var(--paste);">101</td><td class="r">412</td></tr>
+                    <tr><td style="color: var(--ink-faint);">02</td><td>Wed 13 Oct 23:10</td><td>Google Docs</td><td class="r">72 min</td><td class="r" style="color: var(--typed);">4,106</td><td class="r" style="color: var(--paste);">83</td><td class="r">690</td></tr>
+                    <tr><td style="color: var(--ink-faint);">03</td><td>Thu 14 Oct 00:05</td><td>Google Docs</td><td class="r">19 min</td><td class="r" style="color: var(--typed);">1,040</td><td class="r" style="color: var(--ink-faint);">0</td><td class="r">118</td></tr>
+                    <tr><td style="color: var(--ink-faint);">04</td><td>Sat 16 Oct 15:02</td><td>Google Docs</td><td class="r">36 min</td><td class="r" style="color: var(--typed);">1,988</td><td class="r" style="color: var(--paste);">212</td><td class="r">192</td></tr>
+                    <tr><td style="color: var(--ink-faint);">05</td><td>Sat 16 Oct 16:20</td><td>Notion</td><td class="r">11 min</td><td class="r" style="color: var(--typed);">402</td><td class="r" style="color: var(--ink-faint);">0</td><td class="r">40</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============================================ column B: dialogs and the desk accessory -->
+      <div class="col col-b">
+        <div class="dialog" role="dialog" aria-labelledby="night-verify">
+          <div class="dialog-head">
+            <svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 0h14v1h-14zM1 1h1v1h-1zM4 1h8v1h-8zM14 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM4 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM4 5h8v1h-8zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h10v1h-10zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM3 11h1v1h-1zM5 11h6v1h-6zM12 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h4v1h-4zM12 12h1v1h-1zM14 12h1v1h-1zM1 13h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM1 14h14v1h-14z"/><path fill="var(--chrome-deep)" d="M2 1h2v1h-2zM12 1h2v1h-2zM2 2h2v1h-2zM12 2h2v1h-2zM2 3h2v1h-2zM12 3h2v1h-2zM2 4h2v1h-2zM12 4h2v1h-2zM2 5h2v1h-2zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h12v1h-12zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1z"/><path fill="var(--sheet)" d="M5 2h4v1h-4zM10 2h1v1h-1zM5 3h4v1h-4zM10 3h1v1h-1zM5 4h4v1h-4zM10 4h1v1h-1zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM4 12h1v1h-1zM9 12h3v1h-3zM4 13h8v1h-8z"/></svg>
+            <div class="stack" style="flex: 1; min-width: 0; gap: 12px;">
+              <h2 id="night-verify" class="dialog-title">Verify a record</h2>
+              <p style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); overflow-wrap: anywhere;">hamlet-waiting.trail.tar.gz · 1,214 events · 4 sessions · 18 checkpoints · checked in this browser, nothing uploaded</p>
+              <div class="row" style="gap: 8px; font-family: var(--font-mono); font-size: 12px;"><span class="progress" role="progressbar" aria-label="Checks run" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="flex: 1;"><span class="progress-fill" style="--p: 1;"></span></span><span class="tabular">14 of 14</span></div>
+              <ul class="checks">
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>The file could be opened as a Trail record<span class="name">archive</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every file in the pack still matches its fingerprint<span class="name">manifest file hashes</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every event still matches its own fingerprint<span class="name">event hashes</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every event points at the one before it, so nothing was inserted, removed or edited<span class="name">chain linkage</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>The signatures come from Trail's key, fetched from this site rather than from inside the file<span class="name">signed by Trail's key</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>Every checkpoint appears in Trail's public, append-only log<span class="name">checkpoints in the public log</span></span></li>
+                <li><span class="check-skip" aria-label="skipped">—</span><span style="color: var(--ink-soft);">Some writing sessions had not been checkpointed yet when the pack was built<span class="name">checkpoint coverage · skipped</span></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="var(--typed)" d="M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z"/></svg><span>The pack as a whole was signed by Trail<span class="name">manifest signature</span></span></li>
+              </ul>
+              <p><strong>This record is intact and was signed by Trail at 14 Oct 2026, 21:40.</strong></p>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" class="btn">Now tamper with it</button>
+            <button type="button" class="btn btn-ring">Done</button>
+          </div>
+        </div>
+
+        <div class="dialog" role="alertdialog" aria-labelledby="night-broken">
+          <div class="dialog-head">
+            <svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M7 0h2v1h-2zM7 1h2v1h-2zM6 2h1v1h-1zM9 2h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM5 4h1v1h-1zM10 4h1v1h-1zM5 5h1v1h-1zM7 5h2v1h-2zM10 5h1v1h-1zM4 6h1v1h-1zM7 6h2v1h-2zM11 6h1v1h-1zM4 7h1v1h-1zM7 7h2v1h-2zM11 7h1v1h-1zM3 8h1v1h-1zM7 8h2v1h-2zM12 8h1v1h-1zM3 9h1v1h-1zM7 9h2v1h-2zM12 9h1v1h-1zM2 10h1v1h-1zM7 10h2v1h-2zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM1 12h1v1h-1zM7 12h2v1h-2zM14 12h1v1h-1zM1 13h1v1h-1zM14 13h1v1h-1zM0 14h16v1h-16z"/><path fill="var(--paste)" d="M7 2h2v1h-2zM7 3h2v1h-2zM6 4h4v1h-4zM6 5h1v1h-1zM9 5h1v1h-1zM5 6h2v1h-2zM9 6h2v1h-2zM5 7h2v1h-2zM9 7h2v1h-2zM4 8h3v1h-3zM9 8h3v1h-3zM4 9h3v1h-3zM9 9h3v1h-3zM3 10h4v1h-4zM9 10h4v1h-4zM3 11h10v1h-10zM2 12h5v1h-5zM9 12h5v1h-5zM2 13h12v1h-12z"/></svg>
+            <div class="stack" style="flex: 1; min-width: 0; gap: 12px;">
+              <h2 id="night-broken" class="dialog-title">Chain broken at event #412</h2>
+              <p style="font-size: 14px;">Event <span style="font-family: var(--font-mono);">#412</span> no longer matches its fingerprint, and event #413 points at a fingerprint that does not exist. Everything before #412 is intact; nothing after it can be trusted.</p>
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button type="button" class="btn">Show event #412</button>
+            <button type="button" class="btn btn-ring">Put it back</button>
+          </div>
+        </div>
+
+        <section class="win" aria-labelledby="night-time">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="night-time" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM7 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM7 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM7 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM7 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM7 7h4v1h-4zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z"/><path fill="var(--sheet)" d="M5 1h6v1h-6zM3 2h10v1h-10zM2 3h5v1h-5zM8 3h6v1h-6zM2 4h5v1h-5zM8 4h6v1h-6zM1 5h6v1h-6zM8 5h7v1h-7zM1 6h6v1h-6zM8 6h7v1h-7zM1 7h6v1h-6zM11 7h4v1h-4zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z"/></svg><span>Time</span><span class="win-title-right">this week</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body stack">
+            <div class="row" style="gap: 16px;">
+              <label class="choice"><input type="radio" class="radio" name="night-range" checked /> <span>This week</span></label>
+              <label class="choice"><input type="radio" class="radio" name="night-range" /> <span>Last week</span></label>
+              <label class="choice"><input type="radio" class="radio" name="night-range" /> <span>Semester</span></label>
+            </div>
+            <div class="row" style="gap: 12px; align-items: baseline;">
+              <span class="display" style="font-size: 40px; line-height: 1;">7h 20m</span>
+              <span style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft);">+1h 05m vs last week · 5 of 7 days · 4-day streak</span>
+            </div>
+            <div class="bars tabular">
+              <div><span>BIO 101</span><span class="progress" role="progressbar" aria-label="BIO 101" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: 1;"></span></span><span>2h 44m · 3 items</span></div>
+              <div><span>ENGL 101</span><span class="progress" role="progressbar" aria-label="ENGL 101" aria-valuenow="74" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: .74;"></span></span><span>2h 01m · 2 items</span></div>
+              <div><span>HIST 210</span><span class="progress" role="progressbar" aria-label="HIST 210" aria-valuenow="59" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: .59;"></span></span><span>1h 37m · 2 items</span></div>
+              <div><span>MATH 140</span><span class="progress" role="progressbar" aria-label="MATH 140" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill progress-typed" style="--p: .35;"></span></span><span>58 min · 2 items</span></div>
+            </div>
+            <div class="stack" style="gap: 6px;">
+              <span class="marginal">When you work · Tuesday</span>
+              <div class="heat" role="img" aria-label="Active minutes by hour on Tuesday, busiest after 11pm">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="h1"></i><i class="h1"></i><i></i><i></i><i class="h1"></i><i class="h2"></i><i class="h1"></i><i></i><i></i><i></i><i></i><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h3"></i>
+              </div>
+            </div>
+            <ul class="obs">
+              <li>Most of your Tuesday work happened after 11pm.</li>
+              <li>Your longest unbroken stretch was 94 minutes on Thursday.</li>
+            </ul>
+            <p style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft);">Counted on this computer. No teacher view, no limit, no sharing.</p>
+          </div>
+        </section>
+
+        <section class="win win-inactive" aria-labelledby="night-type">
+          <div class="win-title">
+            <button type="button" class="win-box win-box-close" aria-label="Close"></button>
+            <h2 id="night-type" class="win-title-text"><svg width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 0h10v1h-10zM2 1h1v1h-1zM11 1h2v1h-2zM2 2h1v1h-1zM11 2h1v1h-1zM13 2h1v1h-1zM2 3h1v1h-1zM11 3h4v1h-4zM2 4h1v1h-1zM5 4h6v1h-6zM14 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h7v1h-7zM14 6h1v1h-1zM2 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM5 8h7v1h-7zM14 8h1v1h-1zM2 9h1v1h-1zM14 9h1v1h-1zM2 10h1v1h-1zM5 10h7v1h-7zM14 10h1v1h-1zM2 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM5 12h5v1h-5zM14 12h1v1h-1zM2 13h1v1h-1zM14 13h1v1h-1zM2 14h13v1h-13z"/><path fill="var(--sheet)" d="M3 1h8v1h-8zM3 2h8v1h-8zM12 2h1v1h-1zM3 3h8v1h-8zM3 4h2v1h-2zM11 4h3v1h-3zM3 5h11v1h-11zM3 6h2v1h-2zM12 6h2v1h-2zM3 7h11v1h-11zM3 8h2v1h-2zM12 8h2v1h-2zM3 9h11v1h-11zM3 10h2v1h-2zM12 10h2v1h-2zM3 11h11v1h-11zM3 12h2v1h-2zM10 12h4v1h-4zM3 13h11v1h-11z"/></svg><span>Type (inactive window)</span></h2>
+            <span class="win-box-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="win-body type-spec">
+            <p class="l">display · Pixelify Sans 500 · 48 / 32 / 24</p>
+            <h1 style="font-size: 48px;">See how you write.</h1>
+            <h2 style="font-size: 32px; margin-top: 8px;">Watch 2,000 words happen.</h2>
+            <h3 style="font-size: 24px; margin-top: 8px;">A statement written from what happened.</h3>
+            <p class="l">body · IBM Plex Sans 400 · 16 / 1.55</p>
+            <div class="prose"><p>Trail keeps your own record of how each essay gets written. Replay it. Learn your patterns. And if anyone ever questions your work, <a href="#" class="link">the record is already there</a>.</p></div>
+            <p class="l">essay · IBM Plex Mono 400 · 15 / 1.6</p>
+            <p class="essay prose">Most writing tools keep your final version. Trail keeps the whole thing: what you typed, what you pasted, what you deleted, and when.</p>
+            <p class="l">ui · IBM Plex Mono 400 · 14 and 12 caps</p>
+            <p style="font-family: var(--font-mono); font-size: 14px;">Space or K to play and pause. Drag the scrubber to any moment.</p>
+            <p class="marginal">Final length · Typed · Pasted · Active time · Deleted</p>
+            <p class="l">colour lives on paper</p>
+            <p style="font-family: var(--font-mono); font-size: 14px;"><span style="color: var(--typed);">typed #5FCB84</span> · <span style="color: var(--paste);">pasted #E0A64B</span> · <span style="color: var(--accent);">signed #6B8CFF</span> · <span class="strike">struck</span> · <span class="prov-unobserved">unobserved</span></p>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============================================ desktop icons -->
+      <div class="desk-icons">
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 2h7v1h-7zM1 3h1v1h-1zM7 3h1v1h-1zM0 4h14v1h-14zM0 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM14 6h1v1h-1zM0 7h1v1h-1zM14 7h1v1h-1zM0 8h1v1h-1zM14 8h1v1h-1zM0 9h1v1h-1zM14 9h1v1h-1zM0 10h1v1h-1zM14 10h1v1h-1zM0 11h1v1h-1zM14 11h1v1h-1zM0 12h1v1h-1zM14 12h1v1h-1zM0 13h15v1h-15z"/><path fill="var(--chrome-deep)" d="M2 3h5v1h-5zM2 6h11v1h-11zM2 7h11v1h-11zM2 8h11v1h-11zM2 9h11v1h-11zM2 10h11v1h-11zM2 11h11v1h-11z"/><path fill="var(--sheet)" d="M1 5h13v1h-13zM1 6h1v1h-1zM13 6h1v1h-1zM1 7h1v1h-1zM13 7h1v1h-1zM1 8h1v1h-1zM13 8h1v1h-1zM1 9h1v1h-1zM13 9h1v1h-1zM1 10h1v1h-1zM13 10h1v1h-1zM1 11h1v1h-1zM13 11h1v1h-1zM1 12h13v1h-13z"/></svg><span class="label-plate">Essays</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM7 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM7 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM7 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM7 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM7 7h4v1h-4zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z"/><path fill="var(--sheet)" d="M5 1h6v1h-6zM3 2h10v1h-10zM2 3h5v1h-5zM8 3h6v1h-6zM2 4h5v1h-5zM8 4h6v1h-6zM1 5h6v1h-6zM8 5h7v1h-7zM1 6h6v1h-6zM8 6h7v1h-7zM1 7h6v1h-6zM11 7h4v1h-4zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z"/></svg><span class="label-plate">Time</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M3 1h5v1h-5zM2 2h1v1h-1zM8 2h1v1h-1zM1 3h1v1h-1zM9 3h1v1h-1zM1 4h1v1h-1zM9 4h1v1h-1zM1 5h1v1h-1zM9 5h1v1h-1zM1 6h1v1h-1zM9 6h1v1h-1zM1 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM8 8h2v1h-2zM3 9h5v1h-5zM9 9h2v1h-2zM10 10h2v1h-2zM11 11h2v1h-2zM12 12h2v1h-2zM13 13h2v1h-2z"/><path fill="var(--sheet)" d="M3 2h5v1h-5zM2 3h7v1h-7zM2 4h7v1h-7zM2 5h7v1h-7zM2 6h7v1h-7zM2 7h7v1h-7zM3 8h5v1h-5z"/></svg><span class="label-plate">Patterns</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M1 0h14v1h-14zM1 1h1v1h-1zM4 1h8v1h-8zM14 1h1v1h-1zM1 2h1v1h-1zM4 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM9 3h1v1h-1zM11 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM4 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM4 5h8v1h-8zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h10v1h-10zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM3 11h1v1h-1zM5 11h6v1h-6zM12 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h4v1h-4zM12 12h1v1h-1zM14 12h1v1h-1zM1 13h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM1 14h14v1h-14z"/><path fill="var(--chrome-deep)" d="M2 1h2v1h-2zM12 1h2v1h-2zM2 2h2v1h-2zM12 2h2v1h-2zM2 3h2v1h-2zM12 3h2v1h-2zM2 4h2v1h-2zM12 4h2v1h-2zM2 5h2v1h-2zM12 5h2v1h-2zM2 6h12v1h-12zM2 7h12v1h-12zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1z"/><path fill="var(--sheet)" d="M5 2h4v1h-4zM10 2h1v1h-1zM5 3h4v1h-4zM10 3h1v1h-1zM5 4h4v1h-4zM10 4h1v1h-1zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM4 12h1v1h-1zM9 12h3v1h-3zM4 13h8v1h-8z"/></svg><span class="label-plate">Verify</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M4 3h6v1h-6zM3 4h1v1h-1zM10 4h1v1h-1zM2 5h1v1h-1zM5 5h4v1h-4zM11 5h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM2 8h1v1h-1zM5 8h4v1h-4zM11 8h1v1h-1zM3 9h1v1h-1zM10 9h1v1h-1zM4 10h2v1h-2zM8 10h2v1h-2zM6 11h1v1h-1zM8 11h1v1h-1zM6 12h1v1h-1zM8 12h3v1h-3zM6 13h1v1h-1zM10 13h1v1h-1zM6 14h1v1h-1zM8 14h3v1h-3zM6 15h3v1h-3z"/><path fill="var(--sheet)" d="M4 4h6v1h-6zM3 5h2v1h-2zM9 5h2v1h-2zM3 6h1v1h-1zM10 6h1v1h-1zM3 7h1v1h-1zM10 7h1v1h-1zM3 8h2v1h-2zM9 8h2v1h-2zM4 9h6v1h-6zM6 10h2v1h-2zM7 11h1v1h-1zM7 12h1v1h-1zM7 13h3v1h-3zM7 14h1v1h-1z"/></svg><span class="label-plate">Settings</span></a>
+        <a class="desk-icon" href="#"><svg width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" ><path fill="currentColor" d="M2 5h12v1h-12zM1 6h1v1h-1zM7 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM7 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM8 8h1v1h-1zM14 8h1v1h-1zM1 9h1v1h-1zM8 9h1v1h-1zM14 9h1v1h-1zM2 10h12v1h-12z"/><path fill="var(--sheet)" d="M2 6h5v1h-5zM8 6h6v1h-6zM2 7h1v1h-1zM8 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM7 8h1v1h-1zM13 8h1v1h-1zM2 9h6v1h-6zM9 9h5v1h-5z"/></svg><span class="label-plate">Invite</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<script>
+  // The only script on the page: the phone-width menu toggle, mirroring MenuBar.tsx.
+  for (const b of document.querySelectorAll('.menubar-toggle')) b.addEventListener('click', () => {
+    const open = b.getAttribute('aria-expanded') !== 'true';
+    b.setAttribute('aria-expanded', String(open));
+    b.textContent = open ? 'Close' : 'Menu';
+    document.getElementById(b.getAttribute('aria-controls')).hidden = !open;
+  });
+</script>
+</body>
+</html>

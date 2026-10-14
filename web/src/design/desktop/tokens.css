@@ -1,0 +1,1148 @@
+/* ---------------------------------------------------------------------------
+   Trail desktop design tokens. Owned by design (see web/DESIGN-desktop.md).
+   Engineering imports this file from src/index.css in place of design/tokens.css
+   and never edits it. Same structure as tokens.css: bare :root is Daytime,
+   After Dark applies under prefers-color-scheme (unless html[data-theme="light"])
+   and under html[data-theme="dark"]. Every Tailwind utility name is unchanged.
+
+   Concept: the desktop. A grey desk with a dithered pattern, windows with
+   striped title bars, 1 px black frames with white/dark-grey bevels, a menu bar.
+   Chrome carries only ink. Colour (typed green, pasted amber, signed blue)
+   lives on paper, which is the white inside a window.
+--------------------------------------------------------------------------- */
+/* Fonts: self-hosted. design/fonts.css (Plex) then design/desktop/fonts.css (Pixelify). */
+
+:root {
+  /* the desk */
+  --paper: #a9a9a9; /* flat desk: what bg-paper paints; the pattern below averages to it */
+  --desk: #b4b4b4;
+  --desk-dot: #9e9e9e;
+  --desk-pattern: repeating-conic-gradient(var(--desk) 0 25%, var(--desk-dot) 0 50%);
+  /* paper: the inside of a window */
+  --sheet: #ffffff;
+  --well: #f0f0f0; /* sunken fields, list wells */
+  /* chrome: window faces, title bars, menu bar, buttons */
+  --chrome: #dcdcdc;
+  --chrome-deep: #c0c0c0; /* pressed faces, scrollbar dither partner, icon greys */
+  --frame: #000000; /* the 1 px line around everything */
+  --bevel-hi: #ffffff;
+  --bevel-lo: #808080;
+  --title-stripe: #6e6e6e;
+  --shadow-ink: #000000;
+  /* text */
+  --ink: #000000;
+  --ink-soft: #4d4d4d; /* 6.2:1 on chrome, 8.5:1 on sheet */
+  --ink-faint: #767676; /* 4.5:1 on sheet only: large or decorative text */
+  /* lines */
+  --rule: #9e9e9e; /* hairlines inside paper */
+  --rule-strong: #000000; /* control borders are frames */
+  --margin: #000000; /* the pencil tick: list bullets, scrubber ticks; never red here */
+  /* provenance: the one modern element. Text in these sits on sheet or well, never on chrome. */
+  --typed: #1c6b4c;
+  --paste: #a84e0c;
+  --mixed: #7f6410;
+  --unobserved: #6a6a6a;
+  --typed-wash: rgba(28, 107, 76, 0.12);
+  --paste-wash: rgba(224, 166, 75, 0.38); /* highlighter over pasted text */
+  --paste-wash-soft: rgba(224, 166, 75, 0.2);
+  --unobserved-wash: rgba(106, 106, 106, 0.18);
+  --on-typed: #ffffff; /* text on a typed-coloured fill (ink would be 3.3:1) */
+  --on-paste: #ffffff;
+  /* signed blue: links on paper, focus, caret, progress, selection */
+  --accent: #1e3ea3;
+  --accent-ink: #ffffff;
+  --accent-wash: rgba(30, 62, 163, 0.1);
+  --select: var(--accent);
+  --select-ink: var(--accent-ink);
+  /* misc */
+  --shadow: 2px 2px 0 0 var(--shadow-ink); /* the System 7 window drop */
+  --focus: var(--accent);
+  /* glyphs baked for native controls (checkbox, radio, scrollbar buttons) */
+  --glyph-check: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-radio: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23ffffff' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h14v1h-14zM1 6h14v1h-14zM1 7h14v1h-14zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-radio-on: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM6 5h4v1h-4zM15 5h1v1h-1zM0 6h1v1h-1zM5 6h6v1h-6zM15 6h1v1h-1zM0 7h1v1h-1zM5 7h6v1h-6zM15 7h1v1h-1zM0 8h1v1h-1zM5 8h6v1h-6zM15 8h1v1h-1zM0 9h1v1h-1zM5 9h6v1h-6zM15 9h1v1h-1zM0 10h1v1h-1zM6 10h4v1h-4zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23ffffff' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h5v1h-5zM10 5h5v1h-5zM1 6h4v1h-4zM11 6h4v1h-4zM1 7h4v1h-4zM11 7h4v1h-4zM1 8h4v1h-4zM11 8h4v1h-4zM1 9h4v1h-4zM11 9h4v1h-4zM1 10h5v1h-5zM10 10h5v1h-5zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-up: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M7 4h2v1h-2zM6 5h4v1h-4zM5 6h6v1h-6zM4 7h8v1h-8zM3 8h10v1h-10z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-down: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M3 7h10v1h-10zM4 8h8v1h-8zM5 9h6v1h-6zM6 10h4v1h-4zM7 11h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-left: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M8 3h1v1h-1zM7 4h2v1h-2zM6 5h3v1h-3zM5 6h4v1h-4zM4 7h5v1h-5zM4 8h5v1h-5zM5 9h4v1h-4zM6 10h3v1h-3zM7 11h2v1h-2zM8 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+  --glyph-arrow-right: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23000000' d%3D'M7 3h1v1h-1zM7 4h2v1h-2zM7 5h3v1h-3zM7 6h4v1h-4zM7 7h5v1h-5zM7 8h5v1h-5zM7 9h4v1h-4zM7 10h3v1h-3zM7 11h2v1h-2zM7 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+      --paper: #262626;
+      --desk: #2a2a2a;
+      --desk-dot: #1f1f1f;
+      --sheet: #161616;
+      --well: #1f1f1f;
+      --chrome: #3d3d3d;
+      --chrome-deep: #2e2e2e;
+      --frame: #9a9a9a;
+      --bevel-hi: #6e6e6e;
+      --bevel-lo: #0e0e0e;
+      --title-stripe: #8a8a8a;
+      --shadow-ink: #000000;
+      --ink: #e8e8e8;
+      --ink-soft: #b0b0b0;
+      --ink-faint: #7a7a7a;
+      --rule: #4a4a4a;
+      --rule-strong: #9a9a9a;
+      --margin: #e8e8e8;
+      --typed: #5fcb84;
+      --paste: #e0a64b;
+      --mixed: #d6b65a;
+      --unobserved: #9a9a9a;
+      --typed-wash: rgba(95, 203, 132, 0.14);
+      --paste-wash: rgba(224, 166, 75, 0.3);
+      --paste-wash-soft: rgba(224, 166, 75, 0.16);
+      --unobserved-wash: rgba(154, 154, 154, 0.2);
+      --on-typed: #161616;
+      --on-paste: #161616;
+      --accent: #6b8cff;
+      --accent-ink: #0b1020;
+      --accent-wash: rgba(107, 140, 255, 0.14);
+      --shadow: 2px 2px 0 0 var(--shadow-ink);
+      --glyph-check: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+      --glyph-radio: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h14v1h-14zM1 6h14v1h-14zM1 7h14v1h-14zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+      --glyph-radio-on: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM6 5h4v1h-4zM15 5h1v1h-1zM0 6h1v1h-1zM5 6h6v1h-6zM15 6h1v1h-1zM0 7h1v1h-1zM5 7h6v1h-6zM15 7h1v1h-1zM0 8h1v1h-1zM5 8h6v1h-6zM15 8h1v1h-1zM0 9h1v1h-1zM5 9h6v1h-6zM15 9h1v1h-1zM0 10h1v1h-1zM6 10h4v1h-4zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h5v1h-5zM10 5h5v1h-5zM1 6h4v1h-4zM11 6h4v1h-4zM1 7h4v1h-4zM11 7h4v1h-4zM1 8h4v1h-4zM11 8h4v1h-4zM1 9h4v1h-4zM11 9h4v1h-4zM1 10h5v1h-5zM10 10h5v1h-5zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+      --glyph-arrow-up: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 4h2v1h-2zM6 5h4v1h-4zM5 6h6v1h-6zM4 7h8v1h-8zM3 8h10v1h-10z'%2F%3E%3C%2Fsvg%3E");
+      --glyph-arrow-down: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M3 7h10v1h-10zM4 8h8v1h-8zM5 9h6v1h-6zM6 10h4v1h-4zM7 11h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+      --glyph-arrow-left: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M8 3h1v1h-1zM7 4h2v1h-2zM6 5h3v1h-3zM5 6h4v1h-4zM4 7h5v1h-5zM4 8h5v1h-5zM5 9h4v1h-4zM6 10h3v1h-3zM7 11h2v1h-2zM8 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+      --glyph-arrow-right: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 3h1v1h-1zM7 4h2v1h-2zM7 5h3v1h-3zM7 6h4v1h-4zM7 7h5v1h-5zM7 8h5v1h-5zM7 9h4v1h-4zM7 10h3v1h-3zM7 11h2v1h-2zM7 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+      color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+    --paper: #262626;
+    --desk: #2a2a2a;
+    --desk-dot: #1f1f1f;
+    --sheet: #161616;
+    --well: #1f1f1f;
+    --chrome: #3d3d3d;
+    --chrome-deep: #2e2e2e;
+    --frame: #9a9a9a;
+    --bevel-hi: #6e6e6e;
+    --bevel-lo: #0e0e0e;
+    --title-stripe: #8a8a8a;
+    --shadow-ink: #000000;
+    --ink: #e8e8e8;
+    --ink-soft: #b0b0b0;
+    --ink-faint: #7a7a7a;
+    --rule: #4a4a4a;
+    --rule-strong: #9a9a9a;
+    --margin: #e8e8e8;
+    --typed: #5fcb84;
+    --paste: #e0a64b;
+    --mixed: #d6b65a;
+    --unobserved: #9a9a9a;
+    --typed-wash: rgba(95, 203, 132, 0.14);
+    --paste-wash: rgba(224, 166, 75, 0.3);
+    --paste-wash-soft: rgba(224, 166, 75, 0.16);
+    --unobserved-wash: rgba(154, 154, 154, 0.2);
+    --on-typed: #161616;
+    --on-paste: #161616;
+    --accent: #6b8cff;
+    --accent-ink: #0b1020;
+    --accent-wash: rgba(107, 140, 255, 0.14);
+    --shadow: 2px 2px 0 0 var(--shadow-ink);
+    --glyph-check: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M13 4h2v1h-2zM12 5h3v1h-3zM11 6h3v1h-3zM2 7h2v1h-2zM10 7h3v1h-3zM2 8h3v1h-3zM9 8h3v1h-3zM3 9h3v1h-3zM8 9h3v1h-3zM4 10h6v1h-6zM5 11h4v1h-4zM6 12h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-radio: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM15 5h1v1h-1zM0 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM0 10h1v1h-1zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h14v1h-14zM1 6h14v1h-14zM1 7h14v1h-14zM1 8h14v1h-14zM1 9h14v1h-14zM1 10h14v1h-14zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-radio-on: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M5 0h6v1h-6zM3 1h2v1h-2zM11 1h2v1h-2zM2 2h1v1h-1zM13 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM0 5h1v1h-1zM6 5h4v1h-4zM15 5h1v1h-1zM0 6h1v1h-1zM5 6h6v1h-6zM15 6h1v1h-1zM0 7h1v1h-1zM5 7h6v1h-6zM15 7h1v1h-1zM0 8h1v1h-1zM5 8h6v1h-6zM15 8h1v1h-1zM0 9h1v1h-1zM5 9h6v1h-6zM15 9h1v1h-1zM0 10h1v1h-1zM6 10h4v1h-4zM15 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h2v1h-2zM11 14h2v1h-2zM5 15h6v1h-6z'%2F%3E%3Cpath fill%3D'%23161616' d%3D'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM2 4h12v1h-12zM1 5h5v1h-5zM10 5h5v1h-5zM1 6h4v1h-4zM11 6h4v1h-4zM1 7h4v1h-4zM11 7h4v1h-4zM1 8h4v1h-4zM11 8h4v1h-4zM1 9h4v1h-4zM11 9h4v1h-4zM1 10h5v1h-5zM10 10h5v1h-5zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h10v1h-10zM5 14h6v1h-6z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-up: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 4h2v1h-2zM6 5h4v1h-4zM5 6h6v1h-6zM4 7h8v1h-8zM3 8h10v1h-10z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-down: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M3 7h10v1h-10zM4 8h8v1h-8zM5 9h6v1h-6zM6 10h4v1h-4zM7 11h2v1h-2z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-left: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M8 3h1v1h-1zM7 4h2v1h-2zM6 5h3v1h-3zM5 6h4v1h-4zM4 7h5v1h-5zM4 8h5v1h-5zM5 9h4v1h-4zM6 10h3v1h-3zM7 11h2v1h-2zM8 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+    --glyph-arrow-right: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16' shape-rendering%3D'crispEdges'%3E%3Cpath fill%3D'%23e8e8e8' d%3D'M7 3h1v1h-1zM7 4h2v1h-2zM7 5h3v1h-3zM7 6h4v1h-4zM7 7h5v1h-5zM7 8h5v1h-5zM7 9h4v1h-4zM7 10h3v1h-3zM7 11h2v1h-2zM7 12h1v1h-1z'%2F%3E%3C%2Fsvg%3E");
+    color-scheme: dark;
+}
+
+/* Tailwind v4 theme: every utility resolves to a variable, so `bg-paper text-ink`
+   is right in both themes without dark: variants. Names match design/tokens.css;
+   the desktop adds chrome, frame, bevel, desk and select. */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-well: var(--well);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-margin: var(--margin);
+  --color-typed: var(--typed);
+  --color-paste: var(--paste);
+  --color-mixed: var(--mixed);
+  --color-unobserved: var(--unobserved);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-chrome: var(--chrome);
+  --color-chrome-deep: var(--chrome-deep);
+  --color-frame: var(--frame);
+  --color-bevel-hi: var(--bevel-hi);
+  --color-bevel-lo: var(--bevel-lo);
+  --color-desk: var(--desk);
+  --color-select: var(--select);
+  --color-select-ink: var(--select-ink);
+
+  --font-display: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
+  --font-serif: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; /* no serif on the desktop */
+  --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* 4 px base so existing utilities keep their size; lay out on even steps (8 px grid) */
+  --spacing: 0.25rem;
+
+  /* 12 14 16 18 24 32 40 48 64: whole multiples suit the pixel display face */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.5rem;
+  --text-4xl: 3rem;
+  --text-5xl: 4rem;
+
+  /* nothing is rounded on the desktop */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  --shadow-sheet: var(--shadow);
+
+  --ease-out: steps(3, end);
+}
+
+@layer base {
+  html {
+    background: var(--paper) var(--desk-pattern) 0 0 / 4px 4px;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern", "liga";
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.1;
+    text-wrap: balance;
+    margin: 0;
+  }
+  p {
+    text-wrap: pretty;
+    margin: 0;
+  }
+  a {
+    color: inherit;
+  }
+  ::selection {
+    background: var(--select);
+    color: var(--select-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 0;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* mono caps: the label under an icon, the legend on a panel */
+  .marginal {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  /* essay body text: the document inside the player, mono like a text editor */
+  .essay {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    color: var(--accent);
+  }
+  .link:hover {
+    background: var(--select);
+    color: var(--select-ink);
+    text-decoration-color: var(--select-ink);
+  }
+  /* on chrome the link is ink (accent misses AA on chrome in After Dark) */
+  .on-chrome .link {
+    color: inherit;
+  }
+  /* ruled paper: hairlines every 1.6em */
+  .ruled {
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1.6em - 1px), var(--rule) calc(1.6em - 1px), var(--rule) 1.6em);
+    background-attachment: local;
+  }
+  .caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    vertical-align: -0.18em;
+    background: var(--accent);
+    margin-left: 1px;
+    animation: caret-blink 1s steps(2, start) infinite;
+  }
+  @keyframes caret-blink {
+    to {
+      visibility: hidden;
+    }
+  }
+  .prov-typed {
+    color: var(--ink);
+  }
+  .prov-paste {
+    background: var(--paste-wash);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0.04em 0;
+  }
+  .prov-paste-edited {
+    background: var(--paste-wash-soft);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0.04em 0;
+  }
+  .prov-unobserved {
+    background: var(--unobserved-wash);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .strike {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--ink);
+    color: var(--ink-faint);
+  }
+
+  /* ------------------------------------------------------------- the desk */
+  .desk {
+    background: var(--paper) var(--desk-pattern) 0 0 / 4px 4px;
+  }
+  .desk-plain {
+    background: var(--paper);
+  }
+  /* an icon's label on the desk: ink on a sheet plate, always readable */
+  .label-plate {
+    display: inline-block;
+    background: var(--sheet);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    padding: 0 4px;
+    border: 1px solid var(--frame);
+  }
+  .inverse {
+    background: var(--ink);
+    color: var(--sheet);
+  }
+  /* a 50% dither in one dimension: the Mac menu separator */
+  .hr-dither {
+    height: 1px;
+    border: 0;
+    margin: 0;
+    background: repeating-linear-gradient(to right, var(--ink) 0 1px, transparent 1px 2px);
+  }
+  .dither {
+    background: repeating-conic-gradient(var(--chrome) 0 25%, var(--sheet) 0 50%) 0 0 / 2px 2px;
+  }
+
+  /* ------------------------------------------------------------- bevels */
+  .bevel-out {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .bevel-in {
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo), inset -1px -1px 0 var(--bevel-hi);
+  }
+  .panel {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+    padding: 16px;
+  }
+  .panel-legend {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: -8px 0 12px;
+  }
+
+  /* ------------------------------------------------------------- window */
+  .win {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    background: var(--chrome);
+    color: var(--ink);
+    border: 1px solid var(--frame);
+    box-shadow: var(--shadow);
+  }
+  .win-open {
+    animation: win-open 180ms steps(4, end) both;
+    transform-origin: 50% 40%;
+  }
+  @keyframes win-open {
+    from {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  .win-title {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+    align-items: center;
+    gap: 8px;
+    height: 24px;
+    padding: 0 4px;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--frame);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+    user-select: none;
+  }
+  .win-title::before {
+    content: "";
+    position: absolute;
+    inset: 4px 4px 3px;
+    background: repeating-linear-gradient(to bottom, var(--title-stripe) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+  .win-inactive > .win-title::before {
+    display: none;
+  }
+  .win-inactive > .win-title {
+    color: var(--ink-soft);
+  }
+  .win-title > * {
+    position: relative;
+  }
+  .win-title-text {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 0 8px;
+    background: var(--chrome);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font: inherit;
+    text-align: center;
+  }
+  .win-title-text > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .win-title-right {
+    flex: none; /* the timecode stays whole; the title truncates */
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+    background: var(--chrome);
+    padding: 0 4px;
+  }
+  /* close box and zoom box: 12 px squares on a chrome plate */
+  .win-box {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    background: var(--chrome);
+    cursor: pointer;
+  }
+  .win-box::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    box-sizing: border-box;
+    border: 1px solid var(--frame);
+    background: var(--chrome);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .win-box:active::before,
+  .win-box[aria-pressed="true"]::before {
+    background: var(--ink);
+    box-shadow: none;
+  }
+  .win-box-zoom::after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    box-sizing: border-box;
+    border: 1px solid var(--frame);
+    left: 5px;
+    top: 5px;
+  }
+  .win-box-spacer {
+    width: 20px;
+    height: 20px;
+    background: var(--chrome);
+  }
+  .win-body {
+    background: var(--sheet);
+    min-width: 0;
+    padding: 16px;
+  }
+  .win-body-chrome {
+    background: var(--chrome);
+  }
+  .win-grip {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    background: var(--chrome);
+    border-top: 1px solid var(--frame);
+    border-left: 1px solid var(--frame);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    pointer-events: none;
+  }
+  .win-resizable > .win-body {
+    padding-bottom: 24px;
+  }
+
+  /* ------------------------------------------------------------- menu bar */
+  .menubar {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    height: 24px;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--frame);
+    box-shadow: 0 1px 0 var(--bevel-hi) inset;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    user-select: none;
+  }
+  .menubar-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    color: var(--ink);
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .menubar-item:hover,
+  .menubar-item:focus-visible,
+  .menubar-item[aria-current="page"],
+  .menubar-item[aria-expanded="true"] {
+    background: var(--ink);
+    color: var(--sheet);
+    outline: none;
+  }
+  .menubar-item[aria-current="page"] {
+    font-weight: 600;
+  }
+  .menubar-item[aria-disabled="true"] {
+    color: var(--ink-faint);
+    cursor: default;
+    background: transparent;
+  }
+  .menubar-brand {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .menubar-right {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: stretch;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .menubar-right > .menubar-item {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 700px) {
+    .menubar-item {
+      padding: 0 8px;
+    }
+    .hide-phone {
+      display: none;
+    }
+  }
+  /* the pull-down that holds the items below 700 px */
+  .menubar-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: 40;
+    display: grid;
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    border-top: 0;
+    box-shadow: var(--shadow);
+  }
+  .menubar-sheet[hidden] {
+    display: none;
+  }
+  .menubar-sheet .menubar-item {
+    height: 32px;
+  }
+  .menubar-toggle {
+    display: none;
+  }
+  @media (max-width: 700px) {
+    .menubar-items {
+      display: none;
+    }
+    .menubar-toggle {
+      display: inline-flex;
+    }
+  }
+
+  /* ------------------------------------------------------------- buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 16px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .btn:hover {
+    background: var(--chrome-deep);
+  }
+  .btn:active,
+  .btn[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--sheet);
+    box-shadow: none;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--sheet);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .btn-primary:hover {
+    background: var(--ink-soft);
+  }
+  .btn-primary:active {
+    background: var(--chrome);
+    color: var(--ink);
+  }
+  /* the default button in a dialog: the thick ring means Enter */
+  .btn-ring {
+    outline: 3px solid var(--frame);
+    outline-offset: 2px;
+  }
+  .btn-ring:focus-visible {
+    outline-color: var(--focus);
+  }
+  .btn-quiet {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    padding: 0 8px;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+  .btn-quiet:hover {
+    background: var(--ink);
+    color: var(--sheet);
+  }
+  .btn-lg {
+    height: 40px;
+    padding: 0 24px;
+    font-size: 1rem;
+  }
+  .btn-sm {
+    height: 24px;
+    padding: 0 8px;
+    font-size: 0.75rem;
+  }
+  .btn-icon {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    color: var(--ink-faint);
+    cursor: not-allowed;
+    background: var(--chrome);
+    box-shadow: none;
+    border-color: var(--bevel-lo);
+  }
+
+  /* ------------------------------------------------------------- dialog */
+  .dialog {
+    position: relative;
+    background: var(--sheet);
+    color: var(--ink);
+    border: 1px solid var(--frame);
+    box-shadow: 0 0 0 1px var(--sheet), 0 0 0 3px var(--frame), 4px 4px 0 3px var(--shadow-ink);
+    padding: 24px;
+    margin: 4px; /* room for the outer frame */
+  }
+  .dialog-head {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .dialog-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+  .dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: repeating-conic-gradient(rgba(0, 0, 0, 0.5) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+  }
+
+  /* ------------------------------------------------------------- controls */
+  .chk,
+  .radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex-shrink: 0;
+    vertical-align: -4px;
+    background: var(--sheet) no-repeat center / 16px 16px;
+    cursor: pointer;
+  }
+  .chk {
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .chk:checked {
+    background-image: var(--glyph-check);
+  }
+  .radio {
+    background-color: transparent;
+    background-image: var(--glyph-radio);
+    background-size: 18px 18px;
+  }
+  .radio:checked {
+    background-image: var(--glyph-radio-on);
+  }
+  .chk:disabled,
+  .radio:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .choice {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 18px;
+    cursor: pointer;
+  }
+  .choice:has(:disabled) {
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+  .field {
+    height: 32px;
+    width: 100%;
+    padding: 0 8px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: var(--sheet);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .field::placeholder {
+    color: var(--ink-faint);
+  }
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* ------------------------------------------------------------- progress */
+  .progress {
+    position: relative;
+    display: block;
+    height: 14px;
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+    overflow: hidden;
+  }
+  /* 6 px segments on an 8 px period; the fill ends on a whole segment where round() exists */
+  .progress-fill {
+    --seg: 8px;
+    display: block;
+    width: calc(var(--p, 0) * 100%);
+    height: calc(100% - 2px);
+    margin: 1px 0 0 2px;
+    background: repeating-linear-gradient(to right, var(--progress-ink, var(--accent)) 0 calc(var(--seg) - 2px), transparent calc(var(--seg) - 2px) var(--seg));
+  }
+  @supports (width: round(down, 50%, 8px)) {
+    .progress-fill {
+      width: round(down, calc(var(--p, 0) * 100%), var(--seg));
+    }
+  }
+  .progress-typed {
+    --progress-ink: var(--typed);
+  }
+  .progress-paste {
+    --progress-ink: var(--paste);
+  }
+  .progress-ink {
+    --progress-ink: var(--ink);
+  }
+
+  /* ------------------------------------------------------------- scroll area */
+  .scroll {
+    overflow: auto;
+    min-width: 0;
+    max-width: 100%;
+    contain: inline-size; /* a wide table scrolls here instead of widening its window */
+  }
+  /* Firefox only: in Chromium a non-auto scrollbar-color disables every ::-webkit-scrollbar rule below */
+  @supports not selector(::-webkit-scrollbar) {
+    .scroll {
+      scrollbar-width: auto;
+      scrollbar-color: var(--chrome) var(--well);
+    }
+  }
+  .scroll::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+  }
+  .scroll::-webkit-scrollbar-track {
+    background: repeating-conic-gradient(var(--chrome) 0 25%, var(--sheet) 0 50%) 0 0 / 2px 2px;
+  }
+  .scroll::-webkit-scrollbar-track:vertical {
+    border-left: 1px solid var(--frame);
+  }
+  .scroll::-webkit-scrollbar-track:horizontal {
+    border-top: 1px solid var(--frame);
+  }
+  .scroll::-webkit-scrollbar-thumb {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .scroll::-webkit-scrollbar-button:single-button {
+    display: block;
+    width: 16px;
+    height: 16px;
+    background: var(--chrome) no-repeat center / 16px 16px;
+    border: 1px solid var(--frame);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:vertical:decrement {
+    background-image: var(--glyph-arrow-up);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:vertical:increment {
+    background-image: var(--glyph-arrow-down);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:horizontal:decrement {
+    background-image: var(--glyph-arrow-left);
+  }
+  .scroll::-webkit-scrollbar-button:single-button:horizontal:increment {
+    background-image: var(--glyph-arrow-right);
+  }
+  .scroll::-webkit-scrollbar-corner {
+    background: var(--chrome);
+  }
+
+  /* ------------------------------------------------------------- stat, chip */
+  .stat {
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+    padding: 12px 12px 12px;
+    display: grid;
+    gap: 4px;
+    align-content: start;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    /* colour lives on paper: tone the value on a sheet plate */
+    display: inline-block;
+    background: var(--sheet);
+    padding: 4px 6px 2px;
+    border: 1px solid var(--frame);
+    justify-self: start;
+  }
+  .stat-detail {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+    padding: 0 5px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    white-space: nowrap;
+    background: var(--sheet);
+    color: var(--ink);
+    border: 1px solid var(--frame);
+  }
+  .chip-typed {
+    color: var(--typed);
+  }
+  .chip-paste,
+  .chip-pasted,
+  .chip-ai {
+    color: var(--paste);
+  }
+  .chip-ai {
+    background: var(--paste-wash-soft);
+  }
+  .chip-mixed {
+    color: var(--mixed);
+  }
+  .chip-unobserved {
+    color: var(--unobserved);
+  }
+  .chip-accent {
+    color: var(--accent);
+  }
+  .chip-neutral {
+    color: var(--ink-soft);
+  }
+  .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--frame);
+    vertical-align: -1px;
+  }
+
+  /* ------------------------------------------------------------- scrubber */
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 24px;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 8px;
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .range::-moz-range-track {
+    height: 8px;
+    background: var(--well);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-lo);
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 20px;
+    margin-top: -7px;
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .range::-moz-range-thumb {
+    width: 10px;
+    height: 18px;
+    border-radius: 0;
+    background: var(--chrome);
+    border: 1px solid var(--frame);
+    box-shadow: inset 1px 1px 0 var(--bevel-hi), inset -1px -1px 0 var(--bevel-lo);
+  }
+  .range:focus-visible {
+    outline: none;
+  }
+  .range:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+  .range:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+  .range.bare::-webkit-slider-runnable-track {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .range.bare::-moz-range-track {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  /* ------------------------------------------------------------- provenance strip */
+  .prov-strip {
+    display: flex;
+    height: 16px;
+    gap: 1px;
+    padding: 1px;
+    background: var(--frame);
+    border: 1px solid var(--frame);
+  }
+  .prov-strip > * {
+    flex: 1;
+    min-width: 2px;
+    background: var(--unobserved);
+  }
+  .prov-strip > .is-typed {
+    background: var(--typed);
+  }
+  .prov-strip > .is-pasted {
+    background: var(--paste);
+  }
+  .prov-strip > .is-pasted-edited {
+    background: var(--paste-wash);
+  }
+  .prov-strip > .is-mixed {
+    background: var(--mixed);
+  }
+}
+
+@layer components {
+  /* an icon on the desk */
+  .desk-icon {
+    display: inline-grid;
+    justify-items: center;
+    gap: 4px;
+    width: 96px;
+    padding: 8px 4px;
+    color: var(--ink);
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  .desk-icon:hover .label-plate,
+  .desk-icon:focus-visible .label-plate {
+    background: var(--ink);
+    color: var(--sheet);
+  }
+  /* the player's transport bar: chrome strip under the sheet */
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--chrome);
+    border-top: 1px solid var(--frame);
+    box-shadow: inset 0 1px 0 var(--bevel-hi);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+  }
+}
