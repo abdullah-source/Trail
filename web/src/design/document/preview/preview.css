@@ -1,0 +1,61 @@
+/* Layout for the reference page only (the app lays out with Tailwind). */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+body{min-height:100vh}
+.pv-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.pv-stack-sm{display:grid;gap:10px;justify-items:start}
+.pv-stack-sm .field-inline{width:100%}
+.pv-push{margin-top:auto}
+.pv-muted{color:var(--ink-soft)}
+.pv-small{font-size:.8125rem}
+.pv-hash{font-size:.75rem;color:var(--ink-soft);overflow-wrap:anywhere}
+.pv-full{width:100%}
+.pv-trunc{min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.pv-hero{position:relative;overflow:hidden;border-bottom:1px solid var(--rule)}
+.pv-hero-bg{position:absolute;inset:0;pointer-events:none;-webkit-mask:linear-gradient(to bottom,#000 30%,transparent);mask:linear-gradient(to bottom,#000 30%,transparent)}
+.pv-hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center;padding-block:88px 96px}
+.pv-hero-copy{display:grid;gap:24px;justify-items:start}
+.pv-hero-sub{display:block;margin-top:.3em;font-weight:440;font-stretch:112%;color:var(--guilloche-ink);font-size:max(.46em,1.5rem);letter-spacing:-.015em;line-height:1.1}
+.pv-hero-art{margin:0;display:grid;gap:12px}
+.pv-plate{position:relative;aspect-ratio:1;width:100%;max-width:500px;justify-self:center;display:grid;place-items:center}
+.pv-rosette{position:absolute;inset:6%}
+.pv-seal{position:relative}
+.pv-plate-tl{position:absolute;top:0;left:0}
+.pv-plate-tr{position:absolute;top:0;right:0}
+.pv-plate-bl{position:absolute;bottom:0;left:0}
+.pv-caption{font-size:.8125rem;color:var(--ink-soft);text-align:center;max-width:30rem;justify-self:center}
+@media (max-width:900px){.pv-hero-grid{grid-template-columns:minmax(0,1fr);padding-block:56px 64px;gap:40px}.pv-plate{max-width:360px}}
+
+.pv-path-note{padding-block:40px}
+.pv-who{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:48px 40px}
+.pv-who .note{align-content:stretch;grid-template-rows:auto auto auto 1fr}
+.pv-who .note .pv-stack-sm{justify-items:stretch}
+.pv-who-icon{color:var(--guilloche-ink)}
+@media (max-width:1040px){.pv-who{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.pv-who{grid-template-columns:minmax(0,1fr);gap:36px}}
+
+.pv-verify{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:40px;align-items:start}
+.pv-cert-body{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
+.pv-cert-seal{display:grid;justify-items:center;gap:12px}
+.pv-dl{display:grid;margin:0}
+.pv-dl-row{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px solid var(--rule);align-items:baseline}
+.pv-dl-row dd{margin:0;min-width:0}
+.pv-seals{display:grid;gap:24px}
+.pv-seal-fig{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:center}
+.pv-seal-fig figcaption{display:grid;gap:4px}
+@media (max-width:900px){.pv-verify{grid-template-columns:minmax(0,1fr)}.pv-seals{grid-template-columns:repeat(3,minmax(0,1fr))}.pv-seal-fig{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center}}
+@media (max-width:620px){.pv-cert-body{grid-template-columns:minmax(0,1fr)}.pv-cert-seal{order:-1;justify-items:start;grid-auto-flow:column;align-items:center}.pv-seals{grid-template-columns:minmax(0,1fr)}.pv-seal-fig{grid-template-columns:auto minmax(0,1fr);justify-items:start;text-align:left}}
+
+.pv-kit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px}
+.pv-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pv-ticker-note{grid-column:1/-1}
+@media (max-width:900px){.pv-kit{grid-template-columns:minmax(0,1fr)}.pv-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.pv-specimen{display:grid;gap:16px}
+.pv-numeral{font-size:clamp(3rem,9vw,6rem)}
+.pv-display{font-size:clamp(1.75rem,4.5vw,3rem)}
+.pv-palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px}
+.pv-sw{display:grid;gap:8px}
+.pv-sw-chip{height:56px;border-radius:var(--r-sm);border:1px solid var(--rule)}
+.pv-foil{background:conic-gradient(from 0deg,var(--foil-1),var(--foil-2),var(--foil-3),var(--foil-1))}
+.pv-vault-head{padding-top:48px}
