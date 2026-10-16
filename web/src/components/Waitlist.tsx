@@ -7,7 +7,7 @@ import { useLocation } from 'react-router-dom';
 import { Button, Chip, Icon, Note, TextField, Ticker } from '../design/document';
 import { data } from '../lib/data';
 import type { WaitlistStatus } from '../lib/types';
-import { captureRef, instagramText, normalizeCode, PLACES_PER_REFERRAL, positionText, referralsText, saveCode, shareText, storedCode, waitingText, whatsappUrl, xUrl, captureSrc, sourceFor } from '../lib/waitlist';
+import { captureRef, instagramText, normalizeCode, PLACES_PER_REFERRAL, positionText, referralsText, saveCode, shareText, storedCode, waitingText, whatsappUrl, xUrl, captureSrc, sourceFor, SHOW_COUNTER_FROM } from '../lib/waitlist';
 
 async function copy(text: string): Promise<boolean> {
   try {
@@ -109,7 +109,7 @@ export function WaitlistCard({ source, compact = false }: { source: string; comp
 
   const shown = Math.max(total ?? 0, status?.total ?? 0);
   const counter =
-    shown > 0 ? (
+    shown >= SHOW_COUNTER_FROM ? (
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1" title={waitingText(shown)}>
         <Ticker value={shown} label="people waiting" live size={compact ? '1.5rem' : '2rem'} />
         <span className="text-sm text-ink-soft" aria-hidden>

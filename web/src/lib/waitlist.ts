@@ -5,6 +5,8 @@ export const REF_KEY = 'trail_ref';
 export const SRC_KEY = 'trail_src';
 export const CODE_KEY = 'trail_waitlist_code';
 export const PLACES_PER_REFERRAL = 5;
+/** The public counter stays hidden until the list is big enough to be worth showing. */
+export const SHOW_COUNTER_FROM = 25;
 
 /** Share codes are 8 characters of base32 without I, O, 0 or 1. Returns null for anything else. */
 export function normalizeCode(raw: string | null | undefined): string | null {
