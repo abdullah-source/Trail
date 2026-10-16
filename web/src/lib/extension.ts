@@ -93,6 +93,26 @@ export function setToken(token: string | null, server: string): Promise<void> {
   return send<void>({ type: 'setToken', token, server });
 }
 
+/** Recording consent as the extension holds it. Nothing is recorded until it is granted. */
+export type Consent = { granted: boolean; v?: number; at?: string };
+
+/** Whether the student has allowed recording on this computer. Extensions older than 1.0.0
+ *  do not know the message; they recorded without asking, so they count as granted. */
+export async function getConsent(): Promise<Consent> {
+  try {
+    return await send<Consent>({ type: 'getConsent' }, 2000);
+  } catch (e) {
+    if (e instanceof Error && /unknown message type/.test(e.message)) return { granted: true };
+    throw e;
+  }
+}
+
+/** Give (or withdraw) recording consent, after the student has read the disclosure and pressed
+ *  "Start recording". Withdrawing stops all recording at once; nothing recorded is deleted. */
+export function setConsent(granted: boolean): Promise<Consent> {
+  return send<Consent>({ type: 'setConsent', granted }, 4000);
+}
+
 /** Ask the extension to sign a checkpoint for one doc now (chain heads only). */
 export function checkpointNow(id: string): Promise<{ created: boolean }> {
   return send<{ created: boolean }>({ type: 'checkpoint', doc: id }, 15000);

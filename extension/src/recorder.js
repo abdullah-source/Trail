@@ -1,9 +1,22 @@
 // Records how a document is written. Runs inside supported editors.
 // Keystrokes are batched (text + timing), pastes carry a hash-matched source,
 // and periodic snapshots let the record be verified against the real text.
+// Nothing is recorded, fetched or sent until the student has consented (popup or the web app's
+// welcome page store `consent` in chrome.storage.local); withdrawing it stops recording at once.
 (() => {
   if (window.__trailRecorder) return;
   window.__trailRecorder = true;
+
+  let allowed = false;            // recording consent, kept in step with chrome.storage.local
+  const stopNow = () => { batch = null; sessionOpen = false; sessionSince = null; clearTimeout(docsTimer); };
+  try {
+    chrome.storage.local.get("consent").then((r) => { allowed = !!(r && r.consent); }, () => {});
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== "local" || !("consent" in changes)) return;
+      allowed = !!changes.consent.newValue;
+      if (!allowed) stopNow();
+    });
+  } catch {}
 
   const host = location.host;
   const IDLE_SESSION_MS = 30 * 60_000;
@@ -84,7 +97,7 @@
     return t.replace(/\r\n/g, "\n").replace(/\n+$/, "");
   }
   function docsReconcile(delayMs) {
-    if (editor !== "docs") return Promise.resolve();
+    if (editor !== "docs" || !allowed) return Promise.resolve();
     clearTimeout(docsTimer);
     const wait = Math.max(delayMs || 0, DOCS_MIN_FETCH_MS - (Date.now() - docsFetchAt));
     if (wait > 0) { docsTimer = setTimeout(() => docsReconcile(0), wait); return Promise.resolve(); }
@@ -98,7 +111,7 @@
     return docsFetching;
   }
 
-  function send(msg) { try { chrome.runtime.sendMessage({ ...msg, doc: docId, editor, host }); } catch {} }
+  function send(msg) { if (!allowed) return; try { chrome.runtime.sendMessage({ ...msg, doc: docId, editor, host }); } catch {} }
 
   function flush() {
     if (!batch) return;
@@ -128,7 +141,7 @@
 
   // ---- events --------------------------------------------------------------------
   function onBeforeInput(e) {
-    if (!root) return;
+    if (!root || !allowed) return;
     if (editor === "docs") return;  // Docs: keydown/paste/cut are the only path, so nothing is counted twice
     ensureSession();
     const now = Date.now();
@@ -176,7 +189,7 @@
     applyModel("delete", -1, len);
   }
   function onKeyDown(e) {
-    if (editor !== "docs" || !root) return;
+    if (editor !== "docs" || !root || !allowed) return;
     const now = Date.now();
     if (e.ctrlKey || e.metaKey || e.altKey) {
       // Undo/redo, cut, word or line deletes, and shortcuts we cannot follow: let the export tell us.
@@ -202,7 +215,7 @@
     }
   }
   function onCutDocs() {
-    if (editor !== "docs" || !root) return;
+    if (editor !== "docs" || !root || !allowed) return;
     ensureSession();
     const selected = rootText(root).replace(/\n+$/, "");
     if (selected.length && model.includes(selected)) docsDelete(selected.length, Date.now());
@@ -213,7 +226,7 @@
     flush(); docsReconcile(2500);
   }
   function onPasteDocs(e) {
-    if (editor !== "docs") return;
+    if (editor !== "docs" || !allowed) return;
     ensureSession();
     const text = e.clipboardData && e.clipboardData.getData("text/plain");
     if (!text) return;
@@ -225,7 +238,7 @@
     docsReconcile(1500);
   }
   async function snapshot(force) {
-    if (!root || !sessionOpen) return;
+    if (!root || !sessionOpen || !allowed) return;
     const now = Date.now();
     if (!force && now - lastSnapshot < SNAPSHOT_MS) return;
     lastSnapshot = now;
@@ -262,6 +275,6 @@
     if (sessionOpen) send({ type: "event", kind: "focus", ts: Date.now(), data: { state: document.hidden ? "hidden" : "visible" } });
   });
   chrome.runtime.onMessage.addListener((m, _s, reply) => {
-    if (m.type === "status") reply({ recording: !!root, doc: docId, editor, chars: model.length, session: sessionOpen, since: sessionOpen ? sessionSince : null });
+    if (m.type === "status") reply({ recording: !!root && allowed, consent: allowed, doc: docId, editor, chars: model.length, session: sessionOpen, since: sessionOpen ? sessionSince : null });
   });
 })();

@@ -2,5 +2,12 @@
   "name": "trail-extension",
   "private": true,
   "type": "module",
-  "scripts": { "build": "node build.js" }
+  "scripts": {
+    "build": "node build.js",
+    "package": "node build.js --store --zip",
+    "test": "node test/context.test.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
+  }
 }

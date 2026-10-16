@@ -7,18 +7,40 @@ h1{font-size:16px;margin:0 0 8px;display:flex;align-items:center;gap:8px;font-fa
 .k{color:var(--soft);font-size:11.5px}.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--rule)}
 button{margin-top:8px;width:100%;padding:8px;border:1px solid var(--rule);border-radius:6px;background:transparent;color:inherit;cursor:pointer;font:inherit}
 button.p{background:var(--ink);color:var(--paper);border-color:var(--ink)}button:disabled{opacity:.5;cursor:default}
+button.q{border-color:transparent;color:var(--soft);font-size:11.5px;padding:4px;margin-top:4px}
 textarea{width:100%;box-sizing:border-box;font:inherit;margin-top:8px;min-height:44px;border:1px solid var(--rule);border-radius:6px;padding:6px;background:transparent;color:inherit}
 #conn{margin-top:10px}
 #work{margin-top:4px;color:var(--ink)}#work b{font-weight:600}
+#consent p{margin:0 0 8px}#consent ul{margin:0 0 8px;padding-left:18px}#consent li{margin:2px 0}
+.opt{display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding-top:10px;border-top:1px solid var(--rule);cursor:pointer}
+.opt input{margin:2px 0 0;flex:none}
 </style></head><body>
 <h1><span class="dot" id="dot"></span>Trail</h1>
-<div id="status" class="k">Checking this page…</div>
-<div id="work" class="k" hidden></div>
-<div id="stats"></div>
-<textarea id="note" placeholder="Used an AI tool for this document? Note it, e.g. 'ChatGPT: brainstormed the outline'." hidden></textarea>
-<button id="noteBtn" hidden>Add AI-use note</button>
-<button id="pause" hidden>Pause recording on this site</button>
-<button id="cp">Sign a checkpoint now</button>
-<button id="open" class="p">Open my writing record</button>
-<div id="conn" class="k"></div>
+
+<section id="consent" hidden>
+  <p><strong>Before Trail records anything</strong></p>
+  <p class="k">Trail keeps a private record of how you write, so you can replay it, see your patterns and prove where your work came from. When you start it, it records:</p>
+  <ul class="k">
+    <li>what you type, delete and paste in Google Docs, Notion, Word Online and your school's LMS (Canvas, Moodle, Blackboard, Brightspace), with timing, and the site a paste came from;</li>
+    <li>which sites are in front while a document is open, including AI sites (site name and minutes only);</li>
+    <li>time on your LMS pages, by course and assignment.</li>
+  </ul>
+  <p class="k"><strong>It stays on this computer.</strong> What leaves: a fingerprint of each record every 10 minutes, only if you are signed in. Never your text.</p>
+  <button id="start" class="p">Start recording</button>
+  <button id="notnow">Not now</button>
+</section>
+
+<section id="main" hidden>
+  <div id="status" class="k">Checking this page…</div>
+  <div id="work" class="k" hidden></div>
+  <div id="stats"></div>
+  <textarea id="note" placeholder="Used an AI tool for this document? Note it, e.g. 'ChatGPT: brainstormed the outline'." hidden></textarea>
+  <button id="noteBtn" hidden>Add AI-use note</button>
+  <button id="pause" hidden>Pause recording on this site</button>
+  <button id="cp">Sign a checkpoint now</button>
+  <button id="open" class="p">Open my writing record</button>
+  <label class="opt k"><input type="checkbox" id="anysite"><span>Know where pastes come from (asks for access to all sites; only a fingerprint of what you copy is kept)</span></label>
+  <div id="conn" class="k"></div>
+  <button id="stop" class="q">Stop recording on this computer</button>
+</section>
 <script type="module" src="popup.js"></script></body></html>

@@ -43,10 +43,12 @@ await ctx.route('https://docs.google.com/**', (route) => {
       </script></body></html>`,
   });
 });
+// Recording needs consent (popup or welcome page); grant it the way the bridge does, before any page loads.
+const sw = ctx.serviceWorkers()[0] || (await ctx.waitForEvent('serviceworker'));
+await sw.evaluate(() => globalThis.__trailTest.setConsent(true));
 const page = await ctx.newPage();
 await page.goto(DOC);
 await page.waitForTimeout(1500); // recorder attaches every 3 s; first attach is immediate
-let sw = ctx.serviceWorkers()[0] || (await ctx.waitForEvent('serviceworker'));
 const frame = page.frames().find((f) => f !== page.mainFrame());
 await frame.locator('#tgt').focus();
 

@@ -8,6 +8,7 @@
     trail keygen [--out signer.pem]
     trail serve [--host H] [--port P]
     trail renewal-reminders          email everyone whose plan renews in 7 days (run daily)
+    trail waitlist-stats             waitlist totals by source and day (read-only; on Railway: railway run trail waitlist-stats)
 """
 
 from __future__ import annotations
@@ -118,6 +119,36 @@ def cmd_reminders(a):
     print(f"sent {n} renewal reminder(s)"); return 0
 
 
+def cmd_waitlist_stats(a):
+    """Read-only growth numbers: totals, confirmed, referral share, and counts by source and by day."""
+    from collections import Counter
+    from sqlalchemy import select
+    from trail.server.models import WaitlistEntry
+    from trail.server.settings import Settings
+    from trail.server.store import Store
+    store = Store(Settings.from_env().database_url)
+    with store.session() as s:
+        rows = list(s.scalars(select(WaitlistEntry)))
+    confirmed = [r for r in rows if r.confirmed_at]
+    referred = [r for r in confirmed if r.referred_by]
+    print(f"total {len(rows)} · confirmed {len(confirmed)} · confirmed via a referral {len(referred)}"
+          + (f" ({len(referred) / len(confirmed):.0%})" if confirmed else ""))
+    by_src = Counter((r.source or "unknown") for r in confirmed)
+    print("\nconfirmed by source")
+    for src, n in by_src.most_common():
+        print(f"  {n:5d}  {src}")
+    by_day = Counter(r.created_at.date().isoformat() for r in rows if r.created_at)
+    print("\njoined by day")
+    for day in sorted(by_day):
+        print(f"  {day}  {by_day[day]:5d}")
+    top = sorted((r for r in rows if r.referrals), key=lambda r: -r.referrals)[:10]
+    if top:
+        print("\ntop referrers (code, confirmed referrals)")
+        for r in top:
+            print(f"  {r.code}  {r.referrals}")
+    return 0
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="trail", description="Trail: your writing record")
     p.add_argument("--version", action="version", version=f"trail {__version__}")
@@ -129,6 +160,7 @@ def main(argv=None) -> int:
     s = sub.add_parser("verify"); s.add_argument("path"); s.add_argument("--public-key"); s.set_defaults(fn=cmd_verify)
     s = sub.add_parser("keygen"); s.add_argument("--out", default="signer.pem"); s.set_defaults(fn=cmd_keygen)
     s = sub.add_parser("serve"); s.add_argument("--host", default="127.0.0.1"); s.add_argument("--port", type=int, default=8100); s.set_defaults(fn=cmd_serve)
+    s = sub.add_parser("waitlist-stats"); s.set_defaults(fn=cmd_waitlist_stats)
     s = sub.add_parser("renewal-reminders"); s.add_argument("--days", type=int, default=7); s.set_defaults(fn=cmd_reminders)
     a = p.parse_args(argv)
     return a.fn(a)

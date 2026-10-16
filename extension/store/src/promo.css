@@ -1,0 +1,11 @@
+@font-face{font-family:Archivo;src:url(../../../web/public/fonts/archivo/archivo-latin.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:Fragment Mono;src:url(../../../web/public/fonts/fragment-mono/fragment-mono-latin.woff2) format("woff2")}
+:root{--ink:#111114;--tile:#18181B;--paper:#F2EEE4;--soft:#a8a39a;--caret:#9FB5FF;--typed:#5dba8b;--paste:#e5924e}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;background:var(--ink);color:var(--paper);font-family:Archivo,"Helvetica Neue",Arial,sans-serif;overflow:hidden}
+.mark{border-radius:22%;box-shadow:0 0 0 1px #2c2c31}
+.line{font-weight:700;font-stretch:112%;letter-spacing:-.01em;line-height:1.04;margin:0}
+.line em{font-style:normal;color:var(--caret)}
+.micro{font-family:"Fragment Mono",ui-monospace,monospace;color:var(--soft);letter-spacing:.02em}
+.strip{display:flex;gap:3px}
+.strip i{display:block;height:100%;border-radius:2px}

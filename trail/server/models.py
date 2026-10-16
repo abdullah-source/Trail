@@ -114,11 +114,17 @@ class Doc(Base):
 
 
 class WaitlistEntry(Base):
-    """People who asked to be told when the Chrome Web Store listing is live. Email only."""
+    """People who asked to be told when the Chrome Web Store listing is live, with their place in
+    the referral queue. Email plus queue bookkeeping; no IP address, no name."""
     __tablename__ = "waitlist"
     email: Mapped[str] = mapped_column(String(254), primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source: Mapped[str | None] = mapped_column(String(40))
+    code: Mapped[str] = mapped_column(String(16), unique=True, nullable=False)
+    referred_by: Mapped[str | None] = mapped_column(String(16))  # another entry's code
+    referrals: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    confirm_token_hash: Mapped[str | None] = mapped_column(String(64), unique=True)
 
 
 Index("ix_magic_links_user", MagicLink.user_id)
@@ -204,10 +210,15 @@ DESCRIPTIONS: dict[str, tuple[str, dict[str, str]]] = {
         "checkpoint_hash": "fingerprint of the checkpoint",
         "ts": "when it was signed",
     }),
-    "waitlist": ("People who asked to hear when the Chrome Web Store listing is live.", {
+    "waitlist": ("People who asked to hear when the Chrome Web Store listing is live, and their place in the queue.", {
         "email": "the address they typed",
         "created_at": "when they asked",
         "source": "which page had the form",
+        "code": "the code in their share link",
+        "referred_by": "the share code of whoever invited them, if anyone",
+        "referrals": "how many invited friends confirmed their address (each moves them up 5 places)",
+        "confirmed_at": "when they clicked the link in the confirmation email",
+        "confirm_token_hash": "a hash of the confirmation link token; the token itself is only in the email",
     }),
     "docs": ("One row per document the extension has had signed, so the app can show when it was last signed.", {
         "user_id": "whose document",

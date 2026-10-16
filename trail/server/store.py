@@ -10,9 +10,10 @@ import hmac
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Iterable
 
-from sqlalchemy import create_engine, delete, func, select
+from sqlalchemy import create_engine, delete, func, select, update
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -57,6 +58,32 @@ def _referral_code() -> str:
 
 class PlanInfo(dict):
     pass
+
+
+# -- referral waitlist ------------------------------------------------------------------------------
+
+WAITLIST_PLACES_PER_REFERRAL = 5
+
+
+def waitlist_positions(rows: Iterable[tuple[str, datetime, int]]) -> dict[str, int]:
+    """Queue position for every entry, 1-based. rows are (code, created_at, confirmed referrals).
+
+    Rule: an entry's join index is its 1-based rank by created_at. Its score is
+    join index - 5 x confirmed referrals; the queue is sorted by score, ties broken by created_at
+    (earlier joiner first). So each friend who confirms moves you up five places. Computed in
+    Python over the whole table, which is fine at waitlist scale."""
+    joined = sorted(rows, key=lambda r: (aware(r[1]), r[0]))
+    scored = [(i - WAITLIST_PLACES_PER_REFERRAL * (refs or 0), aware(created), i, code)
+              for i, (code, created, refs) in enumerate(joined, 1)]
+    scored.sort()
+    return {code: pos for pos, (_, _, _, code) in enumerate(scored, 1)}
+
+
+@dataclass
+class WaitlistJoin:
+    entry: WaitlistEntry
+    new: bool
+    confirm_token: str | None  # raw token to email; None when the address is already confirmed
 
 
 class Store:
@@ -139,6 +166,9 @@ class Store:
                 s.execute(delete(model).where((model.referrer_id == uid) | (model.referred_id == uid)))
             for model in (MagicLink, WebSession, ApiToken, Subscription, CheckpointRow, Doc):
                 s.execute(delete(model).where(model.user_id == uid))
+            u = s.get(User, uid)
+            if u:
+                s.execute(delete(WaitlistEntry).where(WaitlistEntry.email == u.email))
             s.execute(delete(User).where(User.id == uid))
             s.commit()
 
@@ -174,15 +204,104 @@ class Store:
 
     # -- web sessions -----------------------------------------------------------------------
 
-    def join_waitlist(self, email: str, source: str | None = None) -> bool:
-        """True when the address is new."""
+    # -- waitlist -----------------------------------------------------------------------------------------
+
+    def _waitlist_code(self, s: Session) -> str:
+        for _ in range(20):
+            code = _referral_code()
+            if not s.scalar(select(WaitlistEntry).where(WaitlistEntry.code == code)):
+                return code
+        raise RuntimeError("could not mint a unique waitlist code")
+
+    def join_waitlist(self, email: str, source: str | None = None, ref: str | None = None) -> WaitlistJoin:
+        """Add an address, or return the existing entry (same code, no duplicate). `ref` is another
+        entry's share code; unknown codes and the entry's own code are ignored. An unconfirmed
+        entry gets a fresh confirmation token each time (the old link stops working)."""
+        email = email.strip().lower()
+        ref = (ref or "").strip().upper() or None
+        with self.session() as s:
+            e = s.get(WaitlistEntry, email)
+            new = e is None
+            if e is None:
+                referrer = s.scalar(select(WaitlistEntry).where(WaitlistEntry.code == ref)) if ref else None
+                e = WaitlistEntry(email=email, created_at=utcnow(), source=(source or None), code=self._waitlist_code(s),
+                                  referred_by=referrer.code if referrer and referrer.email != email else None, referrals=0)
+                s.add(e)
+            token = None
+            if e.confirmed_at is None:
+                token = "wl_" + secrets.token_urlsafe(24)
+                e.confirm_token_hash = self.token_hash(token)
+            s.commit()
+            return WaitlistJoin(entry=e, new=new, confirm_token=token)
+
+    def waitlist_entry(self, code: str) -> WaitlistEntry | None:
+        with self.session() as s:
+            return s.scalar(select(WaitlistEntry).where(WaitlistEntry.code == code.strip().upper()))
+
+    def waitlist_status(self, code: str) -> dict[str, Any] | None:
+        """Position, confirmed referrals and queue size for one share code; None when unknown."""
+        code = code.strip().upper()
+        with self.session() as s:
+            rows = s.execute(select(WaitlistEntry.code, WaitlistEntry.created_at, WaitlistEntry.referrals, WaitlistEntry.confirmed_at)).all()
+        me = next((r for r in rows if r.code == code), None)
+        if me is None:
+            return None
+        positions = waitlist_positions((r.code, r.created_at, r.referrals) for r in rows)
+        return {"code": code, "position": positions[code], "referrals": me.referrals, "total": len(rows), "confirmed": me.confirmed_at is not None}
+
+    def waitlist_stats(self) -> dict[str, int]:
+        with self.session() as s:
+            total = s.scalar(select(func.count()).select_from(WaitlistEntry)) or 0
+            confirmed = s.scalar(select(func.count()).select_from(WaitlistEntry).where(WaitlistEntry.confirmed_at.is_not(None))) or 0
+        return {"total": total, "confirmed": confirmed}
+
+    def confirm_waitlist(self, token: str) -> tuple[WaitlistEntry | None, bool]:
+        """Mark the address confirmed. Returns (entry, referrer_credited). The referrer's count goes
+        up once, only here, only on the first confirmation, and never for the entry's own code.
+        A second click on the same link is harmless: (entry, False)."""
+        with self.session() as s:
+            e = s.scalar(select(WaitlistEntry).where(WaitlistEntry.confirm_token_hash == self.token_hash(token)))
+            if e is None:
+                return None, False
+            # conditional update so two clicks racing cannot both credit the referrer
+            first = s.execute(update(WaitlistEntry).where(WaitlistEntry.email == e.email, WaitlistEntry.confirmed_at.is_(None))
+                              .values(confirmed_at=utcnow())).rowcount == 1
+            credited = False
+            if first and e.referred_by and e.referred_by != e.code:
+                credited = s.execute(update(WaitlistEntry).where(WaitlistEntry.code == e.referred_by, WaitlistEntry.email != e.email)
+                                     .values(referrals=WaitlistEntry.referrals + 1)).rowcount == 1
+            s.commit()
+            s.refresh(e)
+            return e, credited
+
+    def resolve_referrer(self, code: str | None) -> User | None:
+        """The account behind an invite code: a user's own referral code, or a waitlist share code
+        whose address has since made an account."""
+        if not code:
+            return None
+        code = code.strip().upper()
+        with self.session() as s:
+            u = s.scalar(select(User).where(User.referral_code == code))
+            if u:
+                return u
+            e = s.scalar(select(WaitlistEntry).where(WaitlistEntry.code == code))
+            return s.scalar(select(User).where(User.email == e.email)) if e else None
+
+    def waitlist_referrer_user(self, email: str) -> User | None:
+        """Waitlist referral -> account referral, applied at first sign-in (the only time
+        get_or_create_user records a Referral row). Rule: if this address is on the waitlist and was
+        invited with another entry's share code, and that entry's address now has an account, that
+        account is the referrer. Signing in proves the address, so confirmation is not required
+        here. If the inviter has no account yet, there is no credit (it is not back-filled later)."""
         email = email.strip().lower()
         with self.session() as s:
-            if s.get(WaitlistEntry, email):
-                return False
-            s.add(WaitlistEntry(email=email, created_at=utcnow(), source=(source or None)))
-            s.commit()
-            return True
+            e = s.get(WaitlistEntry, email)
+            if not e or not e.referred_by:
+                return None
+            inviter = s.scalar(select(WaitlistEntry).where(WaitlistEntry.code == e.referred_by))
+            if not inviter or inviter.email == email:
+                return None
+            return s.scalar(select(User).where(User.email == inviter.email))
 
     def create_session(self, uid: str) -> str:
         token = "lhs_" + secrets.token_urlsafe(32)
@@ -407,4 +526,4 @@ class Store:
         return "\n".join(out)
 
 
-__all__ = ["Store", "utcnow", "aware", "iso", "now_ts", "TRIAL_DAYS", "SEMESTER_DAYS"]
+__all__ = ["Store", "WaitlistJoin", "waitlist_positions", "WAITLIST_PLACES_PER_REFERRAL", "utcnow", "aware", "iso", "now_ts", "TRIAL_DAYS", "SEMESTER_DAYS"]

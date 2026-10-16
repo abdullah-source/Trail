@@ -1,7 +1,8 @@
 // Single data layer for the pages. With VITE_MOCK=1 every function returns fixtures from
 // ./mock.ts (real simulated events). Otherwise: essays/events come from the extension bridge,
 // account/billing/checkpoints/pack from the API (same origin, httpOnly session cookie).
-import type { Checkpoint, Essay, ExtensionStatus, Me, Referrals, ServerDoc, TrailEvent, VerifyResult, WorklogRow, WorklogSummary } from './types';
+import type { Checkpoint, Essay, ExtensionStatus, Me, Referrals, ServerDoc, TrailEvent, VerifyResult, WaitlistJoin, WaitlistStats, WaitlistStatus, WorklogRow, WorklogSummary } from './types';
+import { storedRef } from './waitlist';
 import * as ext from './extension';
 import { verifyRecordFile, type TrustAnchor } from './verify';
 
@@ -79,18 +80,40 @@ export const data = {
       await sleep(300);
       return { sent: true, created: false };
     }
-    return api('/v1/auth/request', { method: 'POST', body: JSON.stringify({ email, referral: referral || null }) });
+    // A ?ref= code from the waitlist (kept in localStorage) also counts as an invite at sign-up.
+    return api('/v1/auth/request', { method: 'POST', body: JSON.stringify({ email, referral: referral || storedRef() || null }) });
   },
 
-  async joinWaitlist(email: string, source: string): Promise<{ joined: boolean; new: boolean }> {
-    if (MOCK) return { joined: true, new: true };
-    return api('/v1/waitlist', { method: 'POST', body: JSON.stringify({ email, source }) });
+  /** Join (or re-find) a place in the referral queue. `ref` is the share code the visitor arrived with. */
+  async joinWaitlist(email: string, source: string, ref?: string | null): Promise<WaitlistJoin> {
+    if (MOCK) {
+      await sleep(300);
+      return { joined: true, new: true, code: 'MOCK2345', position: 128, referrals: 0, total: 412, confirmed: false, share_url: `${location.origin}/?ref=MOCK2345` };
+    }
+    return api('/v1/waitlist', { method: 'POST', body: JSON.stringify({ email, source, ref: ref || null }) });
+  },
+
+  /** A place in the queue by share code; null when the code is unknown. */
+  async waitlistStatus(code: string): Promise<WaitlistStatus | null> {
+    if (MOCK) return { code, position: 128, referrals: 0, total: 412, confirmed: false, share_url: `${location.origin}/?ref=${code}` };
+    try {
+      return await api<WaitlistStatus>(`/v1/waitlist/${encodeURIComponent(code)}`);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null;
+      throw e;
+    }
+  },
+
+  /** The public counter. */
+  async waitlistStats(): Promise<WaitlistStats> {
+    if (MOCK) return { total: 412, confirmed: 301 };
+    return api<WaitlistStats>('/v1/waitlist/stats', { credentials: 'omit' });
   },
 
   /** Clerk: exchange Clerk's session token for our httpOnly session cookie. */
   async clerkSignIn(token: string, referral?: string): Promise<{ user: string; first: boolean }> {
     if (MOCK) return { user: 'mock', first: false };
-    return api('/v1/auth/clerk', { method: 'POST', body: JSON.stringify({ token, referral: referral || null }) });
+    return api('/v1/auth/clerk', { method: 'POST', body: JSON.stringify({ token, referral: referral || storedRef() || null }) });
   },
 
   async logout(): Promise<void> {

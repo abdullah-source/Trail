@@ -21,11 +21,14 @@ export default function Privacy() {
   return (
     <Desk columns={1} width="reading">
       <Section label="Privacy" code="00:00" icon="key" titleAs="div" open>
-        <Heading as="h1" eyebrow="Privacy" title="What we store, listed as tables, not adjectives." lede="Trail is built so that your writing never reaches our server. This page lists every table and every column that does. Last updated 21 September 2026." />
+        <Heading as="h1" eyebrow="Privacy" title="What we store, listed as tables, not adjectives." lede="Trail is built so that your writing never reaches our server. This page lists every table and every column that does. Last updated 15 October 2026." />
       </Section>
 
       <Section label="Short version" code="00:05">
         <Prose>
+          <p>
+            <strong>What Trail is for.</strong> Trail keeps a private, on-device record of how you write in supported editors, so you can replay it, see your patterns, and prove where your work came from. That is the extension's single purpose. It records nothing until you press Start recording, in the extension or on the welcome page, and you can stop it from the toolbar button at any time.
+          </p>
           <p>
             <strong>Your text stays on your device.</strong> The extension stores your writing record in your browser. The web app reads it from the extension directly. Replay, patterns and the declaration are computed in your browser.
           </p>
@@ -92,7 +95,14 @@ export default function Privacy() {
           <p>
             It also keeps a <strong>homework time log</strong>: for the school sites and editors it already records, the minutes a tab was in front and you were active, with the course and assignment names it read from the page. This powers the Time page in the app, for you alone. Course and assignment names never leave the device: there is no server endpoint that accepts them, and no teacher or institution view exists. You can export or delete the log from Settings.
           </p>
+          <p>
+            <strong>Time on AI sites.</strong> While a document is open in a supported editor, the extension notes which site is in front and for how long: the host name (for example chatgpt.com) and the minutes, with a flag when it is a known AI site. Never the address of the page, its title or anything on it. This lets your record show, honestly, that you looked something up or used an AI tool between two paragraphs.
+          </p>
+          <p>
+            <strong>Where pastes come from, and the optional all-sites setting.</strong> To say where a paste came from, the extension notes, when you copy, the site's host name and a fingerprint (a SHA-256 hash) of what you copied. It never keeps the copied text itself; when you paste into a recorded document, it compares fingerprints. By default this happens only on the supported editor and school sites. If you turn on "Know where pastes come from" in the extension, Chrome asks you to allow access to all sites, and the same fingerprinting runs on every site so a paste from anywhere can be attributed. Turning it off, or removing the permission in Chrome, stops it immediately. Without it, a paste copied from another site is recorded as coming from an unknown source.
+          </p>
           <p>Uninstalling the extension deletes this database, as Chrome does for any extension. Export first if you want to keep it.</p>
+          <p>The use of information received from Google APIs will adhere to the Chrome Web Store User Data Policy, including the Limited Use requirements.</p>
         </Prose>
       </Section>
 

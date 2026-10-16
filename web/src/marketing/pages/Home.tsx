@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Badge, Bullet, ButtonLink, CHROME_STORE_URL, Desk, Eyebrow, Heading, Prose, Section, Stat, useTitle } from '../../design/components';
 import { DesktopIcon, Dialog, ProgressBar } from '../../design/desktop';
 import { useSiteConfig } from '../../lib/config';
-import { WaitlistCard } from './Install';
+import { WaitlistCard } from '../../components/Waitlist';
 import { ReplayHero } from '../../design/ReplayHero';
 import { TypedHeadline } from '../../design/TypedHeadline';
 import { Provenance, type ProvenanceLine, type ProvenancePaste } from '../../design/Provenance';

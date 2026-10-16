@@ -59,10 +59,12 @@ let failures = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failures++; };
 
 // ---- 1. the document tab: type so a session opens ---------------------------------------------------
+// Recording needs consent (popup or welcome page); grant it the way the bridge does, before any page loads.
+const sw = ctx.serviceWorkers()[0] || (await ctx.waitForEvent('serviceworker'));
+await sw.evaluate(() => globalThis.__trailTest.setConsent(true));
 const page = await ctx.newPage();
 await page.goto(DOC);
 await page.waitForTimeout(1500);
-const sw = ctx.serviceWorkers()[0] || (await ctx.waitForEvent('serviceworker'));
 const frame = page.frames().find((f) => f !== page.mainFrame());
 await frame.locator('#tgt').focus();
 const type = async (s, delay = 60) => { for (const ch of s) { await frame.locator('#tgt').press(ch === ' ' ? 'Space' : ch); await page.waitForTimeout(delay); } };

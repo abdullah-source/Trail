@@ -10,6 +10,18 @@
   const detect = globalThis.TrailContext && globalThis.TrailContext.detectContext;
   if (!detect) return;
 
+  // Nothing is counted or sent until the student has consented to recording (chrome.storage.local
+  // `consent`, set from the popup or the web app's welcome page); withdrawing it stops at once.
+  let allowed = false;
+  try {
+    chrome.storage.local.get("consent").then((r) => { allowed = !!(r && r.consent); }, () => {});
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== "local" || !("consent" in changes)) return;
+      allowed = !!changes.consent.newValue;
+      if (!allowed) { acc = 0; sentToday = 0; }
+    });
+  } catch {}
+
   // Tests shorten the heartbeat with ?trail_fast_ms=<ms> (content scripts cannot see page globals).
   let fastMs = 0;
   try { fastMs = Number(new URL(location.href).searchParams.get("trail_fast_ms")) || 0; } catch {}
@@ -58,7 +70,7 @@
   }
 
   function send(active_ms) {
-    if (!ctx || active_ms <= 0) return;
+    if (!ctx || active_ms <= 0 || !allowed) return;
     const msg = { type: "presence", host, editor: ctx.editor, kind: ctx.kind, course_key: ctx.course_key, course_label: ctx.course_label, item_key: ctx.item_key, item_label: ctx.item_label, editor_doc: ctx.editor_doc || null, active_ms: Math.round(active_ms), ts: Date.now() };
     try { chrome.runtime.sendMessage(msg, () => void chrome.runtime.lastError); } catch {}
     sentToday += active_ms;
@@ -75,7 +87,7 @@
     if (!same) { flush(); sentToday = 0; }
     if (next && same) { next.item_label = next.item_label || ctx.item_label; next.course_label = next.course_label || ctx.course_label; }
     ctx = next;
-    if (!ctx) return;
+    if (!ctx || !allowed) { acc = 0; return; }
     const active = document.visibilityState === "visible" && lastInput && now - lastInput < IDLE_MS;
     if (active) acc += dt;
     if (acc >= HEARTBEAT_MS) flush();
@@ -87,6 +99,6 @@
 
   // The popup asks what this page is and how much has been counted here since it loaded.
   chrome.runtime.onMessage.addListener((m, _s, reply) => {
-    if (m && m.type === "presence.status") { reply({ context: ctx, pending_ms: Math.round(acc), page_ms: Math.round(sentToday + acc) }); }
+    if (m && m.type === "presence.status") { reply({ context: allowed ? ctx : null, pending_ms: Math.round(acc), page_ms: Math.round(sentToday + acc) }); }
   });
 })();

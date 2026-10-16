@@ -267,3 +267,10 @@ export type WorklogSummary = {
   by_day: { day: string; active_ms: number }[];
   by_hour: number[];
 };
+
+/** GET /v1/waitlist/{code}: one place in the referral queue. Position is 1-based. */
+export type WaitlistStatus = { code: string; position: number; referrals: number; total: number; confirmed: boolean; share_url: string };
+/** POST /v1/waitlist: the same status plus whether the address was new. Joining twice returns the same code. */
+export type WaitlistJoin = WaitlistStatus & { joined: boolean; new: boolean };
+/** GET /v1/waitlist/stats: the public counter. */
+export type WaitlistStats = { total: number; confirmed: number };

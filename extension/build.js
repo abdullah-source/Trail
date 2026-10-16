@@ -1,28 +1,50 @@
 #!/usr/bin/env node
-// Writes manifest.json and src/config.js from manifest.template.json for one app origin.
+// Writes manifest.json and src/config.js from manifest.template.json for one app origin, and
+// optionally packages the Chrome Web Store zip.
 //
-//   node build.js                                  # APP_ORIGIN env or https://trail.app
-//   node build.js --origin http://localhost:5173   # local dev against `vite dev`
-//   node build.js --origin https://trail.app --dev   # production origin plus localhost for testing
+//   node build.js                                       # APP_ORIGIN env or https://trail.app
+//   node build.js --origin http://localhost:5173        # local dev against `vite dev`
+//   node build.js --origin https://trail.app --dev      # production origin plus localhost for testing
+//   node build.js --store                               # store build: production origin only (see below)
+//   node build.js --store --origin https://trail.app --version 1.0.1 --zip
+//                                                       # store build + dist/trail-<version>.zip
+//   npm run package                                     # = node build.js --store --zip
+//
+// --store refuses --dev, refuses http:// and localhost origins, and writes exactly one origin to
+// externally_connectable and config.js. Its origin is --origin, else APP_ORIGIN, else the live
+// deployment (STORE_ORIGIN below). --version overrides the template's version (store builds only).
+// --zip packs manifest.json, icons/ and src/ (nothing else: no test/, no build.js, no node_modules)
+// into dist/trail-<version>.zip.
 //
 // The origin appears in externally_connectable (the web app talks to the extension over
 // chrome.runtime.sendMessage) and in config.js (popup links, origin check). It is not a host
 // permission: externally_connectable needs none.
-import { readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const STORE_ORIGIN = "https://trail-hmc.up.railway.app";
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const flag = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const origin = (flag("--origin") || process.env.APP_ORIGIN || "https://trail.app").replace(/\/$/, "");
-const dev = args.includes("--dev");
-if (!/^https?:\/\/[^/]+$/.test(origin)) {
-  console.error(`APP_ORIGIN must be scheme + host only, e.g. https://trail.app (got ${origin})`);
+const fail = (msg) => {
+  console.error(msg);
   process.exit(1);
+};
+const store = args.includes("--store");
+const dev = args.includes("--dev");
+const zip = args.includes("--zip");
+if (store && dev) fail("--store and --dev cannot be combined: a store build carries the production origin only.");
+if (zip && !store) fail("--zip packages store builds only: add --store.");
+const fallback = store ? STORE_ORIGIN : "https://trail.app";
+const origin = (flag("--origin") || process.env.APP_ORIGIN || fallback).replace(/\/$/, "");
+if (!/^https?:\/\/[^/]+$/.test(origin)) fail(`APP_ORIGIN must be scheme + host only, e.g. https://trail.app (got ${origin})`);
+if (store && (!origin.startsWith("https://") || /\/\/(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(origin))) {
+  fail(`--store needs a public https origin (got ${origin})`);
 }
 const extra = dev ? ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8100", "http://127.0.0.1:8100"] : [];
 const origins = [origin, ...extra.filter((o) => o !== origin)];
@@ -30,11 +52,38 @@ const origins = [origin, ...extra.filter((o) => o !== origin)];
 const template = JSON.parse(readFileSync(join(here, "manifest.template.json"), "utf8"));
 const manifest = JSON.parse(JSON.stringify(template).replaceAll("__APP_ORIGIN__", origin));
 manifest.externally_connectable.matches = origins.map((o) => `${o}/*`);
+const version = flag("--version");
+if (version) {
+  if (!store) fail("--version is for store builds only.");
+  if (!/^\d+(\.\d+){0,3}$/.test(version)) fail(`--version must be 1 to 4 dot-separated integers (got ${version})`);
+  manifest.version = version;
+}
+if (store) {
+  const text = JSON.stringify(manifest);
+  if (/localhost|127\.0\.0\.1/.test(text)) fail("store manifest mentions localhost; refusing to write it");
+  if (manifest.description.length > 132) fail(`description is ${manifest.description.length} characters; the store allows 132`);
+  if (manifest.name.length > 45) fail(`name is ${manifest.name.length} characters; the store allows 45`);
+  for (const size of Object.values(manifest.icons)) if (!existsSync(join(here, size))) fail(`missing icon ${size}`);
+}
 writeFileSync(join(here, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+const rebuild = store ? `node build.js --store --origin ${origin}` : `node build.js --origin ${origin}${dev ? " --dev" : ""}`;
 writeFileSync(
   join(here, "src", "config.js"),
-  `// Generated by build.js; do not edit. Rebuild with: node build.js --origin ${origin}${dev ? " --dev" : ""}\n` +
+  `// Generated by build.js; do not edit. Rebuild with: ${rebuild}\n` +
     `export const APP_ORIGIN = ${JSON.stringify(origin)};\n` +
     `export const ALLOWED_ORIGINS = ${JSON.stringify(origins)};\n`,
 );
-console.log(`manifest.json written for ${origins.join(", ")}`);
+console.log(`manifest.json ${manifest.version}${store ? " (store)" : ""} written for ${origins.join(", ")}`);
+
+if (zip) {
+  const dist = join(here, "dist");
+  mkdirSync(dist, { recursive: true });
+  const out = join(dist, `trail-${manifest.version}.zip`);
+  rmSync(out, { force: true });
+  // -X: no extra file attributes; only the three paths the extension needs are packed.
+  execFileSync("zip", ["-r", "-X", "-q", out, "manifest.json", "icons", "src", "-x", "*.DS_Store", "-x", "*/.*"], { cwd: here, stdio: "inherit" });
+  const listing = execFileSync("unzip", ["-Z1", out], { encoding: "utf8" }).trim().split("\n");
+  const stray = listing.filter((p) => !(p === "manifest.json" || p.startsWith("icons/") || p.startsWith("src/")));
+  if (stray.length) fail(`unexpected files in the zip: ${stray.join(", ")}`);
+  console.log(`${out}\n  ${listing.join("\n  ")}`);
+}

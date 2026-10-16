@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Trail — see how you write",
-  "version": "0.4.0",
-  "description": "Keeps your own record of how each essay gets written, on your device. Replay your drafts, see your patterns, and get an honest AI-use statement written from what actually happened.",
-  "permissions": ["storage", "alarms", "tabs"],
+  "short_name": "Trail",
+  "version": "1.0.0",
+  "description": "A private, on-device record of how you write in Docs, Notion, Word and your LMS. Replay drafts and prove where your work came from.",
+  "minimum_chrome_version": "105",
+  "permissions": ["storage", "alarms", "tabs", "scripting"],
   "host_permissions": [
     "https://docs.google.com/document/*",
     "https://www.notion.so/*",
@@ -16,11 +18,16 @@
     "https://*.blackboard.com/*",
     "https://*.brightspace.com/*"
   ],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "background": { "service_worker": "src/background.js", "type": "module" },
-  "action": { "default_popup": "src/popup.html", "default_title": "Trail" },
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Trail",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
   "externally_connectable": { "matches": ["__APP_ORIGIN__/*"] },
   "content_scripts": [
-    { "matches": ["<all_urls>"], "js": ["src/copytrack.js"], "run_at": "document_start", "all_frames": true },
     {
       "matches": [
         "https://docs.google.com/document/*",
@@ -34,10 +41,9 @@
         "https://*.blackboard.com/*",
         "https://*.brightspace.com/*"
       ],
-      "js": ["src/context.js", "src/recorder.js", "src/presence.js"],
+      "js": ["src/copytrack.js", "src/context.js", "src/recorder.js", "src/presence.js"],
       "run_at": "document_idle",
       "all_frames": true
     }
-  ],
-  "icons": { "128": "icons/icon128.png" }
+  ]
 }

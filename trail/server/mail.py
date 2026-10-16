@@ -57,3 +57,16 @@ def renewal_reminder_message(plan: str, renews_on: str, amount: str, portal_hint
             f"Nothing to do if you want to keep it. To cancel in one click, open Settings → Billing ({portal_hint}). "
             "No retention flow, no questions.\n")
     return subject, text
+
+
+def waitlist_confirm_message(link: str, position: int, share_url: str) -> tuple[str, str, str]:
+    subject = "Confirm your spot on the Trail waitlist"
+    text = (f"Hi,\n\nYou're #{position} in line for Trail. Click once to confirm your spot:\n\n{link}\n\n"
+            f"Each friend who joins with your link and confirms moves you up 5 places:\n{share_url}\n\n"
+            "One more email, the day the Chrome Web Store listing is live. Nothing else. "
+            "If you did not ask for this, ignore this email and you will not hear from us again.\n")
+    html = (f"<p>You're #{position} in line for Trail. Click once to confirm your spot:</p><p><a href=\"{link}\">Confirm my spot</a></p>"
+            f"<p>Each friend who joins with your link and confirms moves you up 5 places:<br><a href=\"{share_url}\">{share_url}</a></p>"
+            "<p>One more email, the day the Chrome Web Store listing is live. Nothing else. "
+            "If you did not ask for this, ignore this email.</p>")
+    return subject, text, html

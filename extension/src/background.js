@@ -26,6 +26,71 @@ function isAiUrl(url) {
 
 const words = (text) => text.split(/\s+/).filter(Boolean).length;
 
+// ---- recording consent ------------------------------------------------------------------------------
+// Nothing is recorded until the student says so, in the popup or on the web app's welcome page:
+// `consent: {v: 1, at}` in chrome.storage.local. Without it the recorder, presence and copy scripts
+// stay silent, and here no tab is tracked, no message is stored and no checkpoint is sent.
+// Withdrawing it ("Stop recording on this computer") closes the open sessions and stops all of that
+// at once; what was recorded before stays on the device until the student deletes it.
+const CONSENT_VERSION = 1;
+let consentCache = null;       // null until read from storage after a (re)start
+async function consented() {
+  if (consentCache === null) consentCache = !!(await chrome.storage.local.get("consent")).consent;
+  return consentCache;
+}
+async function consentState() {
+  const { consent } = await chrome.storage.local.get("consent");
+  return consent ? { granted: true, v: consent.v, at: consent.at } : { granted: false };
+}
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !("consent" in changes)) return;
+  consentCache = !!changes.consent.newValue;
+  if (!consentCache) { front = null; lastFront = null; lastCopy = null; tabDocs.clear(); }
+});
+async function setConsent(granted) {
+  if (granted) {
+    const prev = (await chrome.storage.local.get("consent")).consent;
+    const consent = prev && prev.v === CONSENT_VERSION ? prev : { v: CONSENT_VERSION, at: nowTs() };
+    await chrome.storage.local.set({ consent });
+    consentCache = true;
+    return consentState();
+  }
+  // Withdraw: close every open session (the last event written), then forget the front tab and the
+  // last copy. Runs inside the message queue, so no recorder message is half-way through.
+  for (const docId of [...sessions.keys()]) await endSession(docId, "stopped", Date.now());
+  for (const d of await db.all("docs")) if (d.openSession) await endSession(d.id, "stopped", Date.now()).catch(() => {});
+  consentCache = false;
+  front = null; lastFront = null; lastCopy = null; tabDocs.clear();
+  await chrome.storage.local.remove("consent");
+  return { granted: false };
+}
+
+// ---- paste sources on every site (optional) ----------------------------------------------------------
+// By default copytrack.js runs only on the supported editor and LMS sites (manifest content_scripts).
+// When the student turns on "Know where pastes come from" in the popup, Chrome grants the optional
+// host permissions below and copytrack.js is registered for every site; when the permission is
+// removed (popup toggle or chrome://extensions) it is unregistered. Without it a paste copied from
+// another site has source_kind "unknown".
+const ALL_SITES = ["https://*/*", "http://*/*"];
+const COPYTRACK_ID = "trail-copytrack";
+async function syncCopytrack() {
+  const granted = await chrome.permissions.contains({ origins: ALL_SITES });
+  const registered = (await chrome.scripting.getRegisteredContentScripts({ ids: [COPYTRACK_ID] })).length > 0;
+  if (granted && !registered) {
+    const editors = (chrome.runtime.getManifest().content_scripts || [])[0]?.matches || [];
+    await chrome.scripting.registerContentScripts([{ id: COPYTRACK_ID, matches: ALL_SITES, excludeMatches: editors, js: ["src/copytrack.js"], runAt: "document_start", allFrames: true, persistAcrossSessions: true }]);
+  } else if (!granted && registered) {
+    await chrome.scripting.unregisterContentScripts({ ids: [COPYTRACK_ID] });
+  }
+  return { granted, registered: granted };
+}
+let copytrackSync = Promise.resolve();
+const resyncCopytrack = () => (copytrackSync = copytrackSync.then(syncCopytrack, syncCopytrack).catch((e) => ({ error: String(e) })));
+chrome.permissions.onAdded.addListener(resyncCopytrack);
+chrome.permissions.onRemoved.addListener(resyncCopytrack);
+chrome.runtime.onStartup.addListener(resyncCopytrack);
+resyncCopytrack();
+
 // ---- document ids: the editor's id (gdoc:..., notion:..., page:host/path) never leaves this device.
 // Every document gets a random id, minted once and stored locally; events, checkpoints and the
 // web app all use that id. The server only ever sees random ids.
@@ -197,15 +262,19 @@ async function worklogSummary(since, until) {
 let queue = Promise.resolve();
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
   const job = async () => {
-    if (m.type === "copy") { lastCopy = { host: m.host, hash: m.hash, len: m.len, ts: m.ts, tab: sender.tab && sender.tab.id }; return; }
+    if (m.type === "consent.get") return consentState();
+    if (m.type === "consent.set") return setConsent(!!m.granted);
+    if (m.type === "copytrack.sync") return resyncCopytrack();
+    if (m.type === "status.bg") { const { token } = await chrome.storage.local.get("token"); return { connected: !!token, paused: [...(await pausedHosts())], consent: await consented() }; }
     if (m.type === "checkpointAll") return checkpointAll();
-    if (m.type === "status.bg") { const { token } = await chrome.storage.local.get("token"); return { connected: !!token, paused: [...(await pausedHosts())] }; }
     if (m.type === "pause") {
       const p = await pausedHosts();
       if (m.paused) p.add(m.host); else p.delete(m.host);
       await chrome.storage.local.set({ paused: [...p] });
       return { paused: [...p] };
     }
+    if (!(await consented())) return;   // no consent: nothing below is stored or acted on
+    if (m.type === "copy") { lastCopy = { host: m.host, hash: m.hash, len: m.len, ts: m.ts, tab: sender.tab && sender.tab.id }; return; }
     if (m.type === "presence.today") return worklogToday(m.item_key, m.editor_doc);
     if (m.host && (await pausedHosts()).has(m.host)) return;  // per-site pause: nothing is recorded
     if (m.type === "presence") return notePresence(m);
@@ -279,8 +348,11 @@ chrome.runtime.onMessageExternal.addListener((m, sender, reply) => {
     switch (m && m.type) {
       case "status": {
         const { token } = await chrome.storage.local.get("token");
-        return { version: chrome.runtime.getManifest().version, connected: !!token, recording: sessions.size > 0 };
+        return { version: chrome.runtime.getManifest().version, connected: !!token, recording: sessions.size > 0, consent: await consented() };
       }
+      // recording consent, given or withdrawn from the web app's welcome page (same rules as the popup)
+      case "getConsent": return consentState();
+      case "setConsent": return serial(() => setConsent(m.granted === true));
       case "listDocs": case "getEssays": return listDocs();
       case "getEvents": return getEvents(m.doc);
       case "getCheckpoints": return getCheckpoints(m.doc);
@@ -289,15 +361,18 @@ chrome.runtime.onMessageExternal.addListener((m, sender, reply) => {
         else await chrome.storage.local.remove(["token", "server"]);
         return { connected: !!m.token };
       }
-      case "addAiNote": await addAiNote(m.doc, m.tool, m.note); return null;
+      case "addAiNote":
+        if (!(await consented())) throw new Error("Recording is off on this computer: start it from the Trail button in the toolbar.");
+        await serial(() => addAiNote(m.doc, m.tool, m.note)); return null;
       case "checkpoint": {
         const r = await checkpointAll(m.doc);
         const row = Array.isArray(r) ? r.find((x) => x.doc === m.doc) : null;
+        if (r && r.skipped === "no consent") throw new Error("Recording is off on this computer: start it from the Trail button in the toolbar.");
         if (r && r.skipped) throw new Error("Not connected: open Settings and connect the extension first.");
         if (row && row.error) throw new Error(row.error);
         return { created: !!(row && row.created) };
       }
-      case "clearAll": await db.clearAll(); sessions.clear(); return null;
+      case "clearAll": await serial(async () => { await db.clearAll(); sessions.clear(); aliases.clear(); tabDocs.clear(); }); return null;
       // work log (screen time for homework): local only, read here like essays are
       case "listWorklog": return worklogRows(m.since || null, m.until || null);
       case "worklogSummary": return worklogSummary(m.since || null, m.until || null);
@@ -310,8 +385,10 @@ chrome.runtime.onMessageExternal.addListener((m, sender, reply) => {
 });
 
 // ---- first run: open the welcome page -------------------------------------------------------------
+// The welcome page asks for recording consent first (bridge `setConsent`); so does the popup.
 chrome.runtime.onInstalled.addListener((d) => {
   if (d.reason === "install") chrome.tabs.create({ url: `${APP_ORIGIN}/app/welcome` });
+  resyncCopytrack();
 });
 
 // ---- source visits and returns: which tab is in front while a document session is open ----------
@@ -347,6 +424,7 @@ async function docOfTab(tabId) {
 
 async function closeFront(now) {
   if (!front) return;
+  if (!(await consented())) { front = null; return; }
   const dwell = now - frontSince;
   if (front.host && dwell >= MIN_DWELL_MS) {
     const data = { host: front.host, dwell_ms: dwell };
@@ -358,6 +436,7 @@ async function closeFront(now) {
 }
 
 async function setFront(tab, now) {
+  if (!(await consented())) { front = null; lastFront = null; return; }   // no consent: no tab is tracked
   const url = (tab && tab.url) || "";
   const host = hostOf(url);
   const ai = isAiUrl(url);
@@ -418,6 +497,7 @@ chrome.alarms.create("checkpoint", { periodInMinutes: 10 });
 chrome.alarms.onAlarm.addListener(async (a) => { if (a.name === "checkpoint") await checkpointAll(); });
 
 export async function checkpointAll(onlyDoc) {
+  if (!(await consented())) return { skipped: "no consent" };
   const { server, token } = await chrome.storage.local.get(["server", "token"]);
   if (!server || !token) return { skipped: "not signed in" };
   const docs = await db.all("docs");
@@ -443,4 +523,6 @@ export async function checkpointAll(onlyDoc) {
 }
 
 // test hook: test/presence-harness.mjs calls these inside the worker (dynamic import() is not allowed there)
-globalThis.__trailTest = { worklogSummary, worklogRows, clearWorklog: () => db.clear("worklog"), isAiUrl, classify, front: () => front };
+globalThis.__trailTest = { worklogSummary, worklogRows, clearWorklog: () => db.clear("worklog"), isAiUrl, classify, front: () => front,
+  setConsent: (granted) => serial(() => setConsent(granted)), consentState, checkpointAll, syncCopytrack, lastCopy: () => lastCopy,
+  registered: () => chrome.scripting.getRegisteredContentScripts() };

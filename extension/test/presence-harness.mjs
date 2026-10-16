@@ -62,10 +62,12 @@ let failures = 0;
 const check = (ok, msg) => { console.log((ok ? 'ok   ' : 'FAIL ') + msg); if (!ok) failures++; };
 
 // ---- 1. an active stint on a Canvas assignment ---------------------------------------------------
+// Recording needs consent (popup or welcome page); grant it the way the bridge does, before any page loads.
+const sw = ctx.serviceWorkers()[0] || (await ctx.waitForEvent('serviceworker'));
+await sw.evaluate(() => globalThis.__trailTest.setConsent(true));
 const page = await ctx.newPage();
 await page.goto(URL_);
 await page.waitForTimeout(1200);
-const sw = ctx.serviceWorkers()[0] || (await ctx.waitForEvent('serviceworker'));
 await page.locator('p').click();   // focus the page without hitting a breadcrumb link
 console.log(`working for ${ACTIVE_S}s …`);
 await workFor(page, ACTIVE_S);

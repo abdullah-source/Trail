@@ -248,8 +248,9 @@ def test_clerk_endpoint_is_absent_when_not_configured(client):
 
 def test_waitlist_needs_no_account_and_dedupes(client):
     r = client.post("/v1/waitlist", json={"email": "Someone+tag@Uni.Example", "source": "home"})
-    assert r.status_code == 200 and r.json() == {"joined": True, "new": True}
-    assert client.post("/v1/waitlist", json={"email": "someone@uni.example"}).json()["new"] is False
+    assert r.status_code == 200 and r.json()["joined"] is True and r.json()["new"] is True
+    again = client.post("/v1/waitlist", json={"email": "someone@uni.example"}).json()
+    assert again["new"] is False and again["code"] == r.json()["code"]  # tests/test_waitlist.py has the rest
     assert client.post("/v1/waitlist", json={"email": "not-an-email"}).status_code == 422
 
 

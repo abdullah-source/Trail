@@ -37,7 +37,7 @@ from trail.server import billing as billing_mod
 from trail.server.clerk import ClerkClient, ClerkVerifier
 from trail.server.billing import PLANS, FakeGateway, Gateway, StripeGateway, handle_webhook
 from trail.server.demo import DEMO_EMAIL, DemoRegistry, find_demo_dir, record_filename
-from trail.server.mail import ConsoleMailer, Mailer, ResendMailer, magic_link_message
+from trail.server.mail import ConsoleMailer, Mailer, ResendMailer, magic_link_message, waitlist_confirm_message
 from trail.server.models import schema_description
 from trail.server.settings import Settings
 from trail.server.store import Store, aware, iso, utcnow
@@ -98,6 +98,10 @@ def clean_email(v: str) -> str:
 
 IP_LINKS_PER_WINDOW = 20
 IP_WINDOW_SECONDS = 15 * 60
+# Same-IP burst guard for waitlist referrals: at most this many joins per (network, share code) per
+# hour carry the referral. Friends on one campus network share an IP, so this is a ceiling, not a ban.
+WAITLIST_REFS_PER_IP = 3
+WAITLIST_REF_WINDOW_SECONDS = 60 * 60
 
 
 def client_ip(request: Request) -> str:
@@ -113,6 +117,7 @@ def client_ip(request: Request) -> str:
 class WaitlistRequest(BaseModel):
     email: str = Field(max_length=254)
     source: str | None = Field(default=None, max_length=40)
+    ref: str | None = Field(default=None, max_length=16)  # another entry's share code
 
     @field_validator("email")
     @classmethod
@@ -225,6 +230,21 @@ def create_app(
             ip_hits.clear()
         return limited
 
+    ref_hits: dict[tuple[str, str], list[float]] = {}
+
+    def ref_burst(ip: str, code: str) -> bool:
+        """True when this network has already used this share code WAITLIST_REFS_PER_IP times this hour."""
+        now = time.time()
+        key = (ip, code.strip().upper())
+        hits = [t for t in ref_hits.get(key, []) if now - t < WAITLIST_REF_WINDOW_SECONDS]
+        burst = len(hits) >= WAITLIST_REFS_PER_IP
+        if not burst:
+            hits.append(now)
+        ref_hits[key] = hits
+        if len(ref_hits) > 10_000:
+            ref_hits.clear()
+        return burst
+
     # -- access log: method, path, status, duration. Never the query string, never the body. --
     @app.middleware("http")
     async def access_log(request: Request, call_next):
@@ -302,10 +322,22 @@ def create_app(
 
     # -- magic-link auth ---------------------------------------------------------------------------
 
+    def invited_by(referral: str | None, email: str):
+        """Who invited a new account (only used when the account is created, i.e. first sign-in).
+        1. An explicit invite code: a user's referral code, or a waitlist share code whose
+           address now has an account.
+        2. Otherwise the waitlist: if this address joined the waitlist with someone's share code
+           and that person's address has an account, they are the referrer.
+        Either way the result goes through the existing Referral logic (credit on first replay)."""
+        u = store.resolve_referrer(referral) if referral else None
+        if u is None:
+            u = store.waitlist_referrer_user(email)
+        return u if u is not None and u.email != email else None
+
     def _request_link(req: AuthRequest, request: Request) -> dict[str, Any]:
         if ip_limited(client_ip(request)):
             raise HTTPException(429, "Too many sign-in links requested from this network. Try again in 15 minutes.")
-        referrer = store.user_by_referral_code(req.referral) if req.referral else None
+        referrer = invited_by(req.referral, req.email)
         user, created = store.get_or_create_user(req.email, referred_by=referrer.id if referrer else None, allow_create=settings.signup_open)
         if not user:
             raise HTTPException(403, "Sign-ups are closed right now. If you already have an account, check the address.")
@@ -344,12 +376,60 @@ def create_app(
         set_session_cookie(resp, session)
         return resp
 
+    # -- referral waitlist -------------------------------------------------------------------------------
+
+    def share_url(code: str) -> str:
+        return f"{settings.app_url}/?ref={code}"
+
+    def waitlist_payload(code: str) -> dict[str, Any]:
+        st = store.waitlist_status(code)
+        if st is None:
+            raise HTTPException(404, "No waitlist entry has that code.")
+        return {"code": st["code"], "position": st["position"], "referrals": st["referrals"], "total": st["total"],
+                "confirmed": st["confirmed"], "share_url": share_url(st["code"])}
+
     @app.post("/v1/waitlist")
     def waitlist(req: WaitlistRequest, request: Request) -> dict[str, Any]:
-        """No account needed: just an address to tell when the Web Store listing is live."""
-        if ip_limited(client_ip(request)):
+        """No account needed. Joining twice returns the same code. A confirmation email goes out
+        while the address is unconfirmed; only a confirmed address counts for whoever invited it."""
+        ip = client_ip(request)
+        if ip_limited(ip):
             raise HTTPException(429, "Too many requests from this network. Try again in 15 minutes.")
-        return {"joined": True, "new": store.join_waitlist(req.email, req.source)}
+        ref = req.ref if req.ref and not ref_burst(ip, req.ref) else None
+        joined = store.join_waitlist(req.email, req.source, ref)
+        out = waitlist_payload(joined.entry.code)
+        if joined.confirm_token:
+            link = f"{settings.app_url}/v1/waitlist/confirm?token={joined.confirm_token}"
+            subject, text, html = waitlist_confirm_message(link, out["position"], out["share_url"])
+            try:
+                mailer.send(joined.entry.email, subject, text, html)
+            except Exception:
+                log.exception("waitlist confirmation email failed")  # the spot is kept; joining again resends
+        return {"joined": True, "new": joined.new, **out}
+
+    @app.get("/v1/waitlist/stats")
+    def waitlist_stats() -> dict[str, int]:
+        """Public counter for the marketing pages."""
+        return store.waitlist_stats()
+
+    @app.get("/v1/waitlist/confirm")
+    def waitlist_confirm(request: Request, token: str = "", format: str = "") -> Response:
+        """The one-click link in the confirmation email. Lands on /install, where the card sits at the top."""
+        entry, _credited = store.confirm_waitlist(token) if token else (None, False)
+        wants_json = format == "json" or "application/json" in request.headers.get("accept", "")
+        if entry is None:
+            if wants_json:
+                raise HTTPException(404, "This confirmation link is not valid. Join again to get a new one.")
+            return RedirectResponse(f"{settings.app_url}/install?waitlist=invalid", status_code=303)
+        if wants_json:
+            return JSONResponse({"confirmed": True, **waitlist_payload(entry.code)})
+        return RedirectResponse(f"{settings.app_url}/install?waitlist=confirmed&code={entry.code}", status_code=303)
+
+    @app.get("/v1/waitlist/{code}")
+    def waitlist_status(code: str) -> dict[str, Any]:
+        if len(code) > 16:
+            raise HTTPException(404, "No waitlist entry has that code.")
+        return waitlist_payload(code)
 
     @app.post("/v1/auth/clerk")
     def auth_clerk(req: ClerkSignIn, request: Request) -> Response:
@@ -360,8 +440,9 @@ def create_app(
         email = clerk.email_for_token(req.token)
         if not email:
             raise HTTPException(401, "Clerk did not accept that sign-in. Try again.")
-        referrer = store.user_by_referral_code(req.referral) if req.referral else None
-        user, first = store.get_or_create_user(clean_email(email), referred_by=referrer.id if referrer else None, allow_create=settings.signup_open)
+        email = clean_email(email)
+        referrer = invited_by(req.referral, email)
+        user, first = store.get_or_create_user(email, referred_by=referrer.id if referrer else None, allow_create=settings.signup_open)
         if not user:
             raise HTTPException(403, "Sign-ups are closed right now.")
         session = store.create_session(user.id)

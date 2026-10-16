@@ -97,7 +97,7 @@ export const STORED_TABLES: StoredTable[] = [
   },
   {
     "table": "waitlist",
-    "why": "People who asked to hear when the Chrome Web Store listing is live.",
+    "why": "People who asked to hear when the Chrome Web Store listing is live, and their place in the queue.",
     "columns": [
       {
         "name": "email",
@@ -113,6 +113,31 @@ export const STORED_TABLES: StoredTable[] = [
         "name": "source",
         "type": "VARCHAR(40)",
         "what": "which page had the form"
+      },
+      {
+        "name": "code",
+        "type": "VARCHAR(16)",
+        "what": "the code in their share link"
+      },
+      {
+        "name": "referred_by",
+        "type": "VARCHAR(16)",
+        "what": "the share code of whoever invited them, if anyone"
+      },
+      {
+        "name": "referrals",
+        "type": "INTEGER",
+        "what": "how many invited friends confirmed their address (each moves them up 5 places)"
+      },
+      {
+        "name": "confirmed_at",
+        "type": "DATETIME",
+        "what": "when they clicked the link in the confirmation email"
+      },
+      {
+        "name": "confirm_token_hash",
+        "type": "VARCHAR(64)",
+        "what": "a hash of the confirmation link token; the token itself is only in the email"
       }
     ]
   },

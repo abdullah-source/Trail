@@ -2,8 +2,26 @@ import { APP_ORIGIN } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
 const send = (m) => new Promise((r) => chrome.runtime.sendMessage(m, (x) => r(x && x.ok ? x.result : x)));
+// The optional permission behind "Know where pastes come from" (see background.js syncCopytrack).
+const ALL_SITES = { origins: ["https://*/*", "http://*/*"] };
 
-(async () => {
+// ---- first open: nothing records until the student presses "Start recording" -------------------------
+async function showConsent(note) {
+  $("main").hidden = true;
+  $("consent").hidden = false;
+  $("dot").className = "dot";
+  if (note) $("consent").querySelector("p").textContent = note;
+  $("start").onclick = async () => {
+    $("start").disabled = true;
+    await send({ type: "consent.set", granted: true });
+    location.reload();   // re-open as the recording popup
+  };
+  $("notnow").onclick = () => window.close();
+}
+
+async function showMain() {
+  $("consent").hidden = true;
+  $("main").hidden = false;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const status = $("status"), dot = $("dot"), stats = $("stats");
   let host = null;
@@ -52,7 +70,7 @@ const send = (m) => new Promise((r) => chrome.runtime.sendMessage(m, (x) => r(x 
     status.textContent = "Keeping time on this page. Everything stays on this device.";
     renderPause();
   } else {
-    status.textContent = "Not an editor Trail records. Supported: Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard, Brightspace.";
+    status.textContent = "Recording is on. This page is not an editor Trail records. Supported: Google Docs, Notion, Word Online, Canvas, Moodle, Blackboard, Brightspace.";
   }
   $("pause").onclick = async () => {
     const r = await send({ type: "pause", host, paused: !paused.has(host) });
@@ -68,4 +86,28 @@ const send = (m) => new Promise((r) => chrome.runtime.sendMessage(m, (x) => r(x 
     else if (Array.isArray(res) && res.some((r) => r.error)) status.textContent = res.find((r) => r.error).error;
     else status.textContent = Array.isArray(res) && res.some((r) => r.created) ? "Checkpoint signed." : "Nothing new to sign.";
   };
+
+  // Paste sources on every site: an optional permission, asked for only when the student turns it on.
+  // permissions.request must run straight from the click; the popup may close while Chrome asks, so
+  // the background registers or unregisters the copy script itself when the permission changes.
+  const anysite = $("anysite");
+  anysite.checked = await chrome.permissions.contains(ALL_SITES);
+  anysite.onchange = () => {
+    const want = anysite.checked;
+    const done = (ok) => { anysite.checked = want ? !!ok : !ok; send({ type: "copytrack.sync" }); };
+    if (want) chrome.permissions.request(ALL_SITES).then(done, () => done(false));
+    else chrome.permissions.remove(ALL_SITES).then(done, () => done(false));
+  };
+
+  $("stop").onclick = async () => {
+    $("stop").disabled = true;
+    await send({ type: "consent.set", granted: false });
+    showConsent("Recording is off on this computer. Nothing new is recorded until you start it again; what was recorded before stays here until you delete it in the app.");
+  };
+}
+
+(async () => {
+  const c = await send({ type: "consent.get" });
+  if (c && c.granted) await showMain();
+  else await showConsent();
 })();

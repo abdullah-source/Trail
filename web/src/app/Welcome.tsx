@@ -1,16 +1,55 @@
-// First run (DECISIONS §6): install → sign in → connect → write one paragraph → first replay.
-// The page polls the extension for the first document with events and opens its replay.
+// First run (DECISIONS §6): allow recording → install → connect → write one paragraph → first replay.
+// Nothing is recorded until the student has read what Trail records and pressed "Start recording"
+// (here, or in the extension's popup); the page hands that consent to the extension over the bridge
+// (`setConsent`). Pressed before the extension is installed, it is kept for this tab and handed over
+// as soon as the extension shows up. The page then polls for the first document with events and
+// opens its replay.
 // On the desktop it is the installer dialog: a step list with a segmented progress bar that fills
 // as the student goes, and the one default button for the current step (DESIGN-desktop.md §4).
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { data } from '../lib/data';
+import { MOCK, data } from '../lib/data';
+import * as ext from '../lib/extension';
 import { useMe } from '../components/AppShell';
 import { usePageTitle } from '../components/useAsync';
 import { Button, ButtonLink, Caption, Chip, Dialog, Icon, ProgressBar, cx } from '../components/ui';
 import { CHROME_STORE_URL } from './shared';
 
-type Step = 'install' | 'connect' | 'write' | 'done';
+type Step = 'allow' | 'install' | 'connect' | 'write' | 'done';
+
+const PENDING_KEY = 'trail_consent_pending';
+const readPending = () => {
+  try {
+    return sessionStorage.getItem(PENDING_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const writePending = (on: boolean) => {
+  try {
+    if (on) sessionStorage.setItem(PENDING_KEY, '1');
+    else sessionStorage.removeItem(PENDING_KEY);
+  } catch {
+    /* storage may be unavailable */
+  }
+};
+
+/** The same disclosure the extension's popup shows before its "Start recording" button. */
+function Disclosure() {
+  return (
+    <div className="grid gap-2 text-sm">
+      <p className="m-0">Trail keeps a private record of how you write, so you can replay it, see your patterns and prove where your work came from. When you start it, it records:</p>
+      <ul className="m-0 pl-5 grid gap-1 list-disc">
+        <li>what you type, delete and paste in Google Docs, Notion, Word Online and your school's LMS (Canvas, Moodle, Blackboard, Brightspace), with timing, and the site a paste came from;</li>
+        <li>which sites are in front while a document is open, including AI sites (site name and minutes only);</li>
+        <li>time on your LMS pages, by course and assignment.</li>
+      </ul>
+      <p className="m-0">
+        <strong>It stays on this computer.</strong> What leaves: a fingerprint of each record every 10 minutes, only if you are signed in. Never your text. You can stop it any time from the Trail button in the toolbar.
+      </p>
+    </div>
+  );
+}
 
 export default function Welcome() {
   usePageTitle('Welcome');
@@ -23,6 +62,12 @@ export default function Welcome() {
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // recording consent: what the extension holds (null until asked), and a "Start recording" pressed
+  // before the extension was installed (kept for this tab, handed over when it shows up)
+  const [consent, setConsent] = useState<boolean | null>(null);
+  const [pending, setPending] = useState(readPending);
+  const [allowing, setAllowing] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
   const tried = useRef(false);
 
   // 1. detect the extension (keeps polling while it is missing so an install shows up without a reload)
@@ -33,6 +78,14 @@ export default function Welcome() {
       if (!alive) return;
       setInstalled(s.installed);
       if (s.connected) setConnected(true);
+      if (s.installed && !MOCK) {
+        try {
+          const c = await ext.getConsent();
+          if (alive) setConsent(c.granted);
+        } catch {
+          /* extension busy; ask again on the next check */
+        }
+      } else if (MOCK) setConsent((c) => c ?? false);
     };
     check();
     const t = setInterval(check, 3000);
@@ -41,6 +94,37 @@ export default function Welcome() {
       clearInterval(t);
     };
   }, []);
+
+  // 1b. consent given before the extension was installed: hand it over as soon as it answers
+  useEffect(() => {
+    if (installed && consent === false && pending && !allowing) allow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [installed, consent, pending]);
+
+  const allow = async () => {
+    setConsentError(null);
+    if (MOCK) {
+      setConsent(true);
+      return;
+    }
+    if (!installed) {
+      // not installed yet: remember the choice for this tab; nothing records until the extension has it
+      writePending(true);
+      setPending(true);
+      return;
+    }
+    setAllowing(true);
+    try {
+      const c = await ext.setConsent(true);
+      setConsent(c.granted);
+      writePending(false);
+      setPending(false);
+    } catch {
+      setConsentError('The extension did not answer. Reload this page, or press Start recording in the Trail button in the toolbar.');
+    } finally {
+      setAllowing(false);
+    }
+  };
 
   // 2. hand the extension its token once, automatically
   useEffect(() => {
@@ -62,7 +146,7 @@ export default function Welcome() {
 
   // 3. wait for the first recorded paragraph, then open its replay
   useEffect(() => {
-    if (!connected || stay) return;
+    if (!connected || !consent || stay) return;
     let alive = true;
     const poll = async () => {
       try {
@@ -79,19 +163,30 @@ export default function Welcome() {
       alive = false;
       clearInterval(t);
     };
-  }, [connected, stay, nav]);
+  }, [connected, consent, stay, nav]);
 
-  const step: Step = installed === false ? 'install' : !connected ? 'connect' : 'write';
+  const allowed = consent === true || (pending && !installed);
+  const step: Step = installed && consent === null ? 'connect' : !allowed ? 'allow' : installed === false ? 'install' : !connected ? 'connect' : 'write';
   const steps: { key: Step; title: string; body: string }[] = [
+    { key: 'allow', title: 'Allow recording', body: 'Nothing is recorded until you say so. Here is exactly what Trail keeps, and where.' },
     { key: 'install', title: 'Install the extension', body: 'Chrome only for now. It records inside Google Docs, Notion, Word Online and your LMS editor, and nowhere else.' },
     { key: 'connect', title: 'Connect it to your account', body: 'The app hands the extension a token so it can get your checkpoints signed. No text is involved.' },
     { key: 'write', title: 'Write one paragraph', body: 'Open Google Docs or Notion and write a few lines. Your first replay opens here on its own.' },
   ];
-  const order: Step[] = ['install', 'connect', 'write'];
+  const order: Step[] = ['allow', 'install', 'connect', 'write'];
   const idx = order.indexOf(step);
 
   const actions =
-    step === 'install' ? (
+    step === 'allow' ? (
+      <>
+        <ButtonLink to="/demo" variant="quiet">
+          Not now
+        </ButtonLink>
+        <Button ring variant="primary" onClick={allow} disabled={allowing}>
+          {allowing ? 'Starting…' : 'Start recording'}
+        </Button>
+      </>
+    ) : step === 'install' ? (
       <>
         <ButtonLink to="/demo" variant="quiet">
           Watch the demo first
@@ -118,7 +213,7 @@ export default function Welcome() {
   return (
     <Dialog title="Trail Installer" icon="disk" className="max-w-2xl win-open" actions={actions}>
       <p className="text-sm">
-        Hi {me.email.split('@')[0]}. Three steps, under five minutes. {me.billing.freeAccess ? 'Free during early access. No clock, no card.' : 'Your trial clock does not start until you see your first replay.'}
+        Hi {me.email.split('@')[0]}. Four steps, under five minutes. {me.billing.freeAccess ? 'Free during early access. No clock, no card.' : 'Your trial clock does not start until you see your first replay.'}
       </p>
       <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
         <ProgressBar segments={20} value={idx / order.length} label="Setup progress" />
@@ -136,6 +231,13 @@ export default function Welcome() {
                   {i + 1}. {s.title}
                 </span>
                 <Caption>{s.body}</Caption>
+                {active && s.key === 'allow' && <Disclosure />}
+                {active && s.key === 'allow' && consentError && (
+                  <p role="alert" className="text-sm">
+                    {consentError}
+                  </p>
+                )}
+                {s.key === 'allow' && i < idx && pending && !consent && <Caption role="status">Recording starts once the extension is installed.</Caption>}
                 {active && s.key === 'install' && <Caption role="status">{installed === null ? 'Checking…' : 'Waiting for the extension… this page notices on its own.'}</Caption>}
                 {active && s.key === 'connect' && error && (
                   <p role="alert" className="text-sm">

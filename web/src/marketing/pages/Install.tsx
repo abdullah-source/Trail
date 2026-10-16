@@ -1,8 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, ButtonLink, Desk, Disclosure, Eyebrow, Heading, Row, Section, useTitle } from '../../design/components';
-import { Dialog, Icon, Panel, TextField } from '../../design/desktop';
-import { data } from '../../lib/data';
+import { Dialog, Icon } from '../../design/desktop';
+import { WaitlistCard } from '../../components/Waitlist';
 
 const ZIP = '/trail-extension.zip';
 
@@ -45,7 +45,7 @@ export default function Install() {
       >
         <Eyebrow>Get Trail for Chrome</Eyebrow>
         <p className="text-lg">The extension is on its way to the Chrome Web Store.</p>
-        <p className="text-sm text-ink-soft max-w-prose">Google is reviewing the listing. Until it is live, leave your email and we will tell you the day it lands, or install it yourself today in about two minutes.</p>
+        <p className="text-sm text-ink-soft max-w-prose">The Chrome Web Store listing is on its way. Until it is live, leave your email and we will tell you the day it lands, or install it yourself today in about two minutes.</p>
         <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(16rem,2fr)] items-start">
           <div className="grid gap-3">
             <Eyebrow>Install today</Eyebrow>
@@ -98,42 +98,5 @@ export default function Install() {
         </dl>
       </Section>
     </Desk>
-  );
-}
-
-/** "Register your copy": one email, the day the listing goes live. A control-panel group with a sunken field. */
-export function WaitlistCard({ source, compact = false }: { source: string; compact?: boolean }) {
-  const [email, setEmail] = useState('');
-  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'again' | 'error'>('idle');
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    setState('busy');
-    try {
-      const r = await data.joinWaitlist(email.trim(), source);
-      setState(r.new ? 'done' : 'again');
-    } catch {
-      setState('error');
-    }
-  };
-  return (
-    <Panel legend="Tell me when it is in the store" className="grid gap-3 content-start">
-      {state === 'done' || state === 'again' ? (
-        <p className="text-sm">{state === 'done' ? 'Got it. One email, the day the listing goes live. Nothing else.' : 'You are already on the list. One email, the day it goes live.'}</p>
-      ) : (
-        <form onSubmit={submit} className={compact ? 'flex flex-wrap items-end gap-2' : 'grid gap-3'} aria-busy={state === 'busy'}>
-          <TextField id={`wl-${source}`} label="Email" type="email" required autoComplete="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} className={compact ? 'flex-1 min-w-[12rem]' : undefined} />
-          <Button type="submit" disabled={state === 'busy' || !email.includes('@')}>
-            {state === 'busy' ? 'Adding…' : 'Notify me'}
-          </Button>
-          {state === 'error' && (
-            <p role="alert" className="text-sm w-full inline-flex items-start gap-2">
-              <Icon name="warning" fill={{ w: 'var(--paste)' }} className="mt-0.5" />
-              That did not go through. Try again in a moment.
-            </p>
-          )}
-          {!compact && <p className="text-xs text-ink-soft">One email when the listing is live. No newsletter, no sharing your address.</p>}
-        </form>
-      )}
-    </Panel>
   );
 }
