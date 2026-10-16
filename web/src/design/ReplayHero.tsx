@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Button, IconButton, Window } from './desktop';
+import { Button, Chip, IconButton, Note } from './document';
 import { usePrefersReducedMotion } from './motion';
 
 /*
@@ -10,8 +10,8 @@ import { usePrefersReducedMotion } from './motion';
  * (a few hundred splices), which makes scrubbing, looping and pausing trivial.
  * One DOM node per run of same-origin text, never per character.
  *
- * The window: striped title bar (essay title, timecode at the right), the essay
- * sheet, the transport bar (step back, play/pause, step forward, bevelled scrubber),
+ * The player is a framed certificate note: mono label and the clock at the top, the
+ * essay sheet, the transport (step back, play/pause, step forward, an ink-thumb scrubber),
  * and a provenance strip that fills in as the record grows. Only the record moves.
  */
 
@@ -229,7 +229,7 @@ function Page({ doc, src, caret, caretRef }: { doc: Doc; src: Map<number, string
       seen.add(h.pid);
       runs.push(
         <span key={`p${h.pid}-${key}`}>
-          {first && <span className="inline-block align-baseline font-mono text-[10px] leading-none tracking-wide text-paste border border-paste px-1 py-[2px] mr-1 select-none">{src.get(h.pid)}</span>}
+          {first && <span className="mk-src">{src.get(h.pid)}</span>}
           <span className={h.s ? 'strike' : doc.edited.has(h.pid) ? 'prov-paste-edited' : 'prov-paste'}>{text}</span>
         </span>,
       );
@@ -270,9 +270,9 @@ function Strip({ doc, w, typed, pasted }: { doc: Doc; w: number; typed: number; 
   const counts = cells.reduce((acc, c) => ((acc[c] = (acc[c] || 0) + 1), acc), {} as Partial<Record<ProvLabel, number>>);
   const summary = (Object.keys(counts) as ProvLabel[]).map((k) => `${counts[k]} ${PROV_NAME[k]}`).join(', ');
   return (
-    <div className="px-4 py-2 border-t border-frame bg-sheet grid gap-2">
+    <div className="mk-player-strip">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-ink-soft tabular">
-        <span className="marginal">Where each line came from</span>
+        <span className="eyebrow">Where each line came from</span>
         <span className="ml-auto">{w} words</span>
         <span className="text-typed">{typed} typed</span>
         <span className="text-paste">{pasted} pasted</span>
@@ -286,7 +286,22 @@ function Strip({ doc, w, typed, pasted }: { doc: Doc; w: number; typed: number; 
   );
 }
 
-const SHEET = 'essay px-4 sm:px-6 pt-4 pb-6 h-[320px] sm:h-[380px] [&>p]:mb-[1em]';
+const SHEET = 'essay mk-player-sheet';
+
+/** The certificate the player sits in: framed note, mono label, the essay's title and the clock. */
+function Frame({ title, editor, time, children }: { title: string; editor: string; time: string; children: ReactNode }) {
+  return (
+    <Note className="mk-player" frame watermark={false} label={`Replay · ${editor}`} aside={<span className="mono text-xs text-ink-soft tabular" aria-label={`Clock ${time}`}>{time}</span>}>
+      <div role="figure" aria-label={`Replay of “${title}”`} className="grid min-w-0">
+        <p className="note-title px-6 pt-2 min-[701px]:px-8 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          {title}
+          <Chip kind="neutral">Example record</Chip>
+        </p>
+        {children}
+      </div>
+    </Note>
+  );
+}
 
 export type ReplayHeroProps = { script?: ReplayOp[]; title?: string; editor?: string; speed?: number; className?: string };
 
@@ -376,17 +391,17 @@ export function ReplayHero({ script = SCRIPT, title = 'Cities and silence', edit
 
   return (
     <div className={`min-w-0 ${className}`} onPointerEnter={(e) => e.pointerType === 'mouse' && setHeld(true)} onPointerLeave={(e) => e.pointerType === 'mouse' && setHeld(false)}>
-      <Window as="figure" title={title} icon="document" right={clock(vt)} bodyClassName="p-0">
+      <Frame title={title} editor={editor} time={clock(vt)}>
         <div ref={sheet} className={`${SHEET} overflow-hidden`} aria-live="off">
           <Page doc={doc} src={src} caret caretRef={caretRef} />
         </div>
-        <div className="transport on-chrome">
-          <IconButton icon="back" label="Back to the previous moment" onClick={back} />
-          <IconButton icon={userPaused ? 'play' : 'pause'} label={userPaused ? 'Play replay' : 'Pause replay'} onClick={() => setUserPaused((p) => !p)} />
-          <IconButton icon="forward" label="Forward to the next moment" onClick={forward} />
+        <div className="transport">
+          <IconButton icon="arrow" className="[&_svg]:rotate-180" label="Back to the previous moment" onClick={back} />
+          <IconButton icon={userPaused ? 'play' : 'pause'} variant="secondary" label={userPaused ? 'Play replay' : 'Pause replay'} onClick={() => setUserPaused((p) => !p)} />
+          <IconButton icon="arrow" label="Forward to the next moment" onClick={forward} />
           <div className="relative flex-1 min-w-[6rem]">
             {micro.map((m, i) =>
-              m.k === 'paste' || m.k === 'gap' ? <span key={i} aria-hidden className={`absolute top-0 w-[2px] h-[6px] ${m.k === 'paste' ? 'bg-paste' : 'bg-margin'}`} style={{ left: `calc(${(i / total) * 100}% - 1px)` }} /> : null,
+              m.k === 'paste' || m.k === 'gap' ? <span key={i} aria-hidden className={`absolute top-0 w-[2px] h-[6px] rounded-[1px] ${m.k === 'paste' ? 'bg-paste' : 'bg-guilloche'}`} style={{ left: `calc(${(i / total) * 100}% - 1px)` }} /> : null,
             )}
             <input
               type="range"
@@ -404,7 +419,7 @@ export function ReplayHero({ script = SCRIPT, title = 'Cities and silence', edit
           <span className="tabular whitespace-nowrap">{doc.gap ? `${doc.gap} min later` : editor}</span>
         </div>
         <Strip doc={doc} w={w} typed={typed} pasted={pasted} />
-      </Window>
+      </Frame>
     </div>
   );
 }
@@ -419,14 +434,14 @@ function Stills({ micro, src, title, editor, className }: { micro: Micro[]; src:
   const pasted = d.chars.filter((c) => c.o === 'pasted' && !c.s).length;
   return (
     <div className={`min-w-0 ${className}`}>
-      <Window as="figure" title={title} icon="document" right={clock(vt)} bodyClassName="p-0">
+      <Frame title={title} editor={editor} time={clock(vt)}>
         <div className={`${SHEET} overflow-auto`}>
           <Page doc={d} src={src} caret={false} />
         </div>
-        <div className="transport on-chrome flex-wrap">
+        <div className="transport">
           <span role="group" aria-label="Choose a draft" className="flex gap-1">
             {['Draft 1', 'Draft 2', 'Final'].map((l, j) => (
-              <Button key={l} size="sm" aria-pressed={i === j} onClick={() => setI(j)}>
+              <Button key={l} size="sm" variant={i === j ? 'primary' : 'secondary'} aria-pressed={i === j} onClick={() => setI(j)}>
                 {l}
               </Button>
             ))}
@@ -434,7 +449,7 @@ function Stills({ micro, src, title, editor, className }: { micro: Micro[]; src:
           <span className="ml-auto tabular whitespace-nowrap">{editor}</span>
         </div>
         <Strip doc={d} w={words(d)} typed={typed} pasted={pasted} />
-      </Window>
+      </Frame>
     </div>
   );
 }

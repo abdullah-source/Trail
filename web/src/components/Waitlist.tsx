@@ -1,10 +1,10 @@
 // Referral waitlist card. Join with an email, then see your place in line, your share link and
 // share buttons. A visitor who arrived on /?ref=CODE carries that code (localStorage trail_ref) into
 // the join; a visitor who already joined on this browser sees their status (localStorage
-// trail_waitlist_code). Markup is deliberately plain: the redesign restyles it later.
+// trail_waitlist_code). Styled as a note on the security-document kit (DESIGN-document.md).
 import { useEffect, useState, type FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Button, Chip, Icon, Panel, TextField } from '../design/desktop';
+import { Button, Chip, Icon, Note, TextField, Ticker } from '../design/document';
 import { data } from '../lib/data';
 import type { WaitlistStatus } from '../lib/types';
 import { captureRef, instagramText, normalizeCode, PLACES_PER_REFERRAL, positionText, referralsText, saveCode, shareText, storedCode, waitingText, whatsappUrl, xUrl, captureSrc, sourceFor } from '../lib/waitlist';
@@ -41,8 +41,9 @@ function useWaitlistTotal(bump: number): number | null {
 /** "A friend invited you": shown when the visitor arrived with someone's share code. */
 export function InvitedBanner() {
   return (
-    <p className="text-sm inline-flex items-center gap-2" role="status">
-      <Chip kind="accent">Invited</Chip>A friend invited you. Join and you both move up the line.
+    <p className="text-sm flex flex-wrap items-center gap-x-2.5 gap-y-1.5" role="status">
+      <Chip kind="accent">Invited</Chip>
+      <span>A friend invited you. Join and you both move up the line.</span>
     </p>
   );
 }
@@ -107,28 +108,36 @@ export function WaitlistCard({ source, compact = false }: { source: string; comp
   };
 
   const shown = Math.max(total ?? 0, status?.total ?? 0);
-  const counter = shown > 0 ? <p className="text-xs text-ink-soft">{waitingText(shown)}</p> : null;
+  const counter =
+    shown > 0 ? (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1" title={waitingText(shown)}>
+        <Ticker value={shown} label="people waiting" live size={compact ? '1.5rem' : '2rem'} />
+        <span className="text-sm text-ink-soft" aria-hidden>
+          people waiting
+        </span>
+      </div>
+    ) : null;
 
   if (!status) {
     return (
-      <Panel legend="Join the waitlist" className="grid gap-3 content-start">
+      <Note label="Join the waitlist" crop={!compact} className="content-start">
         {ref && <InvitedBanner />}
         {badLink && <p className="text-sm">That confirmation link no longer works. Join again with the same email and we will send a fresh one.</p>}
-        <form onSubmit={submit} className={compact ? 'flex flex-wrap items-end gap-2' : 'grid gap-3'} aria-busy={state === 'busy'}>
-          <TextField id={`wl-${source}`} label="Email" type="email" required autoComplete="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} className={compact ? 'flex-1 min-w-[12rem]' : undefined} />
-          <Button type="submit" disabled={state === 'busy' || !email.includes('@')}>
+        <form onSubmit={submit} className={compact ? 'flex flex-wrap items-end gap-3' : 'grid gap-3 justify-items-start'} aria-busy={state === 'busy'}>
+          <TextField id={`wl-${source}`} label="Email" type="email" required autoComplete="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} wrapClassName={compact ? 'flex-1 min-w-[12rem]' : 'w-full'} />
+          <Button type="submit" variant="primary" disabled={state === 'busy' || !email.includes('@')}>
             {state === 'busy' ? 'Joining…' : 'Join the waitlist'}
           </Button>
           {state === 'error' && (
             <p role="alert" className="text-sm w-full inline-flex items-start gap-2">
-              <Icon name="warning" fill={{ w: 'var(--paste)' }} className="mt-0.5" />
+              <Icon name="warning" size={18} className="mt-0.5 text-seal shrink-0" />
               That did not go through. Try again in a moment.
             </p>
           )}
         </form>
-        {!compact && <p className="text-xs text-ink-soft">One email to confirm your spot, one the day the Chrome Web Store listing is live. No newsletter, no sharing your address.</p>}
+        {!compact && <p className="text-sm text-ink-soft">One email to confirm your spot, one the day the Chrome Web Store listing is live. No newsletter, no sharing your address.</p>}
         {counter}
-      </Panel>
+      </Note>
     );
   }
 
@@ -136,12 +145,12 @@ export function WaitlistCard({ source, compact = false }: { source: string; comp
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const refs = referralsText(status.referrals);
   return (
-    <Panel legend="Your place in line" className="grid gap-3 content-start">
-      <p className="text-lg">{positionText(status.position)}</p>
+    <Note label="Your place in line" crop={!compact} className="content-start">
+      <p className="numeral text-3xl">{positionText(status.position)}</p>
       <p className="text-sm">Each friend who confirms moves you up {PLACES_PER_REFERRAL} places.</p>
       {refs && <p className="text-sm text-ink-soft">{refs}</p>}
       <div className="flex flex-wrap items-end gap-2">
-        <TextField id={`wl-link-${source}`} label="Your link" readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="flex-1 min-w-[12rem] font-mono" />
+        <TextField id={`wl-link-${source}`} label="Your link" readOnly value={url} onFocus={(e) => e.currentTarget.select()} wrapClassName="flex-1 min-w-[12rem]" className="mono text-sm" />
         <Button onClick={() => flash('link', url)}>{copied === 'link' ? 'Copied' : 'Copy'}</Button>
       </div>
       <div className="flex flex-wrap gap-2" aria-label="Share">
@@ -149,10 +158,10 @@ export function WaitlistCard({ source, compact = false }: { source: string; comp
           <Button onClick={() => navigator.share({ title: 'Trail waitlist', text: shareText(url), url }).catch(() => undefined)}>Share</Button>
         ) : (
           <>
-            <a className="btn" href={whatsappUrl(url)} target="_blank" rel="noreferrer">
+            <a className="btn btn-secondary" href={whatsappUrl(url)} target="_blank" rel="noreferrer">
               WhatsApp
             </a>
-            <a className="btn" href={xUrl(url)} target="_blank" rel="noreferrer">
+            <a className="btn btn-secondary" href={xUrl(url)} target="_blank" rel="noreferrer">
               X
             </a>
           </>
@@ -161,7 +170,7 @@ export function WaitlistCard({ source, compact = false }: { source: string; comp
       </div>
       {status.confirmed ? (
         <p className="text-sm inline-flex items-center gap-2">
-          <Icon name="check" />
+          <Icon name="check" size={18} className="text-typed" />
           {justConfirmed ? 'Your spot is confirmed.' : 'Your email is confirmed.'}
         </p>
       ) : (
@@ -179,7 +188,7 @@ export function WaitlistCard({ source, compact = false }: { source: string; comp
       >
         Not you? Use another email
       </button>
-    </Panel>
+    </Note>
   );
 }
 

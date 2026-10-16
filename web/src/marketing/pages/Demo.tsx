@@ -2,8 +2,8 @@
 // same EssayView the app uses, next to the ground truth the simulation was built from.
 import { useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Badge, ButtonLink, CHROME_STORE_URL, Desk, Eyebrow, Heading, Info, Section, cx, useTitle } from '../../design/components';
-import { Bevel, Icon, Panel, ScrollArea } from '../../design/desktop';
+import { Badge, ButtonLink, CHROME_STORE_URL, Info, Section, cx, useTitle } from '../../design/components';
+import { Icon, Note } from '../../design/document';
 import { usePrefersReducedMotion } from '../../design/motion';
 import { useAsync } from '../../components/useAsync';
 import { Loading } from '../../components/ui';
@@ -28,30 +28,27 @@ export default function Demo() {
   const choose = (id: string) => setParams({ essay: id }, { replace: false });
 
   return (
-    <Desk>
-      <Section label="Live demo" icon="folder" code="00:00" wide titleAs="div" open>
-        <Heading as="h1" eyebrow="Live demo" title="Watch a real essay get written." lede="Real essays, five ways of writing. Pick one and see the whole record: the replay, where each line came from, every paste with its source, and the AI-use statement drafted from it." />
-        <Bevel sunken className="mt-4 px-3 py-2 text-sm text-ink-soft max-w-prose">
-          Real essays from public datasets; the writing sessions are simulated so you can see what a record looks like. Install the extension to record your own.
-        </Bevel>
+    <>
+      <Section className="mk-first" titleAs="h1" index="Nº 01" eyebrow="Live demo" title="Watch a real essay get written." lede="Real essays, five ways of writing. Pick one and see the whole record: the replay, where each line came from, every paste with its source, and the AI-use statement drafted from it.">
+        <p className="text-sm text-ink-soft max-w-prose -mt-4 pl-3 border-l-2 border-guilloche">Real essays from public datasets; the writing sessions are simulated so you can see what a record looks like. Install the extension to record your own.</p>
 
-        <div className="mt-6">
+        <div>
           {list.status === 'loading' && <Loading label="Loading the demo essays" />}
           {list.status === 'error' && <p className="text-sm text-paste">{list.error.message}</p>}
           {list.status === 'ready' && entries.length === 0 && (
-            <Panel legend="Demo data not published yet" className="max-w-xl grid gap-3">
+            <Note label="Demo data not published yet" className="max-w-xl">
               <p className="text-sm">The demo essays are not on this server yet. Install the extension and write a paragraph; your own record shows up in the app in under five minutes.</p>
               <div>
                 <ButtonLink to={CHROME_STORE_URL} external variant="primary">
                   Install Trail
                 </ButtonLink>
               </div>
-            </Panel>
+            </Note>
           )}
           {entries.length > 0 && (
-            <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" role="list" aria-label="Demo essays">
+            <ul className="mk-grid-3 !gap-x-8 !gap-y-10" role="list" aria-label="Demo essays">
               {entries.map((e) => (
-                <li key={e.id} className="grid" style={selected?.id === e.id ? { outline: '2px solid var(--ink)', outlineOffset: 2 } : undefined}>
+                <li key={e.id} className="grid">
                   <EssayCard entry={e} selected={selected?.id === e.id} onChoose={() => choose(e.id)} />
                 </li>
               ))}
@@ -61,25 +58,25 @@ export default function Demo() {
       </Section>
 
       {selected && <SelectedEssay key={selected.id} entry={selected} />}
-    </Desk>
+    </>
   );
 }
 
-/** One essay to choose: a document icon on a control-panel plate. Pressed when showing. */
+/** One essay to choose: a lifted note that is a button. Pressed when showing. */
 function EssayCard({ entry, selected, onChoose }: { entry: DemoEntry; selected: boolean; onChoose: () => void }) {
   const kind = demoKind(entry.kind);
   return (
-    <button type="button" onClick={onChoose} aria-pressed={selected} className="panel on-chrome w-full h-full text-left grid gap-2 content-start cursor-pointer hover:bg-chrome-deep">
-      <span className="flex items-center justify-between gap-3">
+    <button type="button" onClick={onChoose} aria-pressed={selected} className={cx('note w-full h-full text-left cursor-pointer content-start', selected && 'mk-chosen')} data-crop="" data-lift="">
+      <span className="note-head">
         <Badge kind={KIND_BADGE[kind] || 'neutral'}>{kindLabel(entry.kind)}</Badge>
         {selected && <Badge kind="accent">Showing</Badge>}
       </span>
       <span className="flex items-start gap-3">
-        <Icon name="document" size={32} />
-        <span className="display text-lg leading-tight">{entry.title}</span>
+        <Icon name="document" size={24} className="text-guilloche-ink shrink-0 mt-0.5" />
+        <span className="note-title">{entry.title}</span>
       </span>
       {entry.blurb && <span className="text-sm text-ink-soft">{entry.blurb}</span>}
-      <span className="font-mono text-xs text-ink-soft tabular mt-auto">
+      <span className="mono text-xs text-ink-soft tabular mt-auto">
         {entry.words ? `${num(entry.words)} words · ` : ''}
         {entry.sessions} session{entry.sessions === 1 ? '' : 's'}
         {entry.source ? (
@@ -99,13 +96,12 @@ function SelectedEssay({ entry }: { entry: DemoEntry }) {
   useEffect(() => {
     top.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   }, [entry.id, reduced]);
-  // EssayView draws its own player window and panels, so it sits straight on the desk: a
-  // window around it would be chrome on chrome (DESIGN-desktop.md §9).
+  // EssayView draws its own certificate and notes, so it sits straight on the page.
   return (
-    <div className="min-w-0 min-[701px]:col-span-2 win-open" aria-label={`Record of “${entry.title}”`} role="region">
+    <div className="doc-container section mk-tight min-w-0" aria-label={`Record of “${entry.title}”`} role="region">
       <div ref={top} className="scroll-mt-20" />
       {events.status === 'loading' && <Loading label={`Loading “${entry.title}”`} />}
-      {events.status === 'error' && <p className="label-plate text-sm">{events.error.message}</p>}
+      {events.status === 'error' && <p className="text-sm text-seal">{events.error.message}</p>}
       {events.status === 'ready' && (
         <EssayView
           events={events.value}
@@ -113,23 +109,22 @@ function SelectedEssay({ entry }: { entry: DemoEntry }) {
           editorLabel={kindLabel(entry.kind)}
           autoplay
           loop
+          checkpoints={entry.server?.checkpoints.length}
           actions={
             <div className="flex flex-wrap gap-2">
               <ButtonLink to={`/verify?demo=${encodeURIComponent(entry.id)}`} variant="primary">
                 Verify this record
               </ButtonLink>
-              <ButtonLink to={CHROME_STORE_URL} external>
+              <ButtonLink to={CHROME_STORE_URL} external variant="secondary">
                 Install Trail
               </ButtonLink>
             </div>
           }
           banner={
-            <Bevel sunken className="px-3 py-2 text-sm text-ink-soft max-w-2xl">
-              This essay's text is real; the sessions, pauses and pastes were simulated to match the way of writing on the card. The strip below shows what the simulation did and what Trail found.
-            </Bevel>
+            <p className="text-sm text-ink-soft max-w-2xl">This essay's text is real; the sessions, pauses and pastes were simulated to match the way of writing on the card. The strip below shows what the simulation did and what Trail found.</p>
           }
           afterStats={<GroundTruth entry={entry} events={events.value} />}
-          empty={<p className="label-plate text-sm">This demo file has no events.</p>}
+          empty={<p className="mono text-xs text-ink-soft">This demo file has no events.</p>}
         />
       )}
     </div>
@@ -138,8 +133,6 @@ function SelectedEssay({ entry }: { entry: DemoEntry }) {
 
 const norm = (h: string) => h.toLowerCase().replace(/^www\./, '');
 
-const th = 'marginal font-normal text-left py-2 px-3 border-b border-rule whitespace-nowrap';
-const td = 'py-2 px-3 border-b border-rule align-top';
 
 /** What the simulation did vs what Trail computed from the record alone. */
 function GroundTruth({ entry, events }: { entry: DemoEntry; events: TrailEvent[] }) {
@@ -183,38 +176,35 @@ function GroundTruth({ entry, events }: { entry: DemoEntry; events: TrailEvent[]
     },
   ];
   return (
-    <section className="grid lg:grid-cols-[10rem_1fr] gap-x-8 gap-y-3">
-      <div className="grid gap-1 content-start">
-        <Eyebrow tick={false}>Ground truth</Eyebrow>
-        <span className="text-xs text-ink-soft">What the simulation did, next to what Trail found.</span>
-      </div>
-      <ScrollArea label="Ground truth">
-        <table className="w-full text-sm border-collapse min-w-[30rem]">
+    <Note as="section" label="Ground truth" watermark={false}>
+      <p className="text-sm text-ink-soft">What the simulation did, next to what Trail found.</p>
+      <div className="scroll" role="region" aria-label="Ground truth" tabIndex={0}>
+        <table className="mk-table min-w-[30rem]">
           <thead>
             <tr>
-              <th className={th}>Measure</th>
-              <th className={th}>Ground truth</th>
-              <th className={th}>Trail found</th>
-              <th className={cx(th, 'text-right')}>Match</th>
+              <th>Measure</th>
+              <th>Ground truth</th>
+              <th>Trail found</th>
+              <th className="text-right">Match</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.label}>
-                <td className={td}>
+                <td>
                   <span className="inline-flex items-center gap-1.5">
                     {r.label}
                     <Info text={r.info} />
                   </span>
                 </td>
-                <td className={cx(td, 'text-ink-soft tabular break-words')}>{r.truth}</td>
-                <td className={cx(td, 'tabular break-words')}>{r.found}</td>
-                <td className={cx(td, 'text-right font-mono text-xs', r.match === null ? 'text-ink-faint' : r.match ? 'text-typed' : 'text-paste')}>{r.match === null ? 'n/a' : r.match ? 'yes' : 'no'}</td>
+                <td className="text-ink-soft tabular break-words">{r.truth}</td>
+                <td className="tabular break-words">{r.found}</td>
+                <td className={cx('text-right mono text-xs', r.match === null ? 'text-ink-faint' : r.match ? 'text-typed' : 'text-paste')}>{r.match === null ? 'n/a' : r.match ? 'yes' : 'no'}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </ScrollArea>
-    </section>
+      </div>
+    </Note>
   );
 }

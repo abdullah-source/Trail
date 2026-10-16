@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { data, download, safeName } from '../lib/data';
 import { useAsync, usePageTitle } from '../components/useAsync';
 import { useMe } from '../components/AppShell';
-import { Button, ButtonLink, Caption, Dialog, ErrorNote, Loading, TextField, Window } from '../components/ui';
+import { Button, ButtonLink, Caption, ErrorNote, Icon, Loading, Modal, Note, TextField } from '../components/ui';
 import { editorName } from '../components/format';
 import { copyText, useEssayAnalysis } from './shared';
 import { EssayView } from './EssayView';
@@ -17,6 +17,8 @@ export default function EssayPage() {
   const { me, reload } = useMe();
   const essays = useAsync(() => data.essays(), []);
   const events = useAsync(() => data.essayEvents(docId), [docId]);
+  // the seal is verified only when the record has signed checkpoints; pending until then
+  const checkpoints = useAsync(() => data.checkpoints(docId).catch(() => []), [docId]);
   const essay = essays.status === 'ready' ? essays.value.find((e) => e.id === docId) : undefined;
   const title = essay?.title || (essay ? `Untitled ${editorName(essay.editor)} document` : 'Essay');
   usePageTitle(title);
@@ -41,22 +43,34 @@ export default function EssayPage() {
       editorLabel={essay ? editorName(essay.editor) : 'Essay'}
       autoplay={first}
       onClose={() => nav('/app')}
+      checkpoints={checkpoints.status === 'ready' ? checkpoints.value.length : 0}
       actions={res ? <ExportDialogButton docId={docId} title={title} declaration={res.declaration} entitled={me.entitled} /> : null}
       banner={first ? <>This is your first replay: that paragraph, exactly as you wrote it. Keep writing and this page keeps growing.{me.billing.freeAccess ? '' : ' Your 14-day trial starts now.'}</> : null}
       declarationExtra={<AiNoteDialogButton docId={docId} onAdded={events.reload} />}
       empty={
-        <Window as="section" titleAs="h1" title="Nothing recorded" icon="document" open className="max-w-xl" bodyClassName="grid gap-4">
+        <Note
+          as="section"
+          label={
+            <span className="inline-flex items-center gap-2">
+              <Icon name="document" size={16} /> Record
+            </span>
+          }
+          className="max-w-2xl"
+        >
+          <h1 className="note-title">Nothing recorded</h1>
           <p className="text-sm">Nothing recorded for this document yet. Open it in the editor and write a line; the replay appears here.</p>
           <div>
-            <ButtonLink to="/app">Back to essays</ButtonLink>
+            <ButtonLink to="/app" icon="arrow" className="[&>svg:first-child]:rotate-180">
+              Back to essays
+            </ButtonLink>
           </div>
-        </Window>
+        </Note>
       }
     />
   );
 }
 
-/** "Sign and export" opens a dialog that lists every export with its hint; the evidence pack asks once before sending. */
+/** "Sign and export" opens a modal note that lists every export with its hint; the evidence pack asks once before sending. */
 function ExportDialogButton({ docId, title, declaration, entitled }: { docId: string; title: string; declaration: string; entitled: boolean }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -79,21 +93,24 @@ function ExportDialogButton({ docId, title, declaration, entitled }: { docId: st
   };
   return (
     <>
-      <Button variant="primary" icon="key" onClick={() => setOpen(true)}>
+      <Button variant="primary" size="lg" icon="signature" onClick={() => setOpen(true)}>
         Sign and export
       </Button>
       {msg && !open && <Caption role="status">{msg}</Caption>}
       {open && (
-        <Dialog
-          modal
+        <Modal
           title={confirmPack ? 'Build the evidence pack' : 'Export and sign'}
-          icon="disk"
+          label={
+            <span className="inline-flex items-center gap-2">
+              <Icon name="upload" size={16} /> Export
+            </span>
+          }
           onClose={close}
-          width={560}
+          width={600}
           actions={
             confirmPack ? (
               <>
-                <Button onClick={() => setConfirmPack(false)} disabled={busy !== null}>
+                <Button variant="quiet" onClick={() => setConfirmPack(false)} disabled={busy !== null}>
                   Back
                 </Button>
                 <Button
@@ -113,7 +130,7 @@ function ExportDialogButton({ docId, title, declaration, entitled }: { docId: st
                 </Button>
               </>
             ) : (
-              <Button ring onClick={close}>
+              <Button ring variant="secondary" onClick={close}>
                 Done
               </Button>
             )
@@ -124,7 +141,7 @@ function ExportDialogButton({ docId, title, declaration, entitled }: { docId: st
               To sign the pack, this essay's record is sent to Trail <em>once</em>, built in memory, and returned as a .tar.gz. It is not stored or logged. Anyone can check the result at <span className="font-mono">/verify</span>.
             </p>
           ) : (
-            <ul className="grid gap-3 list-none m-0 p-0">
+            <ul className="grid list-none m-0 p-0">
               <ExportRow hint="Signed .tar.gz a professor can check at /verify" onClick={() => (entitled ? setConfirmPack(true) : setMsg('Packs need an active trial or plan. Raw export below always works.'))}>
                 Evidence pack
               </ExportRow>
@@ -161,7 +178,7 @@ function ExportDialogButton({ docId, title, declaration, entitled }: { docId: st
             </ul>
           )}
           {msg && <Caption role="status">{msg}</Caption>}
-        </Dialog>
+        </Modal>
       )}
     </>
   );
@@ -169,16 +186,16 @@ function ExportDialogButton({ docId, title, declaration, entitled }: { docId: st
 
 function ExportRow({ children, hint, onClick, disabled }: { children: ReactNode; hint: string; onClick: () => void; disabled?: boolean }) {
   return (
-    <li className="grid sm:grid-cols-[14rem_1fr] gap-x-4 gap-y-1 items-center">
-      <Button onClick={onClick} disabled={disabled} className="justify-start">
+    <li className="grid sm:grid-cols-[13rem_minmax(0,1fr)] gap-x-5 gap-y-2 items-center py-3 border-t border-rule first:border-t-0">
+      <Button size="sm" onClick={onClick} disabled={disabled} className="justify-start">
         {children}
       </Button>
-      <span className="text-xs text-ink-soft">{hint}</span>
+      <span className="text-sm text-ink-soft">{hint}</span>
     </li>
   );
 }
 
-/** "Add an AI-use note" opens a dialog with two fields; the note goes into the record and the declaration. */
+/** "Add an AI-use note" opens a modal note with two fields; the note goes into the record and the declaration. */
 function AiNoteDialogButton({ docId, onAdded }: { docId: string; onAdded: () => void }) {
   const [open, setOpen] = useState(false);
   const [tool, setTool] = useState('');
@@ -207,6 +224,7 @@ function AiNoteDialogButton({ docId, onAdded }: { docId: string; onAdded: () => 
   return (
     <>
       <Button
+        size="lg"
         onClick={() => {
           setMsg(null);
           setOpen(true);
@@ -216,34 +234,35 @@ function AiNoteDialogButton({ docId, onAdded }: { docId: string; onAdded: () => 
       </Button>
       {msg && <Caption role="status">{msg}</Caption>}
       {open && (
-        <form onSubmit={submit}>
-          <Dialog
-            modal
-            title="Add an AI-use note"
-            icon="document"
-            onClose={() => setOpen(false)}
-            width={560}
-            actions={
-              <>
-                <Button onClick={() => setOpen(false)} disabled={busy}>
-                  Cancel
-                </Button>
-                <Button type="submit" ring variant="primary" disabled={busy || !tool.trim() || !note.trim()}>
-                  {busy ? 'Adding…' : 'Add note'}
-                </Button>
-              </>
-            }
-          >
+        <Modal
+          title="Add an AI-use note"
+          label={
+            <span className="inline-flex items-center gap-2">
+              <Icon name="document" size={16} /> AI-use note
+            </span>
+          }
+          onClose={() => setOpen(false)}
+          width={560}
+        >
+          <form onSubmit={submit} className="grid gap-5">
             <p className="text-sm text-ink-soft">Used an AI tool in a way the record cannot see (brainstorming, an outline, a retyped suggestion)? Say so here. It is added to the record and to the declaration, in your words.</p>
             <TextField id="ai-tool" label="Tool" value={tool} onChange={(e) => setTool(e.target.value)} placeholder="ChatGPT" maxLength={60} />
             <TextField id="ai-note" label="What you used it for" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Brainstormed three possible thesis statements" maxLength={300} />
             {err && (
-              <p role="alert" className="text-sm">
+              <p role="alert" className="text-sm text-seal">
                 {err}
               </p>
             )}
-          </Dialog>
-        </form>
+            <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+              <Button variant="quiet" onClick={() => setOpen(false)} disabled={busy}>
+                Cancel
+              </Button>
+              <Button type="submit" ring variant="primary" disabled={busy || !tool.trim() || !note.trim()}>
+                {busy ? 'Adding…' : 'Add note'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       )}
     </>
   );

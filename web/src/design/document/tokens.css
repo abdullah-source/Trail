@@ -537,15 +537,16 @@
   }
 
   /* ================================================================ reveal */
-  .reveal > * {
-    opacity: 0;
-    transform: translate3d(0, var(--rise), 0);
-    transition: opacity var(--dur-rise) var(--ease-rise), transform var(--dur-rise) var(--ease-rise);
-    transition-delay: calc(var(--reveal-delay, 0ms) + var(--i, 0) * var(--stagger));
+  /* Content is visible at rest (screenshots, link previews, slow devices, no script). When a group
+     is about to scroll into view, data-in plays the rise once as a keyframe; `both` holds the first
+     frame only during each child's stagger delay. */
+  @keyframes reveal-rise {
+    from { opacity: 0; transform: translate3d(0, var(--rise), 0); }
+    to { opacity: 1; transform: none; }
   }
   .reveal[data-in] > * {
-    opacity: 1;
-    transform: none;
+    animation: reveal-rise var(--dur-rise) var(--ease-rise) both;
+    animation-delay: calc(var(--reveal-delay, 0ms) + var(--i, 0) * var(--stagger));
   }
   .reveal > :nth-child(2) { --i: 1; }
   .reveal > :nth-child(3) { --i: 2; }
@@ -557,17 +558,7 @@
   .reveal > :nth-child(9) { --i: 8; }
   .reveal > :nth-child(n + 10) { --i: 9; }
   @media (prefers-reduced-motion: reduce) {
-    .reveal > * {
-      opacity: 1;
-      transform: none;
-      transition: none;
-    }
-  }
-  @media (scripting: none) {
-    .reveal > * {
-      opacity: 1;
-      transform: none;
-    }
+    .reveal[data-in] > * { animation: none; }
   }
 
   /* ================================================================ nav */

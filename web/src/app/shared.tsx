@@ -18,10 +18,10 @@ export function useEssayAnalysis(events: TrailEvent[] | null, meta: { student?: 
   }, [events, meta.student, meta.course]);
 }
 
-/** A single-column desk for pages mounted inside the design's <MarketingLayout/> (login, verify, 404). */
+/** A single centred column for pages mounted inside the design's <MarketingLayout/> (login, verify, 404). */
 export function PublicShell({ children, wide }: { children: ReactNode; wide?: boolean }) {
   return (
-    <Desk columns={1} width={wide ? 'reading' : 'narrow'}>
+    <Desk width={wide ? 'reading' : 'narrow'}>
       {children}
     </Desk>
   );

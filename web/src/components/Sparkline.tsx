@@ -8,6 +8,7 @@ export function Sparkline({ timeline, width = 96, height = 24, className }: { ti
     if (!timeline.length) return null;
     let acc = 0;
     const pts = timeline.map((b) => (acc += b.typed + b.pasted - b.deleted));
+    if (pts.length === 1) pts.unshift(0); // one bucket: draw it as a rise from nothing
     const max = Math.max(1, ...pts);
     const n = pts.length;
     const x = (i: number) => (n === 1 ? width : (i / (n - 1)) * (width - 2) + 1);
@@ -19,18 +20,18 @@ export function Sparkline({ timeline, width = 96, height = 24, className }: { ti
   if (!d) return <svg width={width} height={height} className={className} aria-hidden />;
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={className} aria-hidden>
-      <path d={d.area} fill="currentColor" opacity="0.12" />
-      <path d={d.path} fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" strokeLinecap="square" />
+      <path d={d.area} fill="currentColor" opacity="0.1" />
+      <path d={d.path} fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
 
-/** Two-tone bar: typed share (green) against pasted share (amber) of the final text, 8 px tall in a frame. */
+/** Two-tone pill: typed share (guilloche green) against pasted share (engraving sepia) of the final text, 6 px tall. */
 export function ShareBar({ typed, width = 64, className, label }: { typed: number | null; width?: number | string; className?: string; label?: string }) {
   const t = typed === null ? 0 : Math.max(0, Math.min(1, typed));
   // a definite width, so the two percentage fills have something to resolve against
   return (
-    <span className={cx('inline-flex h-2 overflow-hidden border border-frame bg-well align-middle', className)} style={{ width }} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
+    <span className={cx('inline-flex h-1.5 gap-px overflow-hidden rounded-full bg-well align-middle shadow-[inset_0_0_0_1px_var(--rule)]', className)} style={{ width }} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
       {typed !== null && (
         <>
           <span className="bg-typed" style={{ width: `${t * 100}%` }} />

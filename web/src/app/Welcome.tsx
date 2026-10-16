@@ -4,15 +4,15 @@
 // (`setConsent`). Pressed before the extension is installed, it is kept for this tab and handed over
 // as soon as the extension shows up. The page then polls for the first document with events and
 // opens its replay.
-// On the desktop it is the installer dialog: a step list with a segmented progress bar that fills
-// as the student goes, and the one default button for the current step (DESIGN-desktop.md §4).
+// On the document it is the installer note: a framed note with a step list, a pill track that fills
+// as the student goes, and the one default button for the current step (DESIGN-document.md §9).
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MOCK, data } from '../lib/data';
 import * as ext from '../lib/extension';
 import { useMe } from '../components/AppShell';
 import { usePageTitle } from '../components/useAsync';
-import { Button, ButtonLink, Caption, Chip, Dialog, Icon, ProgressBar, cx } from '../components/ui';
+import { Button, ButtonLink, Caption, Chip, Icon, Note, ProgressBar, cx } from '../components/ui';
 import { CHROME_STORE_URL } from './shared';
 
 type Step = 'allow' | 'install' | 'connect' | 'write' | 'done';
@@ -37,7 +37,7 @@ const writePending = (on: boolean) => {
 /** The same disclosure the extension's popup shows before its "Start recording" button. */
 function Disclosure() {
   return (
-    <div className="grid gap-2 text-sm">
+    <div className="grid gap-3 text-sm p-4 sm:p-5 bg-well border border-rule rounded-sm">
       <p className="m-0">Trail keeps a private record of how you write, so you can replay it, see your patterns and prove where your work came from. When you start it, it records:</p>
       <ul className="m-0 pl-5 grid gap-1 list-disc">
         <li>what you type, delete and paste in Google Docs, Notion, Word Online and your school's LMS (Canvas, Moodle, Blackboard, Brightspace), with timing, and the site a paste came from;</li>
@@ -179,20 +179,20 @@ export default function Welcome() {
   const actions =
     step === 'allow' ? (
       <>
-        <ButtonLink to="/demo" variant="quiet">
-          Not now
-        </ButtonLink>
         <Button ring variant="primary" onClick={allow} disabled={allowing}>
           {allowing ? 'Starting…' : 'Start recording'}
         </Button>
+        <ButtonLink to="/demo" variant="quiet">
+          Not now
+        </ButtonLink>
       </>
     ) : step === 'install' ? (
       <>
+        <ButtonLink to={CHROME_STORE_URL} external ring variant="primary" arrow>
+          Install
+        </ButtonLink>
         <ButtonLink to="/demo" variant="quiet">
           Watch the demo first
-        </ButtonLink>
-        <ButtonLink to={CHROME_STORE_URL} external ring variant="primary">
-          Install
         </ButtonLink>
       </>
     ) : step === 'connect' ? (
@@ -201,46 +201,70 @@ export default function Welcome() {
       </Button>
     ) : (
       <>
-        <ButtonLink to="https://www.notion.so/new" external>
-          Open Notion
-        </ButtonLink>
         <ButtonLink to="https://docs.new" external ring variant="primary">
           Open a new Google Doc
+        </ButtonLink>
+        <ButtonLink to="https://www.notion.so/new" external>
+          Open Notion
         </ButtonLink>
       </>
     );
 
   return (
-    <Dialog title="Trail Installer" icon="disk" className="max-w-2xl win-open" actions={actions}>
-      <p className="text-sm">
-        Hi {me.email.split('@')[0]}. Four steps, under five minutes. {me.billing.freeAccess ? 'Free during early access. No clock, no card.' : 'Your trial clock does not start until you see your first replay.'}
+    <Note
+      as="section"
+      frame
+      label={
+        <span className="inline-flex items-center gap-2">
+          <Icon name="upload" size={16} /> Trail installer
+        </span>
+      }
+      aside={
+        <span className="font-mono text-xs tabular text-ink-soft">
+          step {idx + 1} of {order.length}
+        </span>
+      }
+      className="max-w-3xl"
+      aria-labelledby="welcome-title"
+    >
+      <h1 id="welcome-title" className="h-section">
+        Hi {me.email.split('@')[0]}.
+      </h1>
+      <p className="lede">
+        Four steps, under five minutes. {me.billing.freeAccess ? 'Free during early access. No clock, no card.' : 'Your trial clock does not start until you see your first replay.'}
       </p>
-      <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-        <ProgressBar segments={20} value={idx / order.length} label="Setup progress" />
-        <span className="tabular">step {idx + 1} of {order.length}</span>
-      </div>
-      <ol className="grid gap-3 list-none m-0 p-0">
+      <ProgressBar value={idx / order.length} label="Setup progress" tone="typed" className="flex-none w-full" />
+      <ol className="grid list-none m-0 p-0">
         {steps.map((s, i) => {
           const done = i < idx;
           const active = i === idx;
           return (
-            <li key={s.key} className="grid grid-cols-[16px_1fr] gap-3 items-start" aria-current={active ? 'step' : undefined}>
-              {done ? <Icon name="check" fill={{ '#': 'var(--typed)' }} label="done" /> : active ? <Icon name="forward" label="current step" /> : <span className="font-mono text-ink-faint text-center w-4 leading-4" aria-hidden>—</span>}
-              <div className="grid gap-1">
-                <span className={cx('text-sm', active && 'font-semibold', done && 'text-ink-soft')}>
+            <li key={s.key} className="grid grid-cols-[32px_minmax(0,1fr)] gap-4 items-start py-5 border-t border-rule first:border-t-0" aria-current={active ? 'step' : undefined}>
+              <span
+                className={cx(
+                  'grid place-items-center w-8 h-8 rounded-full border font-mono text-xs',
+                  done && 'border-typed text-typed bg-[var(--typed-wash)]',
+                  active && 'border-ink bg-ink text-on-ink',
+                  !done && !active && 'border-rule-strong text-ink-faint',
+                )}
+              >
+                {done ? <Icon name="check" size={16} label="done" /> : active ? <Icon name="arrow" size={16} label="current step" /> : <span aria-hidden>{i + 1}</span>}
+              </span>
+              <div className="grid gap-2 min-w-0">
+                <span className={cx('text-base', active && 'font-semibold', done && 'text-ink-soft')}>
                   {i + 1}. {s.title}
                 </span>
                 <Caption>{s.body}</Caption>
                 {active && s.key === 'allow' && <Disclosure />}
                 {active && s.key === 'allow' && consentError && (
-                  <p role="alert" className="text-sm">
+                  <p role="alert" className="text-sm text-seal">
                     {consentError}
                   </p>
                 )}
                 {s.key === 'allow' && i < idx && pending && !consent && <Caption role="status">Recording starts once the extension is installed.</Caption>}
                 {active && s.key === 'install' && <Caption role="status">{installed === null ? 'Checking…' : 'Waiting for the extension… this page notices on its own.'}</Caption>}
                 {active && s.key === 'connect' && error && (
-                  <p role="alert" className="text-sm">
+                  <p role="alert" className="text-sm text-seal">
                     {error}
                   </p>
                 )}
@@ -249,12 +273,13 @@ export default function Welcome() {
                     <Chip kind="typed">connected</Chip> Recording as soon as you type.
                   </span>
                 )}
+                {active && <div className="flex flex-wrap items-center gap-3 pt-2">{actions}</div>}
               </div>
             </li>
           );
         })}
       </ol>
       <Caption>On a phone? Trail records on a laptop; this page shows what the laptop's extension has.</Caption>
-    </Dialog>
+    </Note>
   );
 }

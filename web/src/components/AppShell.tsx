@@ -1,12 +1,14 @@
-// The app shell is the desk: a menu bar along the top, the dithered desk below, and each page's
-// windows on it (DESIGN-desktop.md §4, "App shell"). The margin rail and the phone top bar are gone;
-// the menu bar folds its items behind "Menu" below 700 px on its own.
+// The app shell is the document's frosted Nav with the app's items (Essays, Time, Patterns, Invite,
+// Settings) and, on the right, the theme toggle, the account email in mono and Sign out
+// (DESIGN-document.md §9, "App shell"). No side rail and no desk: pages sit on banknote paper in the
+// 1200 px container. The trial line sits under the nav; "Read-only on phones" is one note line.
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { Me } from '../lib/types';
 import { data } from '../lib/data';
 import { useAsync } from './useAsync';
-import { Button, ButtonLink, Caption, DesktopPattern, Dialog, ErrorNote, Icon, Loading, MenuBar, Radio, Window, type MenuItem } from './ui';
+import { Button, ButtonLink, Caption, Chip, ErrorNote, Icon, Loading, Note, Radio, Reveal, RouterLink, ThemeToggle } from './ui';
+import { Nav } from '../design/document';
 import { daysUntil } from './format';
 
 type Ctx = { me: Me; reload: () => void };
@@ -25,60 +27,12 @@ const NAV: { to: string; label: string; match: (path: string) => boolean }[] = [
   { to: '/app/settings', label: 'Settings', match: (p) => p.startsWith('/app/settings') },
 ];
 
-/* ------------------------------------------------------------ desk accessories */
-
-/** Same storage key and data-theme attribute as design/components ThemeToggle and index.html's first-paint
- *  script; drawn here as a menu bar item with the sun/moon pixel icon. */
-const THEME_KEY = 'trail.theme';
-type Pref = 'system' | 'light' | 'dark';
-const systemDark = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches;
-function useTheme() {
-  const [pref, setPref] = useState<Pref>(() => {
-    try {
-      const v = localStorage.getItem(THEME_KEY);
-      return v === 'light' || v === 'dark' ? v : 'system';
-    } catch {
-      return 'system';
-    }
-  });
-  useEffect(() => {
-    const apply = () => document.documentElement.setAttribute('data-theme', pref === 'dark' || (pref === 'system' && systemDark()) ? 'dark' : 'light');
-    apply();
-    const mq = matchMedia('(prefers-color-scheme: dark)');
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [pref]);
-  const isDark = pref === 'dark' || (pref === 'system' && systemDark());
-  const toggle = () => {
-    const next: Pref = isDark ? 'light' : 'dark';
-    try {
-      localStorage.setItem(THEME_KEY, next);
-    } catch {
-      /* ignore */
-    }
-    setPref(next);
-  };
-  return { isDark, toggle };
-}
-
-const timeNow = () => new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-function useClock() {
-  const [t, setT] = useState(timeNow);
-  useEffect(() => {
-    const id = setInterval(() => setT(timeNow()), 15_000);
-    return () => clearInterval(id);
-  }, []);
-  return t;
-}
-
 /* ------------------------------------------------------------------- shell */
 
 export function AppShell() {
   const me = useAsync(() => data.me(), []);
   const loc = useLocation();
   const nav = useNavigate();
-  const theme = useTheme();
-  const clock = useClock();
 
   // Returning login lands on /app?connect=1: hand the extension a fresh token, then drop the flag.
   useEffect(() => {
@@ -89,15 +43,15 @@ export function AppShell() {
 
   if (me.status === 'loading')
     return (
-      <DesktopPattern className="min-h-dvh grid place-items-center">
+      <div className="min-h-dvh grid place-items-center bg-paper">
         <Loading label="Opening your record" />
-      </DesktopPattern>
+      </div>
     );
   if (me.status === 'error')
     return (
-      <DesktopPattern className="min-h-dvh grid place-items-center p-4">
+      <div className="min-h-dvh grid place-items-center bg-paper p-4">
         <ErrorNote error={me.error} retry={me.reload} />
-      </DesktopPattern>
+      </div>
     );
   if (!me.value) return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
 
@@ -105,7 +59,7 @@ export function AppShell() {
   const trialDays = daysUntil(user.trialEndsAt);
   const expired = user.plan === 'expired';
   const onWelcome = loc.pathname.startsWith('/app/welcome');
-  const items: MenuItem[] = NAV.map((n) => ({ label: n.label, to: n.to, current: n.match(loc.pathname) }));
+  const items = NAV.map((n) => ({ label: n.label, to: n.to, current: n.match(loc.pathname) }));
   const signOut = async () => {
     await data.logout();
     location.assign('/login');
@@ -113,58 +67,61 @@ export function AppShell() {
 
   return (
     <MeCtx.Provider value={{ me: user, reload: me.reload }}>
-      <DesktopPattern className="min-h-dvh text-ink">
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-8 focus:left-2 label-plate z-50">
+      <div className="min-h-dvh bg-paper text-ink">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 btn btn-secondary btn-sm">
           Skip to content
         </a>
-        <MenuBar
+        <Nav
           label="App"
           items={items}
-          linkAs={Link}
+          linkAs={RouterLink}
           brandTo="/app"
           right={
             <>
-              <span className="menubar-item tabular" aria-label="Clock" style={{ cursor: 'default' }}>
-                {clock}
-              </span>
-              <button type="button" className="menubar-item" aria-label={theme.isDark ? 'Switch to Daytime theme' : 'Switch to After Dark theme'} title={theme.isDark ? 'Daytime' : 'After Dark'} onClick={theme.toggle}>
-                <Icon name={theme.isDark ? 'sun' : 'moon'} />
-              </button>
-              <span className="marginal hide-phone self-center px-2 truncate max-w-[16rem]" title={user.email}>
+              <ThemeToggle />
+              <span className="mono text-xs text-ink-soft hide-phone truncate max-w-[16rem] px-1" title={user.email}>
                 {user.email}
               </span>
-              <Button variant="quiet" size="sm" className="self-center" onClick={signOut}>
+              <Button variant="quiet" size="sm" onClick={signOut}>
                 Sign out
               </Button>
             </>
           }
         />
         {user.plan === 'trial' && trialDays !== null && (
-          <div className="on-chrome bg-chrome border-b border-frame h-6 px-4 sm:px-6 flex items-center gap-2 font-mono text-xs" role="status">
-            <span>
-              Trial: <span className="tabular">{trialDays}</span> day{trialDays === 1 ? '' : 's'} left.
-            </span>
-            <Link to="/app/settings" className="link">
-              Plans
-            </Link>
+          <div className="border-b border-rule bg-paper-deep" role="status">
+            <div className="doc-container flex flex-wrap items-center gap-x-3 gap-y-1 py-2 font-mono text-xs text-ink-soft">
+              <Chip kind="signed">Trial</Chip>
+              <span>
+                <span className="tabular text-ink">{trialDays}</span> day{trialDays === 1 ? '' : 's'} left.
+              </span>
+              <Link to="/app/settings" className="link">
+                Plans
+              </Link>
+            </div>
           </div>
         )}
 
-        <main id="main" className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8 grid gap-6 min-w-0">
-          <Window inactive title="Read-only on phones" icon="warning" titleAs="div" className="lg:hidden" bodyClassName="py-2">
-            <Caption>Recording happens in Chrome on your laptop. This page shows what the laptop's extension has.</Caption>
-          </Window>
-          {/* keyed by path so a route change mounts a fresh page and its main window zooms open (DESIGN-desktop.md §6) */}
-          <div key={loc.pathname} className="grid gap-6 min-w-0">
+        <main id="main" className="doc-container grid gap-10 py-10 sm:py-14 min-w-0">
+          <Note crop={false} watermark={false} className="lg:hidden py-3 px-4">
+            <p className="flex items-start gap-3 text-sm">
+              <Icon name="info" size={18} className="flex-none mt-0.5 text-signed" />
+              <span>
+                <span className="font-medium">Read-only on phones.</span> <span className="text-ink-soft">Recording happens in Chrome on your laptop. This page shows what the laptop's extension has.</span>
+              </span>
+            </p>
+          </Note>
+          {/* keyed by path so a route change mounts a fresh page and it rises in once */}
+          <Reveal key={loc.pathname} className="grid gap-10 min-w-0">
             {expired && !onWelcome && !loc.pathname.startsWith('/app/settings') ? <Paywall /> : <Outlet />}
-          </div>
+          </Reveal>
         </main>
-      </DesktopPattern>
+      </div>
     </MeCtx.Provider>
   );
 }
 
-/** The trial has ended: a dialog with a radio per plan and one default button. */
+/** The trial has ended: a framed note with a radio per plan and one default button. */
 export function Paywall() {
   const [plan, setPlan] = useState<'semester' | 'monthly'>('semester');
   const [busy, setBusy] = useState(false);
@@ -178,28 +135,33 @@ export function Paywall() {
     }
   };
   return (
-    <Dialog
-      title="Your trial has ended"
-      icon="key"
-      className="max-w-2xl win-open"
-      actions={
-        <>
-          <ButtonLink to="/app/invite" variant="quiet">
-            Invite three friends instead
-          </ButtonLink>
-          <Button ring variant="primary" onClick={go} disabled={busy}>
-            {busy ? 'Opening checkout…' : 'Continue'}
-          </Button>
-        </>
+    <Note
+      as="section"
+      frame
+      label={
+        <span className="inline-flex items-center gap-2">
+          <Icon name="key" size={16} /> Plan
+        </span>
       }
+      className="max-w-2xl"
     >
+      <h1 className="note-title">Your trial has ended</h1>
       <p className="text-sm">Your record is still yours. The views are what you pay for.</p>
       <p className="text-sm text-ink-soft">Recording, local storage, checkpoint signing and raw export never stop. Replay, sessions, patterns and the declaration come back the moment you pick a plan. Refund within 14 days, one click, no questions.</p>
-      <div className="grid gap-2">
+      <fieldset className="grid gap-3 border-0 p-0 m-0">
+        <legend className="sr-only">Plan</legend>
         <Radio name="paywall-plan" label="Semester, $12 for 4 months" description="Recommended." checked={plan === 'semester'} onChange={() => setPlan('semester')} />
         <Radio name="paywall-plan" label="Monthly, $3.99" checked={plan === 'monthly'} onChange={() => setPlan('monthly')} />
+      </fieldset>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button ring variant="primary" onClick={go} disabled={busy} arrow>
+          {busy ? 'Opening checkout…' : 'Continue'}
+        </Button>
+        <ButtonLink to="/app/invite" variant="quiet">
+          Invite three friends instead
+        </ButtonLink>
       </div>
       <Caption>Price and renewal date are shown on the checkout button. Invite three friends and a semester is free.</Caption>
-    </Dialog>
+    </Note>
   );
 }

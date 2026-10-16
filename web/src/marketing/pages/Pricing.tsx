@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ButtonLink, CHROME_STORE_URL, Desk, Disclosure, Heading, PriceCard, Row, Section, useTitle } from '../../design/components';
-import { Panel } from '../../design/desktop';
+import { ButtonLink, CHROME_STORE_URL, Disclosure, PriceCard, Row, Section, useTitle } from '../../design/components';
+import { Note, Reveal } from '../../design/document';
 import { useSiteConfig } from '../../lib/config';
 
 export default function Pricing() {
@@ -8,10 +8,9 @@ export default function Pricing() {
   const cfg = useSiteConfig();
   if (cfg.freeAccess) return <FreePricing />;
   return (
-    <Desk>
-      <Section label="Plans" code="00:00" wide chrome titleAs="div" open>
-        <Heading as="h1" eyebrow="Pricing" title="Two plans. No tricks." lede="Fourteen days free with every feature and no card. After that, pick one. Either way, recording, local storage, export and checkpoint signing keep working forever." />
-        <div className="grid md:grid-cols-2 gap-4 mt-6 items-start">
+    <>
+      <Section className="mk-first" titleAs="h1" index="Nº 01" eyebrow="Pricing" title="Two plans. No tricks." lede="Fourteen days free with every feature and no card. After that, pick one. Either way, recording, local storage, export and checkpoint signing keep working forever.">
+        <Reveal className="mk-grid-2">
           <PriceCard
             name="Semester"
             price="$12"
@@ -33,49 +32,52 @@ export default function Pricing() {
             equivalent="Same features, month to month"
             points={['Everything in Semester', 'Renews monthly; we email you 7 days before', 'Cancel in one click, no retention screen', 'Full refund within 14 days of any charge, one click']}
             cta={
-              <ButtonLink to={CHROME_STORE_URL} external className="w-full">
+              <ButtonLink to={CHROME_STORE_URL} external variant="secondary" className="w-full">
                 Start 14 days free
               </ButtonLink>
             }
             note="Prices in USD. Stripe shows your local currency at checkout."
           />
-        </div>
+        </Reveal>
       </Section>
 
-      <Section label="Never locks" code="00:14" icon="key">
-        <Heading title="What never locks" lede="Your record is yours whether you pay or not. Holding it hostage would make the whole thing pointless." />
-        <dl className="mt-4">
+      <Section band index="02" eyebrow="Never locks" title="What never locks" lede="Your record is yours whether you pay or not. Holding it hostage would make the whole thing pointless.">
+        <Reveal>
+        <dl>
           <Row term="Recording">The extension keeps recording after the trial. It never stops because of billing.</Row>
           <Row term="Local storage">Your record stays in your browser, readable by the extension, for as long as you keep it.</Row>
           <Row term="Raw export">Export the full record as JSON at any time, on any plan, including expired.</Row>
           <Row term="Checkpoint signing">The server keeps signing your fingerprints every ten minutes, paid or not, so the chain stays verifiable.</Row>
           <Row term="What does lock">The views: replay, sessions, patterns, the draft declaration, and the one-click evidence pack. That is what you pay for.</Row>
         </dl>
+        </Reveal>
       </Section>
 
-      <Section label="Referral" code="00:26" icon="link" offset>
-        <Heading title="Invite three friends, get a semester" lede="Simple rule, no fine print hidden elsewhere." />
-        <dl className="mt-4">
+      <Section index="03" eyebrow="Referral" title="Invite three friends, get a semester" lede="Simple rule, no fine print hidden elsewhere.">
+        <Reveal>
+        <dl>
           <Row term="The rule">Invite three people. When each of them installs Trail and finishes their first replay, you get one free semester (4 months) added to your account.</Row>
           <Row term="Stacking">Up to three free semesters in total, so nine successful invites.</Row>
           <Row term="Counting">An invite counts when your friend completes a first replay, not when they sign up. Your progress (0 of 3) is on the Invite page.</Row>
           <Row term="Your friends">They get the same 14-day trial as everyone. No discount either way; we would rather keep one price.</Row>
         </dl>
+        </Reveal>
       </Section>
 
-      <Section label="Refunds" code="00:38">
-        <Heading title="Refunds and cancelling" lede="The rules we would want as students." />
-        <dl className="mt-4">
+      <Section band index="04" eyebrow="Refunds" title="Refunds and cancelling" lede="The rules we would want as students.">
+        <Reveal>
+        <dl>
           <Row term="Refund">Any charge, refunded in full, within 14 days of the charge. One button in Settings, no questions, no email to write. Stripe returns the money to the same card.</Row>
           <Row term="Cancel">One click, through Stripe's customer portal. No "are you sure" flow, no offers to make you stay. Your plan runs to the end of the period you paid for.</Row>
           <Row term="Renewal">We email you seven days before every renewal with the amount and the date. Miss the email and change your mind? The 14-day refund still applies.</Row>
           <Row term="Trial">Starts when you play your first replay, not when you sign up. No card. No countdown timers on your essays.</Row>
         </dl>
+        </Reveal>
       </Section>
 
-      <Section label="Questions" code="00:50" offset>
-        <Heading title="Questions" />
-        <div className="mt-4">
+      <Section index="05" eyebrow="Questions" title="Questions">
+        <Reveal>
+        <div>
           <Disclosure q="Why is there no free plan?">
             <p>Because the free part is the important part: the record itself is free, always. The views are what cost us money to run and support, and $3 a month is the least we can charge while staying independent. No ads, no selling anything, no institutional deals that would put us on the wrong side of the table.</p>
           </Disclosure>
@@ -101,18 +103,18 @@ export default function Pricing() {
             </p>
           </Disclosure>
         </div>
+        </Reveal>
       </Section>
-    </Desk>
+    </>
   );
 }
 
 /** Shown while the server runs with FREE_ACCESS (no Stripe): the true, current terms. */
 function FreePricing() {
   return (
-    <Desk>
-      <Section label="Plans" code="00:00" wide chrome titleAs="div" open>
-        <Heading as="h1" eyebrow="Pricing" title="Free while we are in early access." lede="Every feature, every essay, no card and no trial clock. Nothing is charged, and there is nothing to cancel." />
-        <div className="grid md:grid-cols-2 gap-4 mt-6 items-start">
+    <>
+      <Section className="mk-first" titleAs="h1" index="Nº 01" eyebrow="Pricing" title="Free while we are in early access." lede="Every feature, every essay, no card and no trial clock. Nothing is charged, and there is nothing to cancel.">
+        <Reveal className="mk-grid-2">
           <PriceCard
             name="Early access"
             price="$0"
@@ -127,26 +129,27 @@ function FreePricing() {
             }
             note="When pricing switches on you will hear it from us first, with notice."
           />
-          <Panel legend="Later, when we charge" className="grid gap-3 content-start text-sm">
+          <Note as="article" label="Later, when we charge" className="text-sm">
             <p>The plan is $12 a semester (four months) or $3.99 a month, with 14 days free first and no card. Cancel in one click, full refund within 14 days of any charge. Invites you make now still count: three friends who each finish a first replay bank you a free semester.</p>
             <p>Whatever the price becomes, the record itself stays free: recording, local storage, raw export and checkpoint signing never lock.</p>
-          </Panel>
-        </div>
+          </Note>
+        </Reveal>
       </Section>
 
-      <Section label="Never locks" code="00:14" icon="key">
-        <Heading title="What never locks" lede="Your record is yours whether you ever pay or not. Holding it hostage would make the whole thing pointless." />
-        <dl className="mt-4">
+      <Section band index="02" eyebrow="Never locks" title="What never locks" lede="Your record is yours whether you ever pay or not. Holding it hostage would make the whole thing pointless.">
+        <Reveal>
+        <dl>
           <Row term="Recording">The extension keeps recording. It never stops because of billing.</Row>
           <Row term="Local storage">Your record stays in your browser, readable by the extension, for as long as you keep it.</Row>
           <Row term="Raw export">Export the full record as JSON at any time.</Row>
           <Row term="Checkpoint signing">The server keeps signing your fingerprints every ten minutes, so the chain stays verifiable.</Row>
         </dl>
+        </Reveal>
       </Section>
 
-      <Section label="Questions" code="00:26" offset>
-        <Heading title="Questions" />
-        <div className="mt-4">
+      <Section index="03" eyebrow="Questions" title="Questions">
+        <Reveal>
+        <div>
           <Disclosure q="Why is it free?">
             <p>Because we are early and want students using it, telling us what is confusing, and finding the bugs. The record itself will always be free; the views may cost a few dollars a semester later, and $3 a month is the least we could charge while staying independent. No ads, no selling anything, no institutional deals that would put us on the wrong side of the table.</p>
           </Disclosure>
@@ -166,7 +169,8 @@ function FreePricing() {
             </p>
           </Disclosure>
         </div>
+        </Reveal>
       </Section>
-    </Desk>
+    </>
   );
 }

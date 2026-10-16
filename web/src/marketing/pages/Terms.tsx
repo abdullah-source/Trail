@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Desk, Heading, Prose, Section, useTitle } from '../../design/components';
+import { Prose, Section, useTitle } from '../../design/components';
+import { Reveal } from '../../design/document';
 
 const SECTIONS: { code: string; label: string; title: string; body: ReactNode }[] = [
   {
@@ -103,16 +104,15 @@ const SECTIONS: { code: string; label: string; title: string; body: ReactNode }[
 export default function Terms() {
   useTitle('Terms');
   return (
-    <Desk columns={1} width="reading">
-      <Section label="Terms" code="00:00" icon="document" titleAs="div" open>
-        <Heading as="h1" eyebrow="Terms of service" title="Short, because there is not much to say." lede="These are the terms for using Trail. Plain English, no surprises. Last updated 21 September 2026." />
-      </Section>
-      {SECTIONS.map((s) => (
-        <Section key={s.code} code={s.code} label={s.label}>
-          <Heading title={s.title} />
-          <Prose className="mt-4">{s.body}</Prose>
+    <>
+      <Section className="mk-first" titleAs="h1" index="Nº 01" eyebrow="Terms of service" title="Short, because there is not much to say." lede="These are the terms for using Trail. Plain English, no surprises. Last updated 21 September 2026." />
+      {SECTIONS.map((s, i) => (
+        <Section key={s.code} band={i % 2 === 0} index={String(i + 2).padStart(2, '0')} eyebrow={s.label} title={s.title} className="mk-reading">
+          <Reveal>
+            <Prose>{s.body}</Prose>
+          </Reveal>
         </Section>
       ))}
-    </Desk>
+    </>
   );
 }

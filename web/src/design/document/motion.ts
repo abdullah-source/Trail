@@ -75,5 +75,7 @@ export function mountReveal(el: HTMLElement, opts: { delay?: number; stagger?: n
     el.setAttribute('data-in', '');
     return () => {};
   }
-  return whenVisible(el, () => el.setAttribute('data-in', ''));
+  // Start just before the group enters the viewport, so the rise plays as it arrives instead of
+  // a visible block blinking out and back.
+  return whenVisible(el, () => el.setAttribute('data-in', ''), '0px 0px 12% 0px', 0);
 }

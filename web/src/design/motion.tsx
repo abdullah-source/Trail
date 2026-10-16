@@ -1,14 +1,14 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { Reveal } from './document';
 
 /*
- * Motion on the desktop (DESIGN-desktop.md §6): only the record moves. The budget is the
- * window zoom-open (`.win-open` in tokens.css), the caret blink, the replay itself and the
- * one-time light-up of the provenance strip. FadeUp, Stagger, StaggerItem and Motion keep
- * their names so nothing has to change its imports, but they render plain divs, and
- * framer-motion is no longer loaded on marketing pages.
+ * Motion on the security document (DESIGN-document.md §6): sections rise in once (Reveal), the
+ * provenance dots travel, the seal tilts, the hero rosette drifts. Nothing else moves, and all of
+ * it stops under reduced motion. FadeUp, Stagger, StaggerItem and Motion keep their names so old
+ * imports keep working: FadeUp and Stagger are Reveal groups, the other two are plain divs.
  */
 
-export const EASE = [0.2, 0.7, 0.2, 1] as const;
+export const EASE = [0.22, 1, 0.36, 1] as const;
 
 const QUERY = '(prefers-reduced-motion: reduce)';
 const prefers = () => typeof matchMedia !== 'undefined' && matchMedia(QUERY).matches;
@@ -28,21 +28,21 @@ export function usePrefersReducedMotion(): boolean {
 
 type Plain = { children?: ReactNode; className?: string; style?: CSSProperties; id?: string };
 
-/** Formerly one element arriving. On the desktop it is a plain div. */
-export function FadeUp({ children, className, style, id }: Plain & { delay?: number; distance?: number; inView?: boolean }) {
+/** One block rising in once when it scrolls into view (a Reveal of one child). */
+export function FadeUp({ children, className, style, delay }: Plain & { delay?: number; distance?: number; inView?: boolean }) {
   return (
-    <div className={className} style={style} id={id}>
-      {children}
-    </div>
+    <Reveal className={className} style={style} delay={delay}>
+      <div>{children}</div>
+    </Reveal>
   );
 }
 
-/** Formerly a staggered parent. On the desktop it is a plain div. */
-export function Stagger({ children, className, style, id }: Plain & { gap?: number; inView?: boolean }) {
+/** A staggered group: each direct child rises 90 ms after the one before. */
+export function Stagger({ children, className, style }: Plain & { gap?: number; inView?: boolean }) {
   return (
-    <div className={className} style={style} id={id}>
+    <Reveal className={className} style={style}>
       {children}
-    </div>
+    </Reveal>
   );
 }
 
@@ -55,8 +55,9 @@ export function StaggerItem({ children, className, style, id }: Plain) {
 }
 
 export function Motion({ children, className, reducedClassName, style, id }: Plain & { reducedClassName?: string }) {
+  const reduced = usePrefersReducedMotion();
   return (
-    <div className={reducedClassName ?? className} style={style} id={id}>
+    <div className={reduced && reducedClassName ? reducedClassName : className} style={style} id={id}>
       {children}
     </div>
   );

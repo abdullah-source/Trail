@@ -3,7 +3,7 @@ import { useSiteConfig } from '../lib/config';
 import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { data } from '../lib/data';
 import { useAsync, usePageTitle } from '../components/useAsync';
-import { Button, Dialog, Icon, TextField } from '../design/desktop';
+import { Button, Guilloche, Icon, Note, TextField } from '../design/document';
 import { PublicShell } from './shared';
 
 export default function Login() {
@@ -18,23 +18,30 @@ export default function Login() {
   return <MagicLinkLogin referral={referral} freeAccess={cfg.freeAccess} expired={params.get('error') === 'expired'} />;
 }
 
-/** The "Sign in" dialog with the key icon, centred on a narrow desk. */
+/** The "Log in" note: narrow, centred, framed, with a faint rosette engraved behind the page. */
 function SignInDialog({ children, actions }: { children: ReactNode; actions?: ReactNode }) {
   return (
-    <PublicShell>
-      <div className="w-full max-w-md mx-auto">
-        <Dialog title="Sign in" icon="key" className="win-open" actions={actions}>
-          {children}
-        </Dialog>
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center" aria-hidden="true">
+        <div className="w-[min(640px,96vw)] aspect-square">
+          <Guilloche seed="login" intensity="faint" />
+        </div>
       </div>
-    </PublicShell>
+      <PublicShell>
+        <Note frame label="Trail account" className="relative">
+          <h1 className="note-title">Log in</h1>
+          {children}
+          {actions && <div className="grid gap-3">{actions}</div>}
+        </Note>
+      </PublicShell>
+    </div>
   );
 }
 
 function Warn({ children }: { children: ReactNode }) {
   return (
     <p role="alert" className="text-sm inline-flex items-start gap-2">
-      <Icon name="warning" fill={{ w: 'var(--paste)' }} className="mt-0.5" />
+      <Icon name="warning" size={18} className="mt-0.5 text-seal shrink-0" />
       <span>{children}</span>
     </p>
   );
@@ -67,7 +74,7 @@ function ClerkLogin({ referral, freeAccess, signUp }: { referral?: string; freeA
   return (
     <SignInDialog>
       <Exchange />
-      <h3 className="text-lg">{signUp ? 'Create your account.' : 'Sign in with Google or your email.'}</h3>
+      <h2 className="text-lg font-semibold">{signUp ? 'Create your account.' : 'Sign in with Google or your email.'}</h2>
       <p className="text-ink-soft text-sm">Any address works; .edu is not required. {freeAccess ? 'Free during early access, no card.' : '14-day trial, no card.'} Your writing never leaves your device.</p>
       {referral && (
         <p className="text-sm text-ink-soft">
@@ -99,12 +106,12 @@ function MagicLinkLogin({ referral, freeAccess, expired }: { referral?: string; 
     return (
       <SignInDialog
         actions={
-          <Button ring onClick={() => setState({ kind: 'idle' })}>
+          <Button variant="secondary" className="w-full" onClick={() => setState({ kind: 'idle' })}>
             Send another
           </Button>
         }
       >
-        <h3 className="text-lg">Check your inbox.</h3>
+        <h2 className="text-lg font-semibold">Check your inbox.</h2>
         <p className="text-ink-soft">
           We sent a sign-in link to <span className="font-mono text-ink [overflow-wrap:anywhere]">{email.trim().toLowerCase()}</span>. It works once and expires in 30 minutes.
         </p>
@@ -121,13 +128,13 @@ function MagicLinkLogin({ referral, freeAccess, expired }: { referral?: string; 
   return (
     <SignInDialog
       actions={
-        <Button type="submit" form="login-form" variant="primary" ring icon="key" disabled={state.kind === 'busy' || !email.includes('@')}>
+        <Button type="submit" form="login-form" variant="primary" size="lg" icon="key" className="w-full" disabled={state.kind === 'busy' || !email.includes('@')}>
           {state.kind === 'busy' ? 'Sending…' : 'Email me a sign-in link'}
         </Button>
       }
     >
       <form id="login-form" onSubmit={submit} className="grid gap-4" aria-busy={state.kind === 'busy'}>
-        <h3 className="text-lg">Your email is the only password.</h3>
+        <h2 className="text-lg font-semibold">Your email is the only password.</h2>
         <p className="text-ink-soft text-sm">We email you a link. No password to forget, nothing to reset. Any address works; .edu is not required.</p>
         {expired && <Warn>That link expired or was already used. Request a fresh one.</Warn>}
         {referral && (
@@ -137,7 +144,7 @@ function MagicLinkLogin({ referral, freeAccess, expired }: { referral?: string; 
         )}
         <TextField id="email" label="Email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@university.edu" hint="For the sign-in link and nothing else." />
         {state.kind === 'error' && <Warn>{state.message}</Warn>}
-        <p className="text-xs text-ink-soft">Signing in creates an account if you do not have one. {cfg.freeAccess ? 'Free during early access, no card.' : '14-day trial, no card.'} Your writing never leaves your device.</p>
+        <p className="text-sm text-ink-soft">Signing in creates an account if you do not have one. {cfg.freeAccess ? 'Free during early access, no card.' : '14-day trial, no card.'} Your writing never leaves your device.</p>
       </form>
     </SignInDialog>
   );
@@ -184,7 +191,7 @@ export function ClerkDone() {
   return (
     <SignInDialog
       actions={
-        <Button onClick={() => location.replace('/login')} ring>
+        <Button variant="secondary" className="w-full" onClick={() => location.replace('/login')}>
           Back to sign in
         </Button>
       }
